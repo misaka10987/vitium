@@ -1,0 +1,51 @@
+[
+    {
+        "Weapon": {
+            "id": "example_id",
+            "name": "example_name",
+            "age": [
+                "example_age"
+            ],
+            "atk": "11d45+14",
+            "rng": 114514,
+            "pntr": true,
+            "per_turn": 2,
+            "charge": 5,
+            "load": 1,
+            "price": [
+                [
+                    "1920s",
+                    1919810
+                ]
+            ]
+        }
+    },
+    {
+        "Armor": {
+            "id": "example_id",
+            "name": "example_name",
+            "age": [
+                "example_age"
+            ],
+            "def": "11d45+14",
+            "cover": [
+                "torso",
+                "head"
+            ],
+            "rerist_pntr": true,
+            "price": [
+                [
+                    "1920s",
+                    1919810
+                ]
+            ]
+        }
+    },
+    {
+        "Other": {
+            "id": "example_id",
+            "name": "example_name",
+            "descr": "This is description."
+        }
+    }
+]

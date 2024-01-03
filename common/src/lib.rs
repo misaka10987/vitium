@@ -1,6 +1,5 @@
 pub mod action;
 pub mod age;
-pub mod armor;
 pub mod chara;
 pub mod dice;
 pub mod game;
@@ -16,7 +15,6 @@ pub mod script;
 pub mod skill;
 pub mod util;
 pub mod vehicle;
-pub mod weapon;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

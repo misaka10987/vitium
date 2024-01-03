@@ -11,6 +11,7 @@ where
     /// Generate a new instance.
     /// # Examples
     /// ```
+    /// use vitium_common::registry::Regis;
     /// let reg = Regis::Static(Box::new(|| 114));
     /// assert_eq!(reg.inst(), 114);
     /// let reg = Regis::Dynamic(514);
