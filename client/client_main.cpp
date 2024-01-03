@@ -1,3 +1,6 @@
+#define _LINUX_
+//#define _WIN32_
+
 #include "httplib.h"
 #include <bits/stdc++.h> //very bad coding habit
 using std::cin;
@@ -33,6 +36,12 @@ int main()
     string ip_address;
     cout << "Please input your server IP : ";
     cin >> ip_address;
+#ifdef _WIN32_
+    system("cls");
+#endif
+#ifdef _LINUX_
+    system("clear");
+#endif
     try
     {
         httplib::Client cli(ip_address);
