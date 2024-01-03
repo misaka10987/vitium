@@ -1,5 +1,8 @@
-use crate::{armor::Armor, util::Envelop, weapon::Weapon};
+use crate::{age::Age, armor::Armor, util::Envelop, weapon::Weapon};
 use serde_derive::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+pub type Price = HashMap<Age, u64>;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct OtherItem {

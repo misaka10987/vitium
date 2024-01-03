@@ -1,6 +1,6 @@
+pub mod action;
 pub mod age;
 pub mod armor;
-pub mod bottle;
 pub mod chara;
 pub mod dice;
 pub mod game;

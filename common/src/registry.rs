@@ -1,26 +1,26 @@
 use std::collections::HashMap;
-
-/// Defines constructor function.
-pub type Maker<'a, T> = &'a dyn Fn() -> T;
-
-/// Defines a registry item.
-pub struct Regis<'a, T> {
-    constructor: Maker<'a, T>,
+pub enum Regis<T> {
+    Static(Box<dyn Fn() -> T>),
+    Dynamic(T),
 }
 
-impl<'a, T> Regis<'a, T> {
-    pub fn new(constructor: Maker<'a, T>) -> Self {
-        Self { constructor }
-    }
+impl<T> Regis<T>
+where
+    T: Clone,
+{
     /// Generate a new instance.
     /// # Examples
     /// ```
-    /// let f = || 114;
-    /// let reg = Regis::new(&f);
-    /// assert_eq!(reg.inst(),114);
+    /// let reg = Regis::Static(Box::new(|| 114));
+    /// assert_eq!(reg.inst(), 114);
+    /// let reg = Regis::Dynamic(514);
+    /// assert_eq!(reg.inst(), 514);
     /// ```
     pub fn inst(&self) -> T {
-        (self.constructor)()
+        match self {
+            Self::Static(f) => f(),
+            Self::Dynamic(t) => t.clone(),
+        }
     }
 }
 
@@ -28,4 +28,4 @@ impl<'a, T> Regis<'a, T> {
 pub type RegID = String;
 
 /// Generic registry table using `HashMap`.
-pub type RegTable<'a, T> = HashMap<RegID, Regis<'a, T>>;
+pub type RegTable<'a, T> = HashMap<RegID, Regis<T>>;

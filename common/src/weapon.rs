@@ -1,4 +1,4 @@
-use crate::{age::Age, bottle::Bottle, dice::Dice};
+use crate::{age::Age, dice::Dice, util::Bottle};
 use serde_derive::{Deserialize, Serialize};
 
 /// Instance of weapon.

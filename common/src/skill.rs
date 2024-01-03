@@ -12,6 +12,7 @@ pub struct Skill {
 }
 
 impl Skill {
+    /// Sum up the skill profession, interest and growth level.
     pub fn level(&self) -> Envelop<u16> {
         if let Envelop::Open(g) = self.growth {
             if let Envelop::Open(p) = self.profession {
