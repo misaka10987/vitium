@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "any": "cpp",
+        "expected": "cpp",
+        "optional": "cpp",
+        "variant": "cpp"
+    }
+}
