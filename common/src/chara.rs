@@ -1,4 +1,4 @@
-use crate::{bottle::Bottle, envelop::Envelop};
+use crate::{bottle::Bottle, item::Inventory, util::Envelop};
 use serde_derive::{Deserialize, Serialize};
 
 pub type TpAttr = u16;
@@ -14,4 +14,14 @@ impl Attr {
     pub fn new(id: String, value: Envelop<Bottle<TpAttr>>) -> Self {
         Self { id, value }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Character {
+    pub id: i128,
+    pub player: i128,
+    pub name: String,
+    pub descr: String,
+    pub attr: Vec<Attr>,
+    pub invt: Inventory,
 }

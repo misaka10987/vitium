@@ -1,11 +1,11 @@
-use crate::{armor::Armor, envelop::Envelop, weapon::Weapon};
+use crate::{armor::Armor, util::Envelop, weapon::Weapon};
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct OtherItem {
     pub uid: u128,
     pub name: String,
-    pub description: String,
+    pub descr: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
