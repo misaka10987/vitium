@@ -6,7 +6,7 @@ use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 use serde_derive::{Deserialize, Serialize};
 
 /// Container for values with maximum.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Bottle<T> {
     pub now: T,
     pub cap: T,

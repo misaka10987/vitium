@@ -39,7 +39,7 @@ impl Player {
 }
 
 /// Used for authentication.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Token {
     pub uid: i128,
     pub pswd: String,

@@ -1,10 +1,11 @@
+use crate::{age::Age, skill::Skill};
 use serde_derive::{Deserialize, Serialize};
-
-use crate::envelop::Envelop;
 
 #[derive(Serialize, Deserialize)]
 pub struct Prof {
-    pub id:String,
-    pub name:String,
-    pub credit:Envelop<u16>,
+    pub age: Age,
+    pub id: String,
+    pub name: String,
+    pub credit: u16,
+    pub skills: Vec<(Skill, u16)>,
 }

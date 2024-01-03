@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 pub type TpAttr = u16;
 
 /// Defines attribution of a character.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Attr {
     pub id: String,
     pub value: Envelop<Bottle<TpAttr>>,

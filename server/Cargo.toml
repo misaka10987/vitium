@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+vitium-common={path = "../common"}
+axum = "0.7.3"
+ndm = "0.9.10"
+tokio = "1.35.1"

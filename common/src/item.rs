@@ -1,14 +1,14 @@
 use crate::{armor::Armor, envelop::Envelop, weapon::Weapon};
 use serde_derive::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct OtherItem {
     pub uid: u128,
     pub name: String,
     pub description: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Item {
     Weapon(Weapon),
     Armor(Armor),
