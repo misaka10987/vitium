@@ -1,11 +1,13 @@
-#define _LINUX_
-//#define _WIN32_
+#define _LINUX_ // probably support macOS ?
+// #define _WIN32_
 
 #include "httplib.h"
 #include <bits/stdc++.h> //very bad coding habit
 using std::cin;
 using std::cout;
 using std::endl;
+using std::ifstream;
+using std::ofstream;
 using std::string;
 
 class err_handle_pack
@@ -36,6 +38,9 @@ int main()
     string ip_address;
     cout << "Please input your server IP : ";
     cin >> ip_address;
+    ifstream init_local_r;
+    ofstream init_local_w;
+    init_local_w.open(".init_local");
 #ifdef _WIN32_
     system("cls");
 #endif
@@ -53,7 +58,8 @@ int main()
         {
             throw res->status;
         }
-        res->body;
+        init_local_w << res->body; // load the init directly into the local file
+        init_local_w.close();
     }
     catch (int e)
     {
