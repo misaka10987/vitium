@@ -1,22 +1,31 @@
-/// Registry
-pub struct Regis<'a, T> {
-    pub id: String,
-    constructor: &'a dyn Fn() -> T,
+use std::collections::HashMap;
+pub enum Regis<T> {
+    Static(Box<dyn Fn() -> T>),
+    Dynamic(T),
 }
 
-impl<'a, T> Regis<'a, T> {
-    pub fn new(id: String, constructor: &dyn Fn() -> T) -> Regis<T> {
-        Regis { id, constructor }
-    }
-
-    /// Creates a new `T` instance using internal constructor.
+impl<T> Regis<T>
+where
+    T: Clone,
+{
+    /// Generate a new instance.
     /// # Examples
     /// ```
-    /// let f = || 114;
-    /// let reg = Regis::new("test".to_string(), &f);
-    /// assert_eq!(reg.inst(),114);
+    /// let reg = Regis::Static(Box::new(|| 114));
+    /// assert_eq!(reg.inst(), 114);
+    /// let reg = Regis::Dynamic(514);
+    /// assert_eq!(reg.inst(), 514);
     /// ```
     pub fn inst(&self) -> T {
-        (self.constructor)()
+        match self {
+            Self::Static(f) => f(),
+            Self::Dynamic(t) => t.clone(),
+        }
     }
 }
+
+/// String ID for a registry.
+pub type RegID = String;
+
+/// Generic registry table using `HashMap`.
+pub type RegTable<'a, T> = HashMap<RegID, Regis<T>>;

@@ -1,4 +1,4 @@
-use crate::envelop::Envelop;
+use crate::{age::Age, util::Envelop};
 use serde_derive::{Deserialize, Serialize};
 
 /// Defines a skill instance.
@@ -12,6 +12,7 @@ pub struct Skill {
 }
 
 impl Skill {
+    /// Sum up the skill profession, interest and growth level.
     pub fn level(&self) -> Envelop<u16> {
         if let Envelop::Open(g) = self.growth {
             if let Envelop::Open(p) = self.profession {
@@ -22,4 +23,13 @@ impl Skill {
         }
         Envelop::Closed
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Prof {
+    pub age: Age,
+    pub id: String,
+    pub name: String,
+    pub credit: u16,
+    pub skills: Vec<(Skill, u16)>,
 }

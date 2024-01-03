@@ -1,5 +1,5 @@
 use crate::{
-    character::Character,
+    chara::Character,
     player::{Player, Token},
 };
 use serde_derive::{Deserialize, Serialize};
