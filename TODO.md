@@ -1,7 +1,7 @@
 # Coding Guidelines
 This program consists of client and server, connected via http.
 All GETs should be at "/user/$YOUR_USERNAME".
-All PUSHs shold locate in "/act".
+All POSTs shold locate in "/act".
 
 # TODO List
 1. example.json //the format to transfer between server and client
