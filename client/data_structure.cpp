@@ -19,7 +19,7 @@ public:
 
 trait::trait(int num_of_traits,std::ifstream load)
 {
-    //we will new every single trait as a single_trait struct
+    //we will new every single trait as a single_trait struct and store the pointer toward it in the pointer array.
 }
 
 trait::~trait()
