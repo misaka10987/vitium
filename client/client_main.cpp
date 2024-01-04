@@ -58,39 +58,81 @@ void http_get(char server_path[], char local_path[])
         }
         else
         {
+            err_package_major.err_code = 20000 + res->status;
+            err_package_major.err_message = httplib::to_string(res.error());
             throw res->status;
         }
-        if (local_w.is_open()){
-            local_w.close();
-            local_w.open(local_path);
+        if (local_r.is_open() || local_w.is_open())
+        {
+            std::cerr << "[WARNING] A .local file stream was not closed. This may cause fatal errors." << '\n';
+            if (local_r.is_open())
+                local_r.close();
+            if (local_w.is_open())
+                local_w.close();
         }
+        local_w.open(local_path);
         local_w << res->body; // load the data directly into the local file
         local_w.close();
     }
     catch (int e)
     {
-        err_package_major.err_code = 20000 + e;
-        err_package_major.err_message = "HTTP connection error ";
-        std::cerr << err_package_major.err_message;
+        std::cerr << "HTTP connection error ";
         std::cerr << e + 20000 << '\n';
     }
+}
+
+void http_post(char server_path[], char local_path[])
+{
+    try
+    {
+        if (local_r.is_open() || local_w.is_open())
+        {
+            std::cerr << "[WARNING] A .local file stream was not closed. This may cause fatal errors." << '\n';
+            if (local_r.is_open())
+                local_r.close();
+            if (local_w.is_open())
+                local_w.close();
+        }
+        httplib::Client cli(ip_address);
+        auto res = cli.Post(server_path, "text", local_path);
+        if (res->status / 100 == 2)
+        {
+        }
+        else
+        {
+            err_package_major.err_code = 20000 + res->status;
+            err_package_major.err_message = httplib::to_string(res.error());
+            throw res->status;
+        }
+    }
+    catch (int e)
+    {
+        std::cerr << "HTTP connection error ";
+        std::cerr << e + 20000 << '\n';
+    }
+}
+
+void sync_data()
+{
 }
 
 int main()
 {
     cout << "Please input your server IP : ";
     cin >> ip_address;
-    local_w.open(".local");
+    local_w.open(".data/.local");
     clear();
     try
     {
         httplib::Client cli(ip_address);
-        auto res = cli.Get("/user/init.json"); // this init should provide the list of player names and stuff, actual name depends on the server-side development (^w^)
+        auto res = cli.Get("/init.json"); // this init should provide the list of player names and stuff, actual name depends on the server-side development (^w^)
         if (res->status / 100 == 2)
         {
         }
         else
         {
+            err_package_major.err_code = 21000 + res->status;
+            err_package_major.err_message = httplib::to_string(res.error());
             throw res->status;
         }
         local_w << res->body; // load the init directly into the local file
@@ -99,9 +141,10 @@ int main()
     }
     catch (int e)
     {
-        err_package_major.err_code = 21000 + e;
-        err_package_major.err_message = "HTTP connection initialize error ";
-        std::cerr << err_package_major.err_message;
+        std::cerr << err_package_major.err_message << '\n';
+        std::cerr << "HTTP connection initialize error ";
         std::cerr << e + 21000 << '\n';
     }
+    // now we have the init, we can start working
+    // we will use the hash of the "username+salt" as the password, at least for now...
 }
