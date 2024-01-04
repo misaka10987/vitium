@@ -2,7 +2,7 @@
 // #define _WIN32_
 
 #include "httplib.h"
-#include "json.hpp"
+//#include "json.hpp" //we might not use it yet if the rust-C port is built
 // #include <bits/stdc++.h> //very bad coding habit
 using std::cin;
 using std::cout;
