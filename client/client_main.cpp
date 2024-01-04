@@ -128,6 +128,7 @@ void http_post(char server_path[], char local_path[])
 
 void sync_data()
 {
+    //todo, can't do since we don't have data structure yet...
 }
 
 int main()
