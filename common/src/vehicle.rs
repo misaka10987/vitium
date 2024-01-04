@@ -1,6 +1,6 @@
+use crate::age::Age;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::age::Age;
 /// Instance of vehicle.
 #[derive(Serialize, Deserialize)]
 pub struct Vehicle {

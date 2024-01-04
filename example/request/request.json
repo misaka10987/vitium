@@ -1,0 +1,115 @@
+[
+    "ServerStatus",
+    {
+        "Sync": {
+            "id": "example_player",
+            "pswd": "example_password"
+        }
+    },
+    "RecvChat",
+    "GetPlayer",
+    "GetChara",
+    {
+        "Enroll": [
+            {
+                "uid": 0,
+                "player": "example_player",
+                "name": "example_character",
+                "descr": "This is an example character",
+                "attr": [
+                    {
+                        "id": "example_attribution",
+                        "value": {
+                            "now": 0,
+                            "cap": 10
+                        }
+                    }
+                ],
+                "invt": [
+                    {
+                        "Other": {
+                            "uid": 0,
+                            "id": "example_id",
+                            "name": "example_name",
+                            "descr": "This is description of an OtherItem."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "example_player",
+                "pswd": "example_password"
+            }
+        ]
+    },
+    {
+        "SendChat": {
+            "id": "example_player",
+            "pswd": "example_password"
+        }
+    },
+    {
+        "EditPlayer": [
+            {
+                "id": "example_player",
+                "name": "Player P Example",
+                "profile": null
+            },
+            {
+                "id": "example_player",
+                "pswd": "example_password"
+            }
+        ]
+    },
+    {
+        "EditChara": [
+            {
+                "uid": 0,
+                "player": "example_player",
+                "name": "example_character",
+                "descr": "This is an example character",
+                "attr": [
+                    {
+                        "id": "example_attribution",
+                        "value": {
+                            "now": 0,
+                            "cap": 10
+                        }
+                    }
+                ],
+                "invt": [
+                    {
+                        "Other": {
+                            "uid": 0,
+                            "id": "example_id",
+                            "name": "example_name",
+                            "descr": "This is description of an OtherItem."
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "example_player",
+                "pswd": "example_password"
+            }
+        ]
+    },
+    {
+        "Act": [
+            "Say hello world.",
+            {
+                "id": "example_player",
+                "pswd": "example_password"
+            }
+        ]
+    },
+    {
+        "Cmd": [
+            "help --help",
+            {
+                "id": "example_player",
+                "pswd": "example_password"
+            }
+        ]
+    }
+]
