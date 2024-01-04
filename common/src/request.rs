@@ -3,6 +3,7 @@ use crate::{
     player::{Player, Token},
 };
 use serde_derive::{Deserialize, Serialize};
+
 /// All possible requests are defined here.
 #[derive(Serialize, Deserialize)]
 pub enum Req {
@@ -29,6 +30,25 @@ pub enum Req {
     /// Issue server command.
     Cmd(String, Token),
 }
+
+impl Req {
+    pub fn route(&self) -> &'static str {
+        match self {
+            Req::ServerStatus => "GET /",
+            Req::Sync(_) => "GET /sync",
+            Req::RecvChat => "GET /chat",
+            Req::GetPlayer => "GET /player",
+            Req::GetChara => "GET /chara",
+            Req::Enroll(_, _) => "POST /enroll",
+            Req::SendChat(_) => "POST /chat",
+            Req::EditPlayer(_, _) => "POST player",
+            Req::EditChara(_, _) => "POST chara",
+            Req::Act(_, _) => "POST /act",
+            Req::Cmd(_, _) => "POST /cmd",
+        }
+    }
+}
+
 #[test]
 fn see_json() {
     use crate::{
