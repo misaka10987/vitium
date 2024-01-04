@@ -2,7 +2,7 @@
 // #define _WIN32_
 
 #include "httplib.h"
-//#include "json.hpp" //we might not use it yet since the rust-C port is built
+// #include "json.hpp" //we might not use it yet since the rust-C port is built
 // #include <bits/stdc++.h> //very bad coding habit
 using std::cin;
 using std::cout;
@@ -129,7 +129,7 @@ void http_post(char server_path[], char local_path[])
 
 void sync_data()
 {
-    //todo, can't do since we don't have data structure yet...
+    // todo, can't do since we don't have data structure yet...
 }
 
 int main()
