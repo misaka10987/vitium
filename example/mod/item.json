@@ -1,13 +1,15 @@
 [
     {
         "Weapon": {
+            "uid": 0,
             "id": "example_id",
             "name": "example_name",
+            "descr": "This is an example weapon.",
             "age": [
-                "example_age"
+                "1920s"
             ],
             "atk": "11d45+14",
-            "rng": 114514,
+            "rng": 0,
             "pntr": true,
             "per_turn": 2,
             "charge": 5,
@@ -22,16 +24,19 @@
     },
     {
         "Armor": {
+            "uid": 0,
             "id": "example_id",
             "name": "example_name",
+            "descr": "This is an example armor.",
             "age": [
-                "example_age"
+                "1920s"
             ],
             "def": "11d45+14",
             "cover": [
                 "torso",
                 "head"
             ],
+            "species": "Human",
             "rerist_pntr": true,
             "price": [
                 [
@@ -43,9 +48,10 @@
     },
     {
         "Other": {
+            "uid": 0,
             "id": "example_id",
             "name": "example_name",
-            "descr": "This is description."
+            "descr": "This is description of an OtherItem."
         }
     }
 ]
