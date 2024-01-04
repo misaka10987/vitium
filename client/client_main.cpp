@@ -10,6 +10,16 @@ using std::ifstream;
 using std::ofstream;
 using std::string;
 
+void clear()
+{
+#ifdef _WIN32_
+    system("cls");
+#endif
+#ifdef _LINUX_
+    system("clear");
+#endif
+}
+
 class err_handle_pack
 {
 private:
@@ -41,12 +51,7 @@ int main()
     ifstream init_local_r;
     ofstream init_local_w;
     init_local_w.open(".init_local");
-#ifdef _WIN32_
-    system("cls");
-#endif
-#ifdef _LINUX_
-    system("clear");
-#endif
+    clear();
     try
     {
         httplib::Client cli(ip_address);
