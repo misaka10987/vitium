@@ -3,13 +3,13 @@
 
 #include "httplib.h"
 // #include <bits/stdc++.h> //very bad coding habit
-#include "data_structure.cpp" //<bits/stdc++> is already in this
 using std::cin;
 using std::cout;
 using std::endl;
 using std::ifstream;
 using std::ofstream;
 using std::string;
+#include "data_structure.cpp" //<bits/stdc++> is already in this
 
 void clear() // a simple clear screen ...
 {
@@ -60,8 +60,10 @@ void http_get(char server_path[], char local_path[])
         {
             throw res->status;
         }
-        if (!local_w.is_open())
+        if (local_w.is_open()){
+            local_w.close();
             local_w.open(local_path);
+        }
         local_w << res->body; // load the data directly into the local file
         local_w.close();
     }
@@ -93,6 +95,7 @@ int main()
         }
         local_w << res->body; // load the init directly into the local file
         local_w.close();
+        std::cerr << "connection built to server." << '\n';
     }
     catch (int e)
     {
@@ -101,5 +104,4 @@ int main()
         std::cerr << err_package_major.err_message;
         std::cerr << e + 21000 << '\n';
     }
-    std::cerr << "connection built to server." << '\n';
 }
