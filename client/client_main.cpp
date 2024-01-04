@@ -2,6 +2,7 @@
 // #define _WIN32_
 
 #include "httplib.h"
+#include "json.hpp"
 // #include <bits/stdc++.h> //very bad coding habit
 using std::cin;
 using std::cout;
