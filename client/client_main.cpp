@@ -94,7 +94,21 @@ void http_post(char server_path[], char local_path[])
                 local_w.close();
         }
         httplib::Client cli(ip_address);
-        auto res = cli.Post(server_path, "text", local_path);
+        /*         string filename;
+                filename = server_path;
+                for (int i = filename.size() - 1; i > 0; i--)
+                {
+                    if (filename[i] != '/')
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        filename.erase(0, i);
+                    }
+                }
+         */
+        auto res = cli.Post(server_path, local_path, "json"); // I don't know if this actually works
         if (res->status / 100 == 2)
         {
         }
