@@ -1,7 +1,7 @@
 use serde_derive::{Deserialize, Serialize};
 
 /// Defines a real-world player.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Player {
     pub id: String,
     pub name: String,

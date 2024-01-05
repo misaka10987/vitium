@@ -4,6 +4,12 @@ use crate::{
 };
 use serde_derive::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EditPlayer {
+    pub player: Player,
+    pub token: Option<Token>,
+}
+
 /// All possible requests are defined here.
 #[derive(Serialize, Deserialize)]
 pub enum Req {
