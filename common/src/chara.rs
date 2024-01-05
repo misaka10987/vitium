@@ -1,7 +1,7 @@
 use crate::{item::Inventory, util::Bottle, UID};
 use serde_derive::{Deserialize, Serialize};
 
-/// Defines attribution of a character.
+/// Defines attribution of a Chara.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Attr {
     pub id: String,
@@ -18,7 +18,7 @@ impl Attr {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Character {
+pub struct Chara {
     uid: i128,
     pub player: String,
     pub name: String,
@@ -27,7 +27,7 @@ pub struct Character {
     pub invt: Inventory,
 }
 
-impl Character {
+impl Chara {
     pub fn new(player: &str, name: &str, descr: &str, attr: Vec<Attr>, invt: Inventory) -> Self {
         Self {
             uid: 0,
@@ -40,7 +40,7 @@ impl Character {
     }
 }
 
-impl UID for Character {
+impl UID for Chara {
     fn uid(&self) -> i128 {
         self.uid
     }

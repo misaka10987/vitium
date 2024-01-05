@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 pub enum Regis<T> {
-    Static(Box<dyn Fn() -> T>),
+    //Static(Box<dyn Fn() -> T>),
     Dynamic(T),
 }
 
@@ -12,14 +12,14 @@ where
     /// # Examples
     /// ```
     /// use vitium_common::registry::Regis;
-    /// let reg = Regis::Static(Box::new(|| 114));
-    /// assert_eq!(reg.inst(), 114);
+    /// //let reg = Regis::Static(Box::new(|| 114));
+    /// //assert_eq!(reg.inst(), 114);
     /// let reg = Regis::Dynamic(514);
     /// assert_eq!(reg.inst(), 514);
     /// ```
     pub fn inst(&self) -> T {
         match self {
-            Self::Static(f) => f(),
+            //Self::Static(f) => f(),
             Self::Dynamic(t) => t.clone(),
         }
     }
@@ -29,4 +29,4 @@ where
 pub type RegID = String;
 
 /// Generic registry table using `HashMap`.
-pub type RegTable<'a, T> = HashMap<RegID, Regis<T>>;
+pub type RegTable<T> = HashMap<RegID, Regis<T>>;
