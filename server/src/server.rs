@@ -4,18 +4,24 @@ use axum::{
     Json, Router,
 };
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
-use tokio::sync::{Mutex, MutexGuard};
+use std::collections::{HashMap, VecDeque};
+use tokio::{
+    signal,
+    sync::{Mutex, MutexGuard},
+};
+use tower_http::trace::TraceLayer;
 use vitium_common::{
-    chara::Character,
+    chara::Chara,
     item::Item,
     player::{Player, Token},
     registry::RegTable,
-    request::EditPlayer,
+    request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
     scene::Scene,
     skill::{Prof, Skill},
     vehicle::Vehicle,
 };
+
+const CHAT_CAP: usize = 127;
 
 type REG<T> = Lazy<Mutex<RegTable<T>>>;
 macro_rules! reg {
@@ -30,16 +36,21 @@ static REG_PROF: REG<Prof> = reg!();
 static REG_SCENE: REG<Scene> = reg!();
 static REG_VEHICLE: REG<Vehicle> = reg!();
 
+static CHAT: Lazy<Mutex<VecDeque<Chat>>> = Lazy::new(|| Mutex::new(VecDeque::new()));
+
 type Map<K, V> = Lazy<Mutex<HashMap<K, V>>>;
 macro_rules! map {
     () => {
         Lazy::new(|| Mutex::new(HashMap::new()))
     };
 }
-
 static PLAYER: Map<String, Player> = map!();
 static PSWD: Map<String, String> = map!();
-static CHARA: Map<String, Character> = map!();
+static CHARA: Map<String, Chara> = map!();
+
+async fn chat() -> MutexGuard<'static, VecDeque<Chat>> {
+    CHAT.lock().await
+}
 
 async fn player() -> MutexGuard<'static, HashMap<String, Player>> {
     PLAYER.lock().await
@@ -49,7 +60,7 @@ async fn pswd() -> MutexGuard<'static, HashMap<String, String>> {
     PSWD.lock().await
 }
 
-async fn chara() -> MutexGuard<'static, HashMap<String, Character>> {
+async fn chara() -> MutexGuard<'static, HashMap<String, Chara>> {
     CHARA.lock().await
 }
 
@@ -61,8 +72,44 @@ async fn verify(token: &Token) -> bool {
     }
 }
 
+async fn recv_chat() -> (StatusCode, Json<VecDeque<Chat>>) {
+    (StatusCode::OK, Json(chat().await.clone()))
+}
+
 async fn get_player() -> (StatusCode, Json<HashMap<String, Player>>) {
     (StatusCode::OK, Json(player().await.clone()))
+}
+
+async fn get_chara() -> (StatusCode, Json<HashMap<String, Chara>>) {
+    (StatusCode::OK, Json(chara().await.clone()))
+}
+
+async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
+    if !verify(&req.token).await {
+        StatusCode::FORBIDDEN
+    } else if req.token.id != req.chat.player {
+        StatusCode::FORBIDDEN
+    } else {
+        let mut dat = chat().await;
+        while dat.len() >= CHAT_CAP {
+            dat.pop_front();
+        }
+        let mut content = req.chat;
+        dat.push_back(content.renew().clone());
+        StatusCode::ACCEPTED
+    }
+}
+
+async fn edit_pswd(Json(req): Json<EditPswd>) -> StatusCode {
+    if verify(&req.token).await {
+        *pswd()
+            .await
+            .get_mut(&req.token.id)
+            .expect("internal server error when trying to change password") = req.pswd;
+        StatusCode::ACCEPTED
+    } else {
+        StatusCode::FORBIDDEN
+    }
 }
 
 async fn edit_player(Json(req): Json<EditPlayer>) -> StatusCode {
@@ -84,11 +131,36 @@ async fn edit_player(Json(req): Json<EditPlayer>) -> StatusCode {
     }
 }
 
-// basic handler that responds with a static string
-async fn hello() -> String {
-    "Hello, World!".to_string()
+async fn edit_chara(Json(req): Json<EditChara>) -> StatusCode {
+    let mut dat = chara().await;
+    if !verify(&req.token).await {
+        return StatusCode::FORBIDDEN;
+    }
+    if let Some(chara) = dat.get_mut(&req.chara.player) {
+        *chara = req.chara;
+        StatusCode::ACCEPTED
+    } else {
+        dat.insert(req.token.id, req.chara);
+        StatusCode::CREATED
+    }
 }
 
+/// A handler always returns `Hello, world!\n`.
+async fn hello() -> &'static str {
+    "Hello, World!\n"
+}
+
+/// Defines the server. This is a more abstract one, see crate::game for specific game logics.
+///
+/// Note that only one static instance exists for this struct and it should **NEVER** be manually created.
+/// # Examples
+/// ```
+/// use crate:server:Server;
+/// Server::start()
+///     .set_port(50000)
+///     .run()
+///     .unwrap();
+/// ```
 pub struct Server {
     port: u16,
 }
@@ -101,19 +173,51 @@ impl Server {
         self.port = port;
         self
     }
+    /// The function to run the server.
     #[tokio::main]
     pub async fn run(&self) -> Result<(), std::io::Error> {
-        // initialize tracing
-        // tracing_subscriber::fmt::init();
+        // initialize logger
+        tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::DEBUG)
+            .init();
         // build our application with a route
         let app = Router::new()
             .route("/hello", get(hello))
+            .route("/chat", get(recv_chat))
             .route("/player", get(get_player))
-            .route("/player", post(edit_player));
+            .route("/chara", get(get_chara))
+            .route("/chat", post(send_chat))
+            .route("/pswd", post(edit_pswd))
+            .route("/player", post(edit_player))
+            .route("/chara", post(edit_chara))
+            .layer(TraceLayer::new_for_http());
         // run our app with hyper, listening globally on port 3000
         let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port))
             .await
-            .unwrap();
-        axum::serve(listener, app).await
+            .expect("failed to bind TCP listener");
+        axum::serve(listener, app)
+            .with_graceful_shutdown(sig_shut())
+            .await
+    }
+}
+
+async fn sig_shut() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
     }
 }

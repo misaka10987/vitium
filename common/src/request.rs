@@ -1,13 +1,52 @@
 use crate::{
-    chara::Character,
+    chara::Chara,
     player::{Player, Token},
 };
 use serde_derive::{Deserialize, Serialize};
+use std::time::SystemTime;
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Chat {
+    pub msg: String,
+    pub player: String,
+    pub time: SystemTime,
+}
+impl Chat {
+    pub fn new(msg: &str, player: &str) -> Self {
+        Self {
+            msg: msg.to_string(),
+            player: player.to_string(),
+            time: SystemTime::now(),
+        }
+    }
+    pub fn renew(&mut self) -> &mut Self {
+        self.time = SystemTime::now();
+        self
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditPlayer {
     pub player: Player,
     pub token: Option<Token>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EditChara {
+    pub chara: Chara,
+    pub token: Token,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct SendChat {
+    pub chat: Chat,
+    pub token: Token,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EditPswd {
+    pub token: Token,
+    pub pswd: String,
 }
 
 /// All possible requests are defined here.
@@ -23,14 +62,16 @@ pub enum Req {
     GetPlayer,
     /// Synchronize character list.
     GetChara,
+    /// Change password.
+    EditPswd(EditPswd),
     /// Enroll in the game.
-    Enroll(Character, Token),
+    Enroll(Chara, Token),
     /// Send out-game chat message.
     SendChat(Token),
     /// Create, edit or delete player.
-    EditPlayer(Player, Option<Token>),
+    EditPlayer(EditPlayer),
     /// Create, edit or delete character.
-    EditChara(Character, Token),
+    EditChara(EditChara),
     /// Submit in-game action.
     Act(String, Token),
     /// Issue server command.
@@ -47,10 +88,11 @@ impl Req {
             Req::GetChara => "GET /chara",
             Req::Enroll(_, _) => "POST /enroll",
             Req::SendChat(_) => "POST /chat",
-            Req::EditPlayer(_, _) => "POST player",
-            Req::EditChara(_, _) => "POST chara",
+            Req::EditPlayer(_) => "POST player",
+            Req::EditChara(_) => "POST chara",
             Req::Act(_, _) => "POST /act",
             Req::Cmd(_, _) => "POST /cmd",
+            Req::EditPswd(_) => "POST /pswd",
         }
     }
 }
@@ -58,7 +100,7 @@ impl Req {
 #[test]
 fn see_json() {
     use crate::{
-        chara::{Attr, Character},
+        chara::{Attr, Chara},
         item::{Item, OtherItem},
         player::{Player, Token},
         util::Bottle,
@@ -73,10 +115,10 @@ fn see_json() {
     ));
     let p = Player::new("example_player", "Player P Example", None);
     let t = Token::new("example_player", "example_password");
-    let c = Character::new(
+    let c = Chara::new(
         &p.id,
-        "example_character",
-        "This is an example character",
+        "example_Chara",
+        "This is an example Chara",
         vec![a],
         vec![Some(i)],
     );
@@ -87,8 +129,8 @@ fn see_json() {
     println!("{}", json(&Req::GetChara).unwrap());
     println!("{}", json(&Req::Enroll(c.clone(), t.clone())).unwrap());
     println!("{}", json(&Req::SendChat(t.clone())).unwrap());
-    println!("{}", json(&Req::EditPlayer(p, Some(t.clone()))).unwrap());
-    println!("{}", json(&Req::EditChara(c.clone(), t.clone())).unwrap());
+    //println!("{}", json(&Req::EditPlayer(p, Some(t.clone()))).unwrap());
+    //println!("{}", json(&Req::EditChara(c.clone(), t.clone())).unwrap());
     println!(
         "{}",
         json(&Req::Act("Say hello world.".to_string(), t.clone())).unwrap()
