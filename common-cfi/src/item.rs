@@ -28,18 +28,33 @@ impl C<C_Tuple_CAge_Cu64> for (Age, u64) {
 }
 
 #[repr(C)]
+/// Instance of weapon.
 pub struct CWeapon {
+    /// Unique in-game id generated automatically. Set to `0` to let the program generate.
     pub uid: i64,
+    /// String ID for `Item`, must be unique.
+    ///
+    /// Any char that is allowed in a valid filename is allowed here, like `-`.
     pub id: *const c_char,
+    /// Name dieplayed in game.
     pub name: *const c_char,
+    /// Description displayed in game.
     pub descr: *const c_char,
+    /// Age periods available.
     pub age: CVector,
+    /// Damage expression using dice, eg `1d4+1`.
     pub atk: CDice,
+    /// In milimetres, `0` for melee weapons.
     pub rng: u32,
+    /// Whether to apply penetration.
     pub pntr: bool,
+    /// Number of attacks able to inflict in a turn.
     pub per_turn: u8,
+    /// Charges remaining.
     pub charge: u8,
+    /// Charges used per attack.
     pub load: u8,
+    /// Price in different time periods.
     pub price: CPrice,
 }
 impl C<CWeapon> for Weapon {
@@ -63,10 +78,14 @@ impl C<CWeapon> for Weapon {
 
 pub type CBodyPart = *const c_char;
 
+/// Defines species for deciding if an armor is able to wear.
 #[repr(C)]
 pub enum CSpecies {
+    /// Human-liked species.
     Human,
+    /// Non human-liked species.
     NonHuman,
+    /// Let host decide if able to wear.
     Else(*const c_char),
 }
 impl C<CSpecies> for Species {
@@ -79,6 +98,7 @@ impl C<CSpecies> for Species {
     }
 }
 
+/// Instance of armor.
 #[repr(C)]
 pub struct CArmor {
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
