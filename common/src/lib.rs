@@ -1,6 +1,5 @@
 pub mod action;
 pub mod age;
-pub mod cfi;
 pub mod chara;
 pub mod dice;
 pub mod game;
