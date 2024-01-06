@@ -12,29 +12,13 @@ use tokio::{
 use tower_http::trace::TraceLayer;
 use vitium_common::{
     chara::Chara,
-    item::Item,
     player::{Player, Token},
-    registry::RegTable,
     request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
-    scene::Scene,
-    skill::{Prof, Skill},
-    vehicle::Vehicle,
 };
 
 const CHAT_CAP: usize = 127;
 
-type REG<T> = Lazy<Mutex<RegTable<T>>>;
-macro_rules! reg {
-    () => {
-        Lazy::new(|| Mutex::new(RegTable::new()))
-    };
-}
-
-static REG_ITEM: REG<Item> = reg!();
-static REG_SKILL: REG<Skill> = reg!();
-static REG_PROF: REG<Prof> = reg!();
-static REG_SCENE: REG<Scene> = reg!();
-static REG_VEHICLE: REG<Vehicle> = reg!();
+pub static mut ON: bool = false;
 
 static CHAT: Lazy<Mutex<VecDeque<Chat>>> = Lazy::new(|| Mutex::new(VecDeque::new()));
 
@@ -51,15 +35,12 @@ static CHARA: Map<String, Chara> = map!();
 async fn chat() -> MutexGuard<'static, VecDeque<Chat>> {
     CHAT.lock().await
 }
-
 async fn player() -> MutexGuard<'static, HashMap<String, Player>> {
     PLAYER.lock().await
 }
-
 async fn pswd() -> MutexGuard<'static, HashMap<String, String>> {
     PSWD.lock().await
 }
-
 async fn chara() -> MutexGuard<'static, HashMap<String, Chara>> {
     CHARA.lock().await
 }
@@ -167,6 +148,13 @@ pub struct Server {
 
 impl Server {
     pub fn start() -> Self {
+        unsafe {
+            if ON {
+                panic!("trying to start multiple server instance")
+            } else {
+                ON = true
+            }
+        }
         Server { port: 0 }
     }
     pub fn set_port(&mut self, port: u16) -> &mut Self {

@@ -1,4 +1,10 @@
 use std::collections::HashMap;
+
+/// Registry.
+/// # Todo
+/// `Static` is temporarily disabled as it makes compiler unhappy
+/// when it comes to multi-threaded situations. I'm trying to find out
+/// how to trick it.
 pub enum Regis<T> {
     //Static(Box<dyn Fn() -> T>),
     Dynamic(T),

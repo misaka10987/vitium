@@ -1,13 +1,17 @@
 use server::Server;
 
+/// Dice implementation using `ndm`.
 pub mod dice;
+/// Specific game logics goes here.
+pub mod game;
+/// Registry.
+pub mod registry;
+/// Defines the server.
 pub mod server;
-
-pub const UNTIL: u64 = 500;
 
 fn main() {
     Server::start()
         .set_port(19198)
         .run()
-        .expect("An irrecoverable internal server error occured!")
+        .expect("internal server error")
 }

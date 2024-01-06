@@ -1,10 +1,11 @@
 pub mod action;
 pub mod age;
+pub mod cfi;
 pub mod chara;
 pub mod dice;
 pub mod game;
 pub mod item;
-pub mod load;
+pub mod json;
 pub mod module;
 pub mod player;
 pub mod registry;
@@ -17,6 +18,10 @@ pub mod vehicle;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
+}
+
+pub trait ID {
+    fn id(&self) -> String;
 }
 
 pub trait UID {
