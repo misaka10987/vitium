@@ -5,7 +5,8 @@ mod json;
 mod player;
 
 pub use std::ffi::c_char;
-use std::{ffi::CString, ptr::null};
+use std::ffi::CString;
+pub use std::ptr::null;
 
 fn ptr<T>(dat: &T) -> *const T {
     Box::into_raw(Box::new(dat)) as *const T
@@ -60,8 +61,12 @@ impl<T> C<*const T> for Option<T> {
     }
 }
 
+pub trait Rust<T> {
+    fn rs(&self) -> T;
+}
+
 #[export_name = "vitium_common_cfi_hello"]
-pub extern "C" fn hello() -> *const c_char {
+extern "C" fn hello() -> *const c_char {
     "Hello, world!\n".c()
 }
 

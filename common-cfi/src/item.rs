@@ -1,30 +1,41 @@
 use std::ffi::{c_char, CStr};
 use vitium_common::{
     age::Age,
-    item::{Armor, BodyPart, Item, OtherItem, Species, Weapon},
+    item::{Armor, BodyPart, Item, OtherItem, Price, Species, Weapon},
     json::obj,
     UID,
 };
 
 use crate::{age::CAge, dice::CDice, ptr, CVector, C};
 
-pub type CPrice = CVector;
-
-//#[allow(non_camel_case_types)]
-#[repr(C)]
-pub struct C_Tuple_CAge_Cu64 {
-    v_1: CAge,
-    v_2: u64,
+/// `T=C_CAge_Cu64`
+#[repr(transparent)]
+pub struct CPrice(CVector);
+impl C<CPrice> for Price {
+    fn c(&self) -> CPrice {
+        CPrice(self.c())
+    }
 }
 
-impl C<C_Tuple_CAge_Cu64> for (Age, u64) {
-    fn c(&self) -> C_Tuple_CAge_Cu64 {
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct C_CAge_Cu64 {
+    v1: CAge,
+    v2: u64,
+}
+impl C<C_CAge_Cu64> for (Age, u64) {
+    fn c(&self) -> C_CAge_Cu64 {
         let (a, p) = self;
-        C_Tuple_CAge_Cu64 {
-            v_1: a.c(),
-            v_2: *p,
-        }
+        C_CAge_Cu64 { v1: a.c(), v2: *p }
     }
+}
+#[export_name = "tuple_get_v1_cage_cu64"]
+extern "C" fn get_v1(tuple: C_CAge_Cu64) -> CAge {
+    tuple.v1
+}
+#[export_name = "tuple_get_v2_CAge_Cu64"]
+extern "C" fn get_v2(tuple: C_CAge_Cu64) -> u64 {
+    tuple.v2
 }
 
 #[repr(C)]
@@ -76,7 +87,13 @@ impl C<CWeapon> for Weapon {
     }
 }
 
-pub type CBodyPart = *const c_char;
+#[repr(transparent)]
+pub struct CBodyPart(*const c_char);
+impl C<CBodyPart> for BodyPart {
+    fn c(&self) -> CBodyPart {
+        CBodyPart(self.c())
+    }
+}
 
 /// Defines species for deciding if an armor is able to wear.
 #[repr(C)]
@@ -180,8 +197,6 @@ impl C<CItem> for Item {
         }
     }
 }
-
-pub type CInventory = CVector;
 
 #[no_mangle]
 extern "C" fn c_obj_CItem(json: *const c_char) -> CItem {
