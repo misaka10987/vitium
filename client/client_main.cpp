@@ -4,7 +4,8 @@
 #include "httplib.h"
 // #include "json.hpp" //we might not use it yet since the rust-C port is built
 #include <bits/stdc++.h> //very bad coding habit
-#include<ncurses.h>
+#include <ncurses.h>
+#include <curses.h>
 using std::cin;
 using std::cout;
 using std::endl;
@@ -48,7 +49,8 @@ err_handle_pack err_package_major;
 ifstream local_r;
 ofstream local_w;
 string ip_address;
-
+int maxX = 0;
+int maxY = 0;
 void http_get_file(char server_path[], char local_path[])
 {
     try
@@ -164,8 +166,9 @@ int main()
     }
     initscr();
     raw();
-    keypad(stdscr,TRUE);
-    
+    keypad(stdscr, TRUE);
+    getmaxyx(stdscr, maxY, maxX);
+    mvwprintw(stdscr, 1, maxX / 2 - 3, "%s", "vitium");
     // now we have the init, we can start working
     // we will use the hash of the "username+salt" as the password, at least for now...
 }
