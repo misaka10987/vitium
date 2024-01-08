@@ -5,14 +5,14 @@ use serde_derive::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Cast {
     pub skill: String,
-    pub object: u128,
+    pub object: i128,
 }
 
 /// All in-game actions are defined here.
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Action {
-    Move(u128),
-    Wield(u128),
+    Move(i128),
+    Wield(i128),
     Cast(Cast),
     Hello,
 }
