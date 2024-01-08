@@ -144,7 +144,7 @@ int main()
     try
     {
         httplib::Client cli(ip_address);
-        auto res = cli.Get("/init.json"); // this init should provide the list of player names and stuff, actual name depends on the server-side development (^w^)
+        auto res = cli.Get("/hello"); // this init should provide the list of player names and stuff, actual name depends on the server-side development (^w^)
         if (res->status / 100 == 2)
         {
         }
