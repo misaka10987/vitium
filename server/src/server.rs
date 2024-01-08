@@ -11,30 +11,18 @@ use tokio::{
 };
 use tower_http::trace::TraceLayer;
 use vitium_common::{
+    act::Act,
     chara::Chara,
-    item::Item,
+    //module::Module,
     player::{Player, Token},
-    registry::RegTable,
     request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
-    scene::Scene,
-    skill::{Prof, Skill},
-    vehicle::Vehicle,
 };
+
+use crate::game::{game, push_act, turn};
 
 const CHAT_CAP: usize = 127;
 
-type REG<T> = Lazy<Mutex<RegTable<T>>>;
-macro_rules! reg {
-    () => {
-        Lazy::new(|| Mutex::new(RegTable::new()))
-    };
-}
-
-static REG_ITEM: REG<Item> = reg!();
-static REG_SKILL: REG<Skill> = reg!();
-static REG_PROF: REG<Prof> = reg!();
-static REG_SCENE: REG<Scene> = reg!();
-static REG_VEHICLE: REG<Vehicle> = reg!();
+pub static mut ON: bool = false;
 
 static CHAT: Lazy<Mutex<VecDeque<Chat>>> = Lazy::new(|| Mutex::new(VecDeque::new()));
 
@@ -51,15 +39,12 @@ static CHARA: Map<String, Chara> = map!();
 async fn chat() -> MutexGuard<'static, VecDeque<Chat>> {
     CHAT.lock().await
 }
-
 async fn player() -> MutexGuard<'static, HashMap<String, Player>> {
     PLAYER.lock().await
 }
-
 async fn pswd() -> MutexGuard<'static, HashMap<String, String>> {
     PSWD.lock().await
 }
-
 async fn chara() -> MutexGuard<'static, HashMap<String, Chara>> {
     CHARA.lock().await
 }
@@ -145,6 +130,23 @@ async fn edit_chara(Json(req): Json<EditChara>) -> StatusCode {
     }
 }
 
+async fn act(Json(req): Json<Act>) -> StatusCode {
+    if !verify(&req.token).await {
+        StatusCode::FORBIDDEN
+    } else if req.turn != *turn().await {
+        StatusCode::LOCKED
+    } else if let Some(c) = chara().await.get(&req.token.id) {
+        if c.player == req.token.id {
+            push_act(req).await;
+            StatusCode::ACCEPTED
+        } else {
+            StatusCode::UNAUTHORIZED
+        }
+    } else {
+        StatusCode::NOT_FOUND
+    }
+}
+
 /// A handler always returns `Hello, world!\n`.
 async fn hello() -> &'static str {
     "Hello, World!\n"
@@ -163,10 +165,18 @@ async fn hello() -> &'static str {
 /// ```
 pub struct Server {
     port: u16,
+    //pub module:Vec<Module>,
 }
 
 impl Server {
     pub fn start() -> Self {
+        unsafe {
+            if ON {
+                panic!("trying to start multiple server instance")
+            } else {
+                ON = true
+            }
+        }
         Server { port: 0 }
     }
     pub fn set_port(&mut self, port: u16) -> &mut Self {
@@ -190,11 +200,15 @@ impl Server {
             .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
             .route("/chara", post(edit_chara))
+            .route("/act", post(act))
             .layer(TraceLayer::new_for_http());
-        // run our app with hyper, listening globally on port 3000
+        // listening globally on port 3000
         let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port))
             .await
             .expect("failed to bind TCP listener");
+        // start the internal game
+        tokio::spawn(game());
+        // run our app with hyper
         axum::serve(listener, app)
             .with_graceful_shutdown(sig_shut())
             .await

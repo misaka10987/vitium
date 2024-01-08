@@ -1,4 +1,4 @@
-use crate::{age::Age, dice::Dice, UID};
+use crate::{age::Age, dice::Dice, ID, UID};
 use serde_derive::{Deserialize, Serialize};
 pub type Price = Vec<(Age, u64)>;
 
@@ -193,6 +193,16 @@ pub enum Item {
     Weapon(Weapon),
     Armor(Armor),
     Other(OtherItem),
+}
+
+impl ID for Item {
+    fn id(&self) -> String {
+        match self {
+            Item::Weapon(i) => i.id.clone(),
+            Item::Armor(i) => i.id.clone(),
+            Item::Other(i) => i.id.clone(),
+        }
+    }
 }
 
 impl UID for Item {

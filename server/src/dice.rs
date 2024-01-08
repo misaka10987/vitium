@@ -1,4 +1,5 @@
-use vitium_common::dice::{DError, DResult, Dice};
+pub use vitium_common::dice::Dice;
+use vitium_common::dice::{DError, DResult};
 
 /// Inplemented for dice.
 pub trait Roll {
