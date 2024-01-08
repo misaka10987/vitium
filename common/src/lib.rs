@@ -1,4 +1,4 @@
-pub mod action;
+pub mod act;
 pub mod age;
 pub mod chara;
 pub mod dice;

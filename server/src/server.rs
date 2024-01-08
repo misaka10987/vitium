@@ -11,10 +11,14 @@ use tokio::{
 };
 use tower_http::trace::TraceLayer;
 use vitium_common::{
+    act::Act,
     chara::Chara,
+    //module::Module,
     player::{Player, Token},
     request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
 };
+
+use crate::game::{game, push_act, turn};
 
 const CHAT_CAP: usize = 127;
 
@@ -126,6 +130,23 @@ async fn edit_chara(Json(req): Json<EditChara>) -> StatusCode {
     }
 }
 
+async fn act(Json(req): Json<Act>) -> StatusCode {
+    if !verify(&req.token).await {
+        StatusCode::FORBIDDEN
+    } else if req.turn != *turn().await {
+        StatusCode::LOCKED
+    } else if let Some(c) = chara().await.get(&req.token.id) {
+        if c.player == req.token.id {
+            push_act(req).await;
+            StatusCode::ACCEPTED
+        } else {
+            StatusCode::UNAUTHORIZED
+        }
+    } else {
+        StatusCode::NOT_FOUND
+    }
+}
+
 /// A handler always returns `Hello, world!\n`.
 async fn hello() -> &'static str {
     "Hello, World!\n"
@@ -144,6 +165,7 @@ async fn hello() -> &'static str {
 /// ```
 pub struct Server {
     port: u16,
+    //pub module:Vec<Module>,
 }
 
 impl Server {
@@ -178,11 +200,15 @@ impl Server {
             .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
             .route("/chara", post(edit_chara))
+            .route("/act", post(act))
             .layer(TraceLayer::new_for_http());
-        // run our app with hyper, listening globally on port 3000
+        // listening globally on port 3000
         let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port))
             .await
             .expect("failed to bind TCP listener");
+        // start the internal game
+        tokio::spawn(game());
+        // run our app with hyper
         axum::serve(listener, app)
             .with_graceful_shutdown(sig_shut())
             .await

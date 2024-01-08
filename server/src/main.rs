@@ -1,5 +1,7 @@
 use server::Server;
 
+/// In-game characters.
+pub mod chara;
 /// Dice implementation using `ndm`.
 pub mod dice;
 /// Specific game logics goes here.
