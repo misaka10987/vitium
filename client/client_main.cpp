@@ -169,7 +169,7 @@ int main()
     keypad(stdscr, TRUE);
     getmaxyx(stdscr, maxY, maxX);
     mvwprintw(stdscr, 0, maxX / 2 - 3,"vitium");
-    mvwprintw(stdscr,0,0,"IP: %s",ip_address);
+    mvwprintw(stdscr,0,0,"IP: %s",ip_address.c_str());
     char a;
     cin>>a;
     // now we have the init, we can start working
