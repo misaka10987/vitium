@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "any": "cpp",
+        "expected": "cpp",
+        "optional": "cpp",
+        "variant": "cpp",
+        "utility": "cpp"
+    },
+    "cmake.configureOnOpen": false
+}

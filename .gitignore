@@ -1,4 +1,5 @@
-**/.vscode
-**/target
-**/Cargo.lock
-/client/test-call-rust
+*/target
+*/Cargo.lock
+*/.vscode
+client_main
+a.out

@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: clang++ build active file",
+			"command": "/usr/bin/clang++",
+			"args": [
+				"-fcolor-diagnostics",
+				"-fansi-escape-codes",
+				"-std=c++17",
+				"-g",
+				"${file}",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}",
+				"-lncurses"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: /usr/bin/clang++"
+		}
+	]
+}
