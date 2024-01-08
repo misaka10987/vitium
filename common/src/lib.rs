@@ -1,24 +1,30 @@
+pub mod action;
 pub mod age;
-pub mod armor;
-pub mod attr;
-pub mod bottle;
-pub mod character;
+pub mod chara;
 pub mod dice;
-pub mod envelop;
+pub mod game;
 pub mod item;
+pub mod load;
+pub mod module;
 pub mod player;
-pub mod price;
-pub mod prof;
 pub mod registry;
 pub mod request;
 pub mod response;
+pub mod scene;
 pub mod skill;
 pub mod util;
 pub mod vehicle;
-pub mod weapon;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
+}
+
+pub trait UID {
+    fn uid(&self) -> i128;
+    fn set_uid(&mut self, uid: i128) -> &mut Self;
+    fn no_uid(&self) -> bool {
+        self.uid() == 0
+    }
 }
 
 #[cfg(test)]
