@@ -168,7 +168,10 @@ int main()
     raw();
     keypad(stdscr, TRUE);
     getmaxyx(stdscr, maxY, maxX);
-    mvwprintw(stdscr, 1, maxX / 2 - 3, "%s", "vitium");
+    mvwprintw(stdscr, 0, maxX / 2 - 3,"vitium");
+    mvwprintw(stdscr,0,0,"IP: %s",ip_address);
+    char a;
+    cin>>a;
     // now we have the init, we can start working
     // we will use the hash of the "username+salt" as the password, at least for now...
 }

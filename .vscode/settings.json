@@ -5,5 +5,6 @@
         "optional": "cpp",
         "variant": "cpp",
         "utility": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }
