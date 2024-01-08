@@ -3,3 +3,4 @@
 **/Cargo.lock
 /client/test-call-rust
 /common-cfi/vitium_common.h
+/common-cfi/test

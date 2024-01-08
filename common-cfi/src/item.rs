@@ -32,14 +32,6 @@ impl Rust<(Age, u64)> for C_CAge_Cu64 {
         (self.v1.rs(), self.v2)
     }
 }
-#[export_name = "tuple_get_v1_cage_cu64"]
-extern "C" fn get_v1(tuple: C_CAge_Cu64) -> CAge {
-    tuple.v1
-}
-#[export_name = "tuple_get_v2_CAge_Cu64"]
-extern "C" fn get_v2(tuple: C_CAge_Cu64) -> u64 {
-    tuple.v2
-}
 
 #[repr(C)]
 /// Instance of weapon.
