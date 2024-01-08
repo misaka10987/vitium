@@ -11,7 +11,7 @@ using std::endl;
 using std::ifstream;
 using std::ofstream;
 using std::string;
-#include "data_structure.cpp" //<bits/stdc++> is already in this
+#include "data_structure.hpp" //<bits/stdc++> is already in this
 
 void clear_cli() // a simple clear screen ...
 {
