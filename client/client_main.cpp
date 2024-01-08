@@ -3,7 +3,8 @@
 
 #include "httplib.h"
 // #include "json.hpp" //we might not use it yet since the rust-C port is built
-// #include <bits/stdc++.h> //very bad coding habit
+#include <bits/stdc++.h> //very bad coding habit
+#include<ncurses.h>
 using std::cin;
 using std::cout;
 using std::endl;
@@ -12,7 +13,7 @@ using std::ofstream;
 using std::string;
 #include "data_structure.cpp" //<bits/stdc++> is already in this
 
-void clear() // a simple clear screen ...
+void clear_cli() // a simple clear screen ...
 {
 #ifdef _WIN32_
     system("cls");
@@ -48,7 +49,7 @@ ifstream local_r;
 ofstream local_w;
 string ip_address;
 
-void http_get(char server_path[], char local_path[])
+void http_get_file(char server_path[], char local_path[])
 {
     try
     {
@@ -82,7 +83,7 @@ void http_get(char server_path[], char local_path[])
     }
 }
 
-void http_post(char server_path[], char local_path[])
+void http_post_file(char server_path[], char local_path[])
 {
     try
     {
@@ -137,7 +138,7 @@ int main()
     cout << "Please input your server IP : ";
     cin >> ip_address;
     local_w.open(".data/.local");
-    clear();
+    clear_cli();
     try
     {
         httplib::Client cli(ip_address);
@@ -161,6 +162,10 @@ int main()
         std::cerr << "HTTP connection initialize error ";
         std::cerr << e + 21000 << '\n';
     }
+    initscr();
+    raw();
+    keypad(stdscr,TRUE);
+    
     // now we have the init, we can start working
     // we will use the hash of the "username+salt" as the password, at least for now...
 }
