@@ -218,7 +218,7 @@ impl Server {
     pub async fn run(&self) -> Result<(), std::io::Error> {
         // initialize logger
         tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::DEBUG)
+            .with_max_level(tracing::Level::TRACE)
             .init();
         // build our application with a route
         let app = Router::new()

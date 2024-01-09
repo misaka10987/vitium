@@ -14,6 +14,7 @@ pub mod request;
 pub mod response;
 pub mod scene;
 pub mod skill;
+pub mod story;
 pub mod util;
 pub mod vehicle;
 

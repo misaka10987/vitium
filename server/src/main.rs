@@ -14,6 +14,8 @@ pub mod load;
 pub mod registry;
 /// Save the game.
 pub mod save;
+/// In-game scenario.
+pub mod scene;
 /// Defines the server.
 pub mod server;
 

@@ -4,10 +4,14 @@ use serde_derive::{Deserialize, Serialize};
 /// Instance of scene.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Scene {
-    uid: i128,
+    /// Automatically generated uid.
+    pub uid: i128,
+    /// String id.
     pub id: String,
+    /// Displayed name.
     pub name: String,
-    pub description: String,
+    /// Description showed when a character enters.
+    pub descr: String,
 }
 
 impl ID for Scene {

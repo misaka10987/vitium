@@ -111,6 +111,10 @@ pub async fn push_act(raw_act: Act) -> StatusCode {
 }
 
 static ON_GAME: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
+pub async fn on() -> bool {
+    *ON_GAME.lock().await
+}
+
 static TERM_GAME: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 
 /// This sends a terminate signal to the game instance.
