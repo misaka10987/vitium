@@ -23,9 +23,13 @@ int main()
     auto story_window{cc::widget::window{{17, 0, maxY - 17, maxX}, cc::terminal::main_win}};
     auto buffer_window{cc::widget::window{{maxY, 0, 1, maxX}, cc::terminal::main_win}};
     // std::thread input_proc(input_func);
-    info_window << cc::format(2, 2)("HelloWorld from info-window!");
-    stat_window << cc::format("Hello !", '\n', "From Stat");
+    info_window << cc::format(1, 1)("HelloWorld from info-window!");
+    stat_window << cc::format(1, 1)("Hello !\n From Stat");
     story_window << cc::format(5)("Welcome to vitium client (under dev) !");
-    buffer_window.get_char();
+    info_window.refresh();
+    stat_window.refresh();
+    story_window.refresh();
+    buffer_window.refresh();
+    main_win.get_char();
     return 0;
 }
