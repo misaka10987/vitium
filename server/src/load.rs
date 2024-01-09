@@ -1,0 +1,11 @@
+use crate::chara::chara;
+use tokio::fs::read_to_string;
+use vitium_common::json::obj;
+
+pub async fn load(path: &str) {
+    chara()
+        .await
+        .clone_from(&obj(&read_to_string(format!("{}/chara.json", path))
+            .await
+            .expect("failed to load")))
+}

@@ -1,6 +1,8 @@
 use crate::{
     chara::chara,
+    load::load,
     registry::{reg_item, reg_prof, reg_scene, reg_skill, reg_vehicle},
+    save::save,
 };
 use axum::http::StatusCode;
 use once_cell::sync::Lazy;
@@ -119,12 +121,17 @@ pub async fn term_game() {
 /// The game main function.
 pub async fn game() {
     *ON_GAME.lock().await = true;
+    load("./save").await;
+    let last_save: i128 = 0;
     loop {
         if *TERM_GAME.lock().await {
-            return;
+            break save("./save").await;
+        }
+        if last_save > 15 {
+            save("./save").await;
         }
         if let Some(a) = act().await.pop_front() {
-            proc(a.action, a.chara).await;
+            proc(a.action, a.chara).await
         }
     }
 }
@@ -141,6 +148,9 @@ async fn proc(action: Action, character: i128) {
 async fn hello(character: i128) {
     println!(
         "{}: \"Hello, world!\"",
-        chara().await.get(&character).unwrap().name
+        match chara().await.get(&character) {
+            Some(c) => c.name.clone(),
+            None => format!("[character uid={} non exist]", character),
+        }
     )
 }

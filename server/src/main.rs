@@ -6,8 +6,12 @@ pub mod chara;
 pub mod dice;
 /// Specific game logics goes here.
 pub mod game;
+/// Load game saves.
+pub mod load;
 /// Registry.
 pub mod registry;
+/// Save the game.
+pub mod save;
 /// Defines the server.
 pub mod server;
 
