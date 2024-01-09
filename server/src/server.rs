@@ -1,10 +1,13 @@
+use crate::game;
+use crate::game::{push_act, turn};
 use axum::{
     http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
 use once_cell::sync::Lazy;
-use std::collections::{HashMap, VecDeque};
+use serde_derive::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet, VecDeque};
 use tokio::{
     signal,
     sync::{Mutex, MutexGuard},
@@ -13,12 +16,18 @@ use tower_http::trace::TraceLayer;
 use vitium_common::{
     act::Act,
     chara::Chara,
+    cmd::Cmd,
     //module::Module,
     player::{Player, Token},
     request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
 };
 
-use crate::game::{game, push_act, turn};
+#[derive(Serialize, Deserialize)]
+pub struct ServerConfig {
+    pub port: u16,
+    pub chat_cap: usize,
+    pub module: Vec<String>,
+}
 
 const CHAT_CAP: usize = 127;
 
@@ -35,6 +44,7 @@ macro_rules! map {
 static PLAYER: Map<String, Player> = map!();
 static PSWD: Map<String, String> = map!();
 static CHARA: Map<String, Chara> = map!();
+static OP: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
 
 async fn chat() -> MutexGuard<'static, VecDeque<Chat>> {
     CHAT.lock().await
@@ -48,6 +58,9 @@ async fn pswd() -> MutexGuard<'static, HashMap<String, String>> {
 async fn chara() -> MutexGuard<'static, HashMap<String, Chara>> {
     CHARA.lock().await
 }
+async fn op() -> MutexGuard<'static, HashSet<String>> {
+    OP.lock().await
+}
 
 async fn verify(token: &Token) -> bool {
     if let Some(pswd) = pswd().await.get(&token.id) {
@@ -55,6 +68,10 @@ async fn verify(token: &Token) -> bool {
     } else {
         false
     }
+}
+
+async fn access(token: Token) -> bool {
+    verify(&token).await && op().await.contains(&token.id)
 }
 
 async fn recv_chat() -> (StatusCode, Json<VecDeque<Chat>>) {
@@ -132,18 +149,31 @@ async fn edit_chara(Json(req): Json<EditChara>) -> StatusCode {
 
 async fn act(Json(req): Json<Act>) -> StatusCode {
     if !verify(&req.token).await {
+        // token is invalid
         StatusCode::FORBIDDEN
     } else if req.turn != *turn().await {
+        // the current turn has not yet ended but a new request is received
         StatusCode::LOCKED
     } else if let Some(c) = chara().await.get(&req.token.id) {
         if c.player == req.token.id {
             push_act(req).await;
             StatusCode::ACCEPTED
         } else {
+            // the request has a token but not matches the character it operates on
             StatusCode::UNAUTHORIZED
         }
     } else {
+        // trying to request act on a non-exist character
         StatusCode::NOT_FOUND
+    }
+}
+
+async fn cmd(Json(req): Json<Cmd>) -> StatusCode {
+    if access(req.token).await {
+        game::cmd(req.cmd).await;
+        StatusCode::ACCEPTED
+    } else {
+        StatusCode::FORBIDDEN
     }
 }
 
@@ -188,7 +218,7 @@ impl Server {
     pub async fn run(&self) -> Result<(), std::io::Error> {
         // initialize logger
         tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::DEBUG)
+            .with_max_level(tracing::Level::TRACE)
             .init();
         // build our application with a route
         let app = Router::new()
@@ -201,13 +231,12 @@ impl Server {
             .route("/player", post(edit_player))
             .route("/chara", post(edit_chara))
             .route("/act", post(act))
+            .route("/cmd", post(cmd))
             .layer(TraceLayer::new_for_http());
         // listening globally on port 3000
         let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port))
             .await
             .expect("failed to bind TCP listener");
-        // start the internal game
-        tokio::spawn(game());
         // run our app with hyper
         axum::serve(listener, app)
             .with_graceful_shutdown(sig_shut())

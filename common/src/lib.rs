@@ -1,6 +1,8 @@
 pub mod act;
 pub mod age;
 pub mod chara;
+pub mod cmd;
+pub mod config;
 pub mod dice;
 pub mod game;
 pub mod item;
@@ -12,6 +14,7 @@ pub mod request;
 pub mod response;
 pub mod scene;
 pub mod skill;
+pub mod story;
 pub mod util;
 pub mod vehicle;
 

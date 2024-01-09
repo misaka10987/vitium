@@ -6,7 +6,7 @@ pub type Price = Vec<(Age, u64)>;
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Weapon {
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    uid: i128,
+    pub uid: i128,
     /// String ID for `Item`, must be unique.
     ///
     /// Any char that is allowed in a valid filename is allowed here, like `-`.

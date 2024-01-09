@@ -5,14 +5,14 @@ use serde_derive::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Cast {
     pub skill: String,
-    pub object: u128,
+    pub object: i128,
 }
 
 /// All in-game actions are defined here.
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Action {
-    Move(u128),
-    Wield(u128),
+    Move(i128),
+    Wield(i128),
     Cast(Cast),
     Hello,
 }
@@ -27,10 +27,11 @@ pub struct Act {
 }
 
 impl UID for Act {
+    /// UID getter.
     fn uid(&self) -> i128 {
         self.uid
     }
-
+    /// UID setter.
     fn set_uid(&mut self, uid: i128) -> &mut Self {
         self.uid = uid;
         self
