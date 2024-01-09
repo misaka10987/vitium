@@ -67,7 +67,7 @@ macro_rules! load_reg {
         let mut reg = $reg;
         for i in obj::<Vec<$type>>(&buf) {
             if reg.contains_key(&i.id()) {
-                panic!("{} tried to register an already-exist id", $path)
+                panic!("{} tried to register an existing id", $path)
             }
             reg.insert(i.id(), Regis::Dynamic(i));
         }

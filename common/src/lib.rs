@@ -1,6 +1,7 @@
 pub mod act;
 pub mod age;
 pub mod chara;
+pub mod cmd;
 pub mod dice;
 pub mod game;
 pub mod item;

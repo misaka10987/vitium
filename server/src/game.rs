@@ -1,8 +1,8 @@
+pub use crate::load::load;
+pub use crate::save::save;
 use crate::{
     chara::chara,
-    load::load,
     registry::{reg_item, reg_prof, reg_scene, reg_skill, reg_vehicle},
-    save::save,
 };
 use axum::http::StatusCode;
 use once_cell::sync::Lazy;
@@ -10,6 +10,7 @@ use std::collections::VecDeque;
 use tokio::sync::{Mutex, MutexGuard};
 use vitium_common::{
     act::{Act, Action},
+    cmd::Command,
     item::Item,
     scene::Scene,
     skill::{Prof, Skill},
@@ -133,6 +134,12 @@ pub async fn game() {
         if let Some(a) = act().await.pop_front() {
             proc(a.action, a.chara).await
         }
+    }
+}
+
+pub async fn cmd(command: Command) {
+    match command {
+        Command::Hello => println!("[cmd] Hello, world!"),
     }
 }
 

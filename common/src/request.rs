@@ -1,5 +1,6 @@
 use crate::{
     chara::Chara,
+    cmd::Cmd,
     player::{Player, Token},
 };
 use serde_derive::{Deserialize, Serialize};
@@ -75,7 +76,7 @@ pub enum Req {
     /// Submit in-game action.
     Act(String, Token),
     /// Issue server command.
-    Cmd(String, Token),
+    Cmd(Cmd),
 }
 
 impl Req {
@@ -91,7 +92,7 @@ impl Req {
             Req::EditPlayer(_) => "POST player",
             Req::EditChara(_) => "POST chara",
             Req::Act(_, _) => "POST /act",
-            Req::Cmd(_, _) => "POST /cmd",
+            Req::Cmd(_) => "POST /cmd",
             Req::EditPswd(_) => "POST /pswd",
         }
     }
@@ -135,8 +136,8 @@ fn see_json() {
         "{}",
         json(&Req::Act("Say hello world.".to_string(), t.clone())).unwrap()
     );
-    println!(
-        "{}",
-        json(&Req::Cmd("help --help".to_string(), t.clone())).unwrap()
-    )
+    // println!(
+    //     "{}",
+    //     json(&Req::Cmd("help --help".to_string(), t.clone())).unwrap()
+    // )
 }
