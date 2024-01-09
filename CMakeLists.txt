@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # aux_source_directory(client DIR_SRCS)
 find_package(Curses REQUIRED)
-include_directories(client ${CURSES_INCLUDE_DIR})
+include_directories(vitium ${CURSES_INCLUDE_DIR})
 
 add_executable(client_main.cpp)
 target_link_libraries(vitium ${CURSES_LIBRARIES})
