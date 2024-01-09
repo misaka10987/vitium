@@ -1,5 +1,5 @@
 #include<bits/stdc++.h>
-#include<ncurses.h>
+#include"cxxcurses/cxxcurses.hpp"
 int main()
 {
     std::cout<<"helloworld";
