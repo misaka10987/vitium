@@ -20,3 +20,10 @@ jobs:
       run: cd common && cargo build && cd ..
     - name: vitium-server
       run: cd server && cargo build && cd ..
+    - name: vitium-common-cfi
+      run: cd common-cfi && cargo build && cd ..
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v3
+      with:
+          name: common-cfi lib file
+          path: common-cfi/target/debug/*.a
