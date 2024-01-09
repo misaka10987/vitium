@@ -1,6 +1,21 @@
-#include<bits/stdc++.h>
-#include"cxxcurses/cxxcurses.hpp"
+#include <bits/stdc++.h> //very bad habit
+#include "cxxcurses/cxxcurses.hpp"
+namespace cc = cxxcurses;
+
+// global vars here
+int maxX,maxY;
+std::ostringstream my_input_stream;
+
+char input_func()
+{
+}
+
 int main()
 {
-    std::cout<<"helloworld";
+    // init
+    // std::thread input_proc(input_func);
+    const auto& main_win = cc::terminal::main_win;
+    cc::terminal init;
+    // main_win.max_yx();
+    main_win << cc::format(1)("vitium");
 }
