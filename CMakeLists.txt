@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 2.8) 
+project(vitium)
+
+# specify the C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+aux_source_directory(client DIR_SRCS)
+find_package(Curses REQUIRED)
+include_directories(${DIR_SRCS} ${CURSES_INCLUDE_DIR})
+add_subdirectory(client)
+
+add_executable(client_main.cpp)
+target_link_libraries(vitium ${CURSES_LIBRARIES})
