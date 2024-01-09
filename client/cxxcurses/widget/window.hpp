@@ -11,8 +11,8 @@
 #define CXXCURSES_WINDOW_WINDOW_HPP
 
 #include <curses.h>
-#include "cxxcurses/raw.hpp"
-#include "cxxcurses/widget/widget.hpp"
+#include "../raw.hpp"
+#include "widget.hpp"
 
 namespace cxxcurses::widget
 {
