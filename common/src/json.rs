@@ -15,7 +15,7 @@ pub fn obj<'a, T>(json: &'a str) -> T
 where
     T: de::Deserialize<'a>,
 {
-    serde_json::from_str(json).unwrap()
+    serde_json::from_str(json).expect("deserialize error")
 }
 
 mod test {
