@@ -7,12 +7,13 @@ use axum::{
 };
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet, VecDeque};
+use tokio::fs;
 use tokio::{
     signal,
     sync::{Mutex, MutexGuard},
 };
 use tower_http::trace::TraceLayer;
-use vitium_common::config::ServerConfig;
+use vitium_common::config::{obj, toml, ServerConfig};
 use vitium_common::{
     act::Act,
     chara::Chara,
@@ -195,25 +196,33 @@ async fn hello() -> &'static str {
 ///     .run()
 ///     .unwrap();
 /// ```
-pub struct Server {
-    port: u16,
-    //pub module:Vec<Module>,
-}
+pub struct Server;
 
 impl Server {
     pub fn start() -> Self {
-        unsafe {
-            if ON {
-                panic!("trying to start multiple server instance")
-            } else {
-                ON = true
-            }
-        }
-        Server { port: 0 }
+        Server
     }
-    pub fn set_port(&mut self, port: u16) -> &mut Self {
-        self.port = port;
-        self
+    pub async fn config(&self, path: &str) -> Self {
+        // Generates a default config file if non exist.
+        if !fs::try_exists(path)
+            .await
+            .expect(&format!("{} io error", path))
+        {
+            fs::File::create(path)
+                .await
+                .expect(&format!("{} io error", path));
+            let c = toml(config().await.clone());
+            fs::write(path, c)
+                .await
+                .expect(&format!("{} io error", path));
+            return Server;
+        }
+        config().await.clone_from(&obj::<ServerConfig>(
+            &fs::read_to_string(path)
+                .await
+                .expect(&format!("{} io error", path)),
+        ));
+        Server
     }
     /// The function to run the server.
     #[tokio::main]
@@ -222,6 +231,7 @@ impl Server {
         tracing_subscriber::fmt()
             .with_max_level(tracing::Level::TRACE)
             .init();
+        self.config("./config.toml").await;
         // build our application with a route
         let app = Router::new()
             .route("/hello", get(hello))
@@ -236,7 +246,7 @@ impl Server {
             .route("/cmd", post(cmd))
             .layer(TraceLayer::new_for_http());
         // listening globally on port 3000
-        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port))
+        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config().await.port))
             .await
             .expect("failed to bind TCP listener");
         // run our app with hyper

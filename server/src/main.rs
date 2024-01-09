@@ -2,8 +2,6 @@ use server::Server;
 
 /// In-game characters.
 pub mod chara;
-/// Configuration loader.
-pub mod config;
 /// Dice implementation using `ndm`.
 pub mod dice;
 /// Specific game logics goes here.
@@ -20,8 +18,5 @@ pub mod scene;
 pub mod server;
 
 fn main() {
-    Server::start()
-        .set_port(19198)
-        .run()
-        .expect("internal server error")
+    Server::start().run().expect("internal server error")
 }
