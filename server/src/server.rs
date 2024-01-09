@@ -237,8 +237,6 @@ impl Server {
         let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port))
             .await
             .expect("failed to bind TCP listener");
-        // start the internal game
-        tokio::spawn(game::game());
         // run our app with hyper
         axum::serve(listener, app)
             .with_graceful_shutdown(sig_shut())

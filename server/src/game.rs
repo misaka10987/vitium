@@ -88,16 +88,14 @@ pub async fn vehicle(id: &str) -> Vehicle {
         .to_owned()
 }
 
-/// Starts from `0`, defines how many turns has passed after the game starts.
 static TURN: Lazy<Mutex<i128>> = Lazy::new(|| Mutex::new(255));
-
+/// Starts from `0`, defines how many turns has passed after the game starts.
 pub async fn turn() -> MutexGuard<'static, i128> {
     TURN.lock().await
 }
 
-/// Act queue pushed by request handlers and poped by the game.
 static ACT: Lazy<Mutex<VecDeque<Act>>> = Lazy::new(|| Mutex::new(VecDeque::<Act>::new()));
-
+/// Act queue pushed by request handlers and poped by the game.
 pub async fn act() -> MutexGuard<'static, VecDeque<Act>> {
     ACT.lock().await
 }
@@ -107,6 +105,7 @@ pub async fn push_act(raw_act: Act) -> StatusCode {
     self::act()
         .await
         .push_back(raw_act.clone().set_uid(gen_uid().await).to_owned());
+    tokio::spawn(update());
     StatusCode::ACCEPTED
 }
 
@@ -123,45 +122,44 @@ pub async fn term_game() {
     *TERM_GAME.lock().await = true;
 }
 
-/// The game main function.
-pub async fn game() {
-    *ON_GAME.lock().await = true;
-    load("./save").await;
-    let last_save: i128 = 0;
-    loop {
-        if *TERM_GAME.lock().await {
-            break save("./save").await;
-        }
-        if last_save > 15 {
-            save("./save").await;
-        }
-        if let Some(a) = act().await.pop_front() {
-            proc(a.action, a.chara).await
-        }
-    }
-}
-
+/// Process server command.
 pub async fn cmd(command: Command) {
     match command {
         Command::Hello => println!("[cmd] Hello, world!"),
     }
 }
 
-async fn proc(action: Action, character: i128) {
-    match action {
-        Action::Move(_) => todo!(),
-        Action::Wield(_) => todo!(),
-        Action::Cast(_) => todo!(),
-        Action::Hello => hello(character).await,
+/// Calculate all waiting requests.
+async fn update() {
+    while let Some(a) = act().await.pop_front() {
+        if let Err(s) = proc(a).await {
+            println!("invalid act: {}", s)
+        }
     }
 }
 
-async fn hello(character: i128) {
+/// Internal `Act` process function.
+async fn proc(mut act: Act) -> Result<(), String> {
+    act.set_uid(gen_uid().await);
+    if act.turn != *turn().await {
+        return Err(format!("act[uid={}] non in correct turn", act.uid()));
+    }
+    match act.action {
+        Action::Move(_) => todo!(),
+        Action::Wield(_) => todo!(),
+        Action::Cast(_) => todo!(),
+        Action::Hello => hello(act).await,
+    }
+    Ok(())
+}
+
+/// Act's helloworld.
+async fn hello(act: Act) {
     println!(
         "{}: \"Hello, world!\"",
-        match chara().await.get(&character) {
+        match chara().await.get(&act.chara) {
             Some(c) => c.name.clone(),
-            None => format!("[character uid={} non exist]", character),
+            None => format!("[!chara uid={}]", act.chara),
         }
     )
 }

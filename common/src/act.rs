@@ -27,10 +27,11 @@ pub struct Act {
 }
 
 impl UID for Act {
+    /// UID getter.
     fn uid(&self) -> i128 {
         self.uid
     }
-
+    /// UID setter.
     fn set_uid(&mut self, uid: i128) -> &mut Self {
         self.uid = uid;
         self
