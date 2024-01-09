@@ -2,7 +2,7 @@ pub use crate::load::load;
 pub use crate::save::save;
 use crate::{
     chara::chara,
-    registry::{reg_item, reg_prof, reg_scene, reg_skill, reg_vehicle},
+    registry::{reg_item, reg_scene, reg_vehicle},
 };
 use axum::http::StatusCode;
 use once_cell::sync::Lazy;
@@ -13,7 +13,6 @@ use vitium_common::{
     cmd::Command,
     item::Item,
     scene::Scene,
-    skill::{Prof, Skill},
     vehicle::Vehicle,
     UID,
 };
@@ -38,28 +37,6 @@ pub async fn item(id: &str) -> Item {
         .inst()
         .set_uid(gen_uid().await)
         .to_owned()
-}
-
-/// Returns new instance of `id`.
-/// # Panic
-/// Panics if `id` is not registered.
-pub async fn skill(id: &str) -> Skill {
-    reg_skill()
-        .await
-        .get(id)
-        .expect(&format!("skill {} non registered", id))
-        .inst()
-}
-
-/// Returns new instance of `id`.
-/// # Panic
-/// Panics if `id` is not registered.
-pub async fn prof(id: &str) -> Prof {
-    reg_prof()
-        .await
-        .get(id)
-        .expect(&format!("profession {} non registered", id))
-        .inst()
 }
 
 /// Returns new instance of `id`.
