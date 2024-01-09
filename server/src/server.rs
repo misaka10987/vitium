@@ -12,6 +12,7 @@ use tokio::{
     sync::{Mutex, MutexGuard},
 };
 use tower_http::trace::TraceLayer;
+use vitium_common::config::ServerConfig;
 use vitium_common::{
     act::Act,
     chara::Chara,
@@ -21,7 +22,16 @@ use vitium_common::{
     request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
 };
 
-const CHAT_CAP: usize = 127;
+static CONFIG: Lazy<Mutex<ServerConfig>> = Lazy::new(|| {
+    Mutex::new(ServerConfig {
+        port: 19198,
+        chat_cap: 127,
+        module: vec![],
+    })
+});
+async fn config() -> MutexGuard<'static, ServerConfig> {
+    CONFIG.lock().await
+}
 
 pub static mut ON: bool = false;
 
@@ -85,7 +95,7 @@ async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
         StatusCode::FORBIDDEN
     } else {
         let mut dat = chat().await;
-        while dat.len() >= CHAT_CAP {
+        while dat.len() >= config().await.chat_cap {
             dat.pop_front();
         }
         let mut content = req.chat;

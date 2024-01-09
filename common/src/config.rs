@@ -8,6 +8,15 @@ pub struct ServerConfig {
     pub chat_cap: usize,
     pub module: Vec<String>,
 }
+impl ServerConfig {
+    pub fn new(port: u16, chat_cap: usize, module: Vec<String>) -> Self {
+        Self {
+            port,
+            chat_cap,
+            module,
+        }
+    }
+}
 
 pub trait FromTOML<T>
 where
