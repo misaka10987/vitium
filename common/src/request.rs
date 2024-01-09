@@ -1,4 +1,5 @@
 use crate::{
+    act::Act,
     chara::Chara,
     cmd::Cmd,
     player::{Player, Token},
@@ -74,7 +75,7 @@ pub enum Req {
     /// Create, edit or delete character.
     EditChara(EditChara),
     /// Submit in-game action.
-    Act(String, Token),
+    Act(Act),
     /// Issue server command.
     Cmd(Cmd),
 }
@@ -91,7 +92,7 @@ impl Req {
             Req::SendChat(_) => "POST /chat",
             Req::EditPlayer(_) => "POST player",
             Req::EditChara(_) => "POST chara",
-            Req::Act(_, _) => "POST /act",
+            Req::Act(_) => "POST /act",
             Req::Cmd(_) => "POST /cmd",
             Req::EditPswd(_) => "POST /pswd",
         }
@@ -132,10 +133,10 @@ fn see_json() {
     println!("{}", json(&Req::SendChat(t.clone())).unwrap());
     //println!("{}", json(&Req::EditPlayer(p, Some(t.clone()))).unwrap());
     //println!("{}", json(&Req::EditChara(c.clone(), t.clone())).unwrap());
-    println!(
-        "{}",
-        json(&Req::Act("Say hello world.".to_string(), t.clone())).unwrap()
-    );
+    // println!(
+    //     "{}",
+    //     json(&Req::Act("Say hello world.".to_string(), t.clone())).unwrap()
+    // );
     // println!(
     //     "{}",
     //     json(&Req::Cmd("help --help".to_string(), t.clone())).unwrap()

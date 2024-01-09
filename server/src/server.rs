@@ -6,6 +6,7 @@ use axum::{
     Json, Router,
 };
 use once_cell::sync::Lazy;
+use serde_derive::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use tokio::{
     signal,
@@ -20,6 +21,13 @@ use vitium_common::{
     player::{Player, Token},
     request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
 };
+
+#[derive(Serialize, Deserialize)]
+pub struct ServerConfig {
+    pub port: u16,
+    pub chat_cap: usize,
+    pub module: Vec<String>,
+}
 
 const CHAT_CAP: usize = 127;
 
