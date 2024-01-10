@@ -103,7 +103,8 @@ int main()
     maxX = main_win.max_yx().second;
     maxY = main_win.max_yx().first;
     main_win << cc::format(0)("vitium");
-    main_win << cc::format(1, 1)("IP: " + ip_address);
+    ip_address = "IP: " + ip_address;
+    main_win << cc::format(1, 1)(ip_address.c_str());
     std::thread input_proc(input_func);
     exit_loop = 0;
     while (!exit_loop)
