@@ -12,6 +12,8 @@ pub struct Scene {
     pub name: String,
     /// Description showed when a character enters.
     pub descr: String,
+    /// Path for optional ascii-art image.
+    pub ascii: Option<String>,
 }
 
 impl ID for Scene {

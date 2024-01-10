@@ -19,7 +19,7 @@ impl Attr {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chara {
-    uid: i128,
+    pub uid: i128,
     pub player: String,
     pub name: String,
     pub descr: String,

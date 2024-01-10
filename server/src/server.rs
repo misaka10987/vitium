@@ -14,13 +14,14 @@ use tokio::{
 };
 use tower_http::trace::TraceLayer;
 use vitium_common::config::{obj, toml, ServerConfig};
+use vitium_common::req::Exit;
 use vitium_common::{
     act::Act,
     chara::Chara,
     cmd::Cmd,
     //module::Module,
     player::{Player, Token},
-    request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
+    req::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
 };
 
 static CONFIG: Lazy<Mutex<ServerConfig>> = Lazy::new(|| {
@@ -87,6 +88,19 @@ async fn get_player() -> (StatusCode, Json<HashMap<String, Player>>) {
 
 async fn get_chara() -> (StatusCode, Json<HashMap<String, Chara>>) {
     (StatusCode::OK, Json(chara().await.clone()))
+}
+
+async fn sync(Json(req): Json<Token>) -> (StatusCode, String) {
+    if !verify(&req).await {
+        return (
+            StatusCode::FORBIDDEN,
+            "sync: FORBIDDEN Hello, world!\n".to_string(),
+        );
+    }
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        "sync: Hello, world!\n".to_string(),
+    )
 }
 
 async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
@@ -180,6 +194,27 @@ async fn cmd(Json(req): Json<Cmd>) -> StatusCode {
     }
 }
 
+async fn exit(Json(req): Json<Exit>) -> StatusCode {
+    use crate::chara::chara as game_chara;
+    use crate::chara::exit;
+    if !game_chara().await.contains_key(&req.chara) {
+        return StatusCode::NOT_FOUND;
+    }
+    match game_chara().await.get(&req.chara) {
+        Some(c) => {
+            if req.token.id != c.player {
+                return StatusCode::UNAUTHORIZED;
+            }
+            if !verify(&req.token).await {
+                return StatusCode::FORBIDDEN;
+            }
+            exit(req.chara).await;
+            StatusCode::OK
+        }
+        None => StatusCode::NOT_FOUND,
+    }
+}
+
 /// A handler always returns `Hello, world!\n`.
 async fn hello() -> &'static str {
     "Hello, World!\n"
@@ -238,12 +273,14 @@ impl Server {
             .route("/chat", get(recv_chat))
             .route("/player", get(get_player))
             .route("/chara", get(get_chara))
+            .route("/sync", get(sync))
             .route("/chat", post(send_chat))
             .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
             .route("/chara", post(edit_chara))
             .route("/act", post(act))
             .route("/cmd", post(cmd))
+            .route("/exit", post(exit))
             .layer(TraceLayer::new_for_http());
         // listening globally on port 3000
         let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config().await.port))

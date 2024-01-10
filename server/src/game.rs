@@ -136,7 +136,7 @@ async fn hello(act: Act) {
         "{}: \"Hello, world!\"",
         match chara().await.get(&act.chara) {
             Some(c) => c.name.clone(),
-            None => format!("[!chara uid={}]", act.chara),
+            None => format!("[no-chara[uid={}]]", act.chara),
         }
     )
 }

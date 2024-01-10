@@ -1,11 +1,16 @@
+pub use crate::{act::Act, cmd::Cmd};
 use crate::{
-    act::Act,
     chara::Chara,
-    cmd::Cmd,
     player::{Player, Token},
 };
 use serde_derive::{Deserialize, Serialize};
 use std::time::SystemTime;
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Enroll {
+    pub chara: Chara,
+    pub token: Token,
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chat {
@@ -51,6 +56,12 @@ pub struct EditPswd {
     pub pswd: String,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Exit {
+    pub chara: i128,
+    pub token: Token,
+}
+
 /// All possible requests are defined here.
 #[derive(Serialize, Deserialize)]
 pub enum Req {
@@ -67,7 +78,7 @@ pub enum Req {
     /// Change password.
     EditPswd(EditPswd),
     /// Enroll in the game.
-    Enroll(Chara, Token),
+    Enroll(Enroll),
     /// Send out-game chat message.
     SendChat(Token),
     /// Create, edit or delete player.
@@ -78,6 +89,8 @@ pub enum Req {
     Act(Act),
     /// Issue server command.
     Cmd(Cmd),
+    /// Exit the game temporarily.
+    Exit,
 }
 
 impl Req {
@@ -88,13 +101,14 @@ impl Req {
             Req::RecvChat => "GET /chat",
             Req::GetPlayer => "GET /player",
             Req::GetChara => "GET /chara",
-            Req::Enroll(_, _) => "POST /enroll",
+            Req::Enroll(_) => "POST /enroll",
             Req::SendChat(_) => "POST /chat",
             Req::EditPlayer(_) => "POST player",
             Req::EditChara(_) => "POST chara",
             Req::Act(_) => "POST /act",
             Req::Cmd(_) => "POST /cmd",
             Req::EditPswd(_) => "POST /pswd",
+            Req::Exit => "POST /exit",
         }
     }
 }
@@ -129,7 +143,14 @@ fn see_json() {
     println!("{}", json(&Req::RecvChat).unwrap());
     println!("{}", json(&Req::GetPlayer).unwrap());
     println!("{}", json(&Req::GetChara).unwrap());
-    println!("{}", json(&Req::Enroll(c.clone(), t.clone())).unwrap());
+    println!(
+        "{}",
+        json(&Req::Enroll(Enroll {
+            chara: c.clone(),
+            token: t.clone()
+        }))
+        .unwrap()
+    );
     println!("{}", json(&Req::SendChat(t.clone())).unwrap());
     //println!("{}", json(&Req::EditPlayer(p, Some(t.clone()))).unwrap());
     //println!("{}", json(&Req::EditChara(c.clone(), t.clone())).unwrap());
