@@ -12,3 +12,7 @@ mod tests {
         assert_eq!(result, 4);
     }
 }
+
+#[no-mangle]
+
+pub extern "C" fn 

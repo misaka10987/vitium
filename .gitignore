@@ -1,9 +1,8 @@
-*/target
-*/Cargo.lock
-*/.vscode
-client_main
-a.out
+**/target
+**/Cargo.lock
+**/.vscode
+**/client_main
+**/*.out
 /client/json.hpp:Zone.Identifier
-**/.vscode 
 /common-cfi/vitium_common.h
 /common-cfi/test
