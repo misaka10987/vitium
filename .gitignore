@@ -4,4 +4,6 @@
 client_main
 a.out
 /client/json.hpp:Zone.Identifier
-**/.vscode
+**/.vscode 
+/common-cfi/vitium_common.h
+/common-cfi/test
