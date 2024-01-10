@@ -6,14 +6,19 @@
 namespace cc = cxxcurses;
 
 #ifdef _LINUX_
-#define my_sleep sleep
+void my_sleep(double milliseconds)
+{
+    int timetosleep;
+    timetosleep = (int)(milliseconds * 1000);
+    std ::this_thread ::sleep_for(std::chrono::milliseconds(timetosleep));
+}
 #endif
 
 #ifdef _WIN32_
 #include <Windows.h>
-void my_sleep(int timer_full_secs)
+void my_sleep(int milliseconds)
 {
-    Sleep(timer_full_secs * 1000);
+    Sleep(milliseconds);
 }
 #endif
 
@@ -38,7 +43,7 @@ void init()
 
 void input_func()
 {
-    std::string buff;
+    char buff[4096];
     while (!exit_loop)
     {
         wscanw(main_win.get(), "%s", buff);
