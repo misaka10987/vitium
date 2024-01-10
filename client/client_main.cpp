@@ -6,19 +6,19 @@
 namespace cc = cxxcurses;
 
 #ifdef _LINUX_
-void my_sleep(double milliseconds)
+void my_sleep(double seconds)
 {
     int timetosleep;
-    timetosleep = (int)(milliseconds * 1000);
+    timetosleep = (int)(seconds * 1000);
     std ::this_thread ::sleep_for(std::chrono::milliseconds(timetosleep));
 }
 #endif
 
 #ifdef _WIN32_
 #include <Windows.h>
-void my_sleep(int milliseconds)
+void my_sleep(double seconds)
 {
-    Sleep(milliseconds);
+    Sleep(seconds * 1000);
 }
 #endif
 
