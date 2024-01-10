@@ -25,5 +25,5 @@ jobs:
     - name: Archive code coverage results
       uses: actions/upload-artifact@v3
       with:
-          name: common-cfi lib file
-          path: common-cfi/target/debug/*.a
+          name: debug product pack
+          path: common-cfi/target/debug/*.a && common/target/debug/*.rlib && server/target/debug/vitium-server
