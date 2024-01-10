@@ -58,6 +58,15 @@ void window_refresh_all()
     buffer_window.refresh();
 }
 
+void client_welcome_page()
+{
+    info_window << cc::format(1, 1)("HelloWorld from info-window!");
+    stat_window << cc::format(1, 1)("Hello !"); // do not use \n to change line because you will lose part of the frame
+    stat_window << cc::format(2, 1)("From Stat !");
+    story_window << cc::format(5)("Welcome to vitium client (under dev) !");
+    window_refresh_all();
+}
+
 int main_loop()
 {
     std::string buffer_storage;
@@ -76,9 +85,10 @@ int main_loop()
     }
     if (got_data)
     {
-        
+        // todo
     }
-    
+    client_welcome_page();
+    window_refresh_all();
 }
 
 int main()
@@ -96,11 +106,6 @@ int main()
         main_loop();
     }
     input_proc.join();
-    // info_window << cc::format(1, 1)("HelloWorld from info-window!");
-    // stat_window << cc::format(1, 1)("Hello !"); // do not use \n to change line because you will lose part of the frame
-    // stat_window << cc::format(2, 1)("From Stat !");
-    // story_window << cc::format(5)("Welcome to vitium client (under dev) !");
-    // window_refresh_all();
     main_win.get_char();
     return 0;
 }
