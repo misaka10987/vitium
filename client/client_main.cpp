@@ -43,10 +43,10 @@ void init()
 
 void input_func()
 {
-    char buff[4096];
+    char buff;
     while (!exit_loop)
     {
-        wscanw(main_win.get(), "%s", buff);
+        buff = getch();
         input_stream_lock.lock();
         my_input_stream << buff;
         input_stream_lock.unlock();
@@ -72,7 +72,7 @@ void client_welcome_page()
     window_refresh_all();
 }
 
-int main_loop()
+void main_loop()
 {
     std::string buffer_storage;
     int counter = 0;
@@ -90,9 +90,9 @@ int main_loop()
     }
     if (got_data)
     {
-        // todo
+        buffer_window << cc::format(0, 0)(buffer_storage);
     }
-    client_welcome_page();
+    buffer_storage = "";
     window_refresh_all();
 }
 
@@ -107,6 +107,7 @@ int main()
     main_win << cc::format(1, 1)(ip_address.c_str());
     std::thread input_proc(input_func);
     exit_loop = 0;
+    client_welcome_page();
     while (!exit_loop)
     {
         main_loop();
