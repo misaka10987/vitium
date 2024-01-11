@@ -46,6 +46,7 @@ macro_rules! map {
     };
 }
 static PLAYER: Map<String, Player> = map!();
+static BANNED_PLAYER: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
 static PSWD: Map<String, String> = map!();
 static CHARA: Map<String, Chara> = map!();
 static OP: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
@@ -55,6 +56,9 @@ async fn chat() -> MutexGuard<'static, VecDeque<Chat>> {
 }
 async fn player() -> MutexGuard<'static, HashMap<String, Player>> {
     PLAYER.lock().await
+}
+async fn banned_player() -> MutexGuard<'static, HashSet<String>> {
+    BANNED_PLAYER.lock().await
 }
 async fn pswd() -> MutexGuard<'static, HashMap<String, String>> {
     PSWD.lock().await
@@ -76,6 +80,10 @@ async fn verify(token: &Token) -> bool {
 
 async fn access(token: Token) -> bool {
     verify(&token).await && op().await.contains(&token.id)
+}
+
+async fn banned(id: &str) -> bool {
+    banned_player().await.contains(id)
 }
 
 async fn recv_chat() -> (StatusCode, Json<VecDeque<Chat>>) {
@@ -309,18 +317,34 @@ async fn sig_shut() {
 }
 
 pub mod root {
-    use super::{op, player, pswd};
+    use super::{banned, banned_player, op, player, pswd};
     use tracing::info;
     pub async fn grant(arg: &str) -> i8 {
         let id = arg.trim();
         if player().await.contains_key(id) && pswd().await.contains_key(id) {
             op().await.insert(id.to_string());
             info!("opped player[id=\"{}\"]", id);
-            println!("  Success>> ");
+            println!("  Success>> opped player[id=\"{}\"]", id);
             0
         } else {
             println!("  Failure>> player[id=\"{}\"] not found", id);
             -1
         }
+    }
+    pub async fn ban(arg: &str) -> i8 {
+        let id = arg.trim();
+        if !player().await.contains_key(id) {
+            println!("  Failure>> player[id=\"{}\"] not found", id);
+            return -1;
+        }
+        if banned(id).await {
+            println!("  Failure>> player[id=\"{}\"] is already banned", id);
+            return -1;
+        }
+        player().await.remove(id);
+        pswd().await.remove(id);
+        banned_player().await.insert(id.to_string());
+        println!("  Success>> banned player[id=\"{}\"]", id);
+        0
     }
 }
