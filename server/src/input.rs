@@ -1,3 +1,4 @@
+use clearscreen::clear;
 use once_cell::sync::Lazy;
 use std::{io::stdin, process::exit};
 use tokio::sync::{Mutex, MutexGuard};
@@ -34,11 +35,18 @@ fn resolve(cmd: &str) -> (&str, &str) {
 async fn proc(cmd: &str) -> i8 {
     match resolve(cmd) {
         ("help", _) => {
-            println!("TODO");
+            println!("  TODO");
             -1
+        }
+        ("clear", _) => {
+            clear().unwrap();
+            0
         }
         ("kill", _) => exit(-1),
         ("grant", arg) => grant(arg).await,
-        _ => todo!(),
+        _ => {
+            println!("  Failure>> \"{}\" not found", cmd);
+            -1
+        }
     }
 }
