@@ -307,3 +307,21 @@ async fn sig_shut() {
         _ = terminate => {},
     }
 }
+
+pub mod root {
+    use tracing::info;
+
+    use super::{op, player, pswd};
+    pub async fn grant(arg: &str) -> i8 {
+        let id = arg;
+        if player().await.contains_key(id) && pswd().await.contains_key(id) {
+            op().await.insert(id.to_string());
+            info!("opped player[id=\"{}\"]", id);
+            println!(">>Success>> ");
+            0
+        } else {
+            println!(">>Failure>> player[id=\"{}\"] not found", id);
+            -1
+        }
+    }
+}
