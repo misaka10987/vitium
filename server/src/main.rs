@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use clap::Parser;
 use server::Server;
 use tokio::spawn;
@@ -45,4 +47,5 @@ async fn main() {
         .await
         .expect("internal server error");
     input::stop().await;
+    exit(0)
 }
