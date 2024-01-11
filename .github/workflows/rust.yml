@@ -1,0 +1,29 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: vitium-common
+      run: cd common && rm -rf ./target && cargo build && cd ..
+    - name: vitium-server
+      run: cd server && rm -rf ./target && cargo build && cd ..
+    - name: vitium-common-cfi
+      run: cd common-cfi && rm -rf ./target && cargo build && cd ..
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v3
+      with:
+          name: debug product pack
+          path: common-cfi/target/debug/*.a && common/target/debug/*.rlib && server/target/debug/vitium-server
