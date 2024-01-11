@@ -260,13 +260,7 @@ impl Server {
         Server
     }
     /// The function to run the server.
-    #[tokio::main]
     pub async fn run(&self) -> Result<(), std::io::Error> {
-        // initialize logger
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::TRACE)
-            .init();
-        self.config("./config.toml").await;
         // build our application with a route
         let app = Router::new()
             .route("/hello", get(hello))

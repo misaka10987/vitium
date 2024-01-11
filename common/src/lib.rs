@@ -15,6 +15,7 @@ pub mod req;
 pub mod response;
 pub mod scene;
 pub mod skill;
+pub mod sync;
 pub mod util;
 pub mod vehicle;
 

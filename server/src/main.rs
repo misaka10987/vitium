@@ -1,4 +1,7 @@
+use clap::Parser;
 use server::Server;
+use tokio::spawn;
+use tracing::info;
 
 /// In-game characters.
 pub mod chara;
@@ -6,6 +9,8 @@ pub mod chara;
 pub mod dice;
 /// Specific game logics goes here.
 pub mod game;
+/// Process the input when running server.
+pub mod input;
 /// Load game saves.
 pub mod load;
 /// Registry.
@@ -17,6 +22,27 @@ pub mod scene;
 /// Defines the server.
 pub mod server;
 
-fn main() {
-    Server::start().run().expect("internal server error")
+#[derive(Parser, Debug)]
+struct Args {
+    /// Path to the server configuration file.
+    pub config: Option<String>,
+}
+
+#[tokio::main]
+async fn main() {
+    // initialize logger
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::TRACE)
+        .init();
+    let arg = Args::parse();
+    info!("Running with {:?}", arg);
+    spawn(input::input());
+    // run the server
+    Server::start()
+        .config("./config.toml")
+        .await
+        .run()
+        .await
+        .expect("internal server error");
+    input::stop().await;
 }
