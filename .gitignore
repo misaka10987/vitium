@@ -1,8 +1,9 @@
-**/.vscode
 **/target
 **/Cargo.lock
-/client/test-call-rust
+**/.vscode
+**/client_main
+**/*.out
+/client/json.hpp:Zone.Identifier
 /common-cfi/vitium_common.h
-**/build
 /common-cfi/test
 donotreadit.txt

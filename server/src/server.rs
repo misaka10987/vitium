@@ -6,30 +6,34 @@ use axum::{
     Json, Router,
 };
 use once_cell::sync::Lazy;
-use serde_derive::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
+use tokio::fs;
 use tokio::{
     signal,
     sync::{Mutex, MutexGuard},
 };
 use tower_http::trace::TraceLayer;
+use vitium_common::config::{obj, toml, ServerConfig};
+use vitium_common::req::Exit;
 use vitium_common::{
     act::Act,
     chara::Chara,
     cmd::Cmd,
     //module::Module,
     player::{Player, Token},
-    request::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
+    req::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
 };
 
-#[derive(Serialize, Deserialize)]
-pub struct ServerConfig {
-    pub port: u16,
-    pub chat_cap: usize,
-    pub module: Vec<String>,
+static CONFIG: Lazy<Mutex<ServerConfig>> = Lazy::new(|| {
+    Mutex::new(ServerConfig {
+        port: 19198,
+        chat_cap: 127,
+        module: vec![],
+    })
+});
+async fn config() -> MutexGuard<'static, ServerConfig> {
+    CONFIG.lock().await
 }
-
-const CHAT_CAP: usize = 127;
 
 pub static mut ON: bool = false;
 
@@ -86,6 +90,19 @@ async fn get_chara() -> (StatusCode, Json<HashMap<String, Chara>>) {
     (StatusCode::OK, Json(chara().await.clone()))
 }
 
+async fn sync(Json(req): Json<Token>) -> (StatusCode, String) {
+    if !verify(&req).await {
+        return (
+            StatusCode::FORBIDDEN,
+            "sync: FORBIDDEN Hello, world!\n".to_string(),
+        );
+    }
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        "sync: Hello, world!\n".to_string(),
+    )
+}
+
 async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
     if !verify(&req.token).await {
         StatusCode::FORBIDDEN
@@ -93,7 +110,7 @@ async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
         StatusCode::FORBIDDEN
     } else {
         let mut dat = chat().await;
-        while dat.len() >= CHAT_CAP {
+        while dat.len() >= config().await.chat_cap {
             dat.pop_front();
         }
         let mut content = req.chat;
@@ -177,6 +194,27 @@ async fn cmd(Json(req): Json<Cmd>) -> StatusCode {
     }
 }
 
+async fn exit(Json(req): Json<Exit>) -> StatusCode {
+    use crate::chara::chara as game_chara;
+    use crate::chara::exit;
+    if !game_chara().await.contains_key(&req.chara) {
+        return StatusCode::NOT_FOUND;
+    }
+    match game_chara().await.get(&req.chara) {
+        Some(c) => {
+            if req.token.id != c.player {
+                return StatusCode::UNAUTHORIZED;
+            }
+            if !verify(&req.token).await {
+                return StatusCode::FORBIDDEN;
+            }
+            exit(req.chara).await;
+            StatusCode::OK
+        }
+        None => StatusCode::NOT_FOUND,
+    }
+}
+
 /// A handler always returns `Hello, world!\n`.
 async fn hello() -> &'static str {
     "Hello, World!\n"
@@ -193,25 +231,33 @@ async fn hello() -> &'static str {
 ///     .run()
 ///     .unwrap();
 /// ```
-pub struct Server {
-    port: u16,
-    //pub module:Vec<Module>,
-}
+pub struct Server;
 
 impl Server {
     pub fn start() -> Self {
-        unsafe {
-            if ON {
-                panic!("trying to start multiple server instance")
-            } else {
-                ON = true
-            }
-        }
-        Server { port: 0 }
+        Server
     }
-    pub fn set_port(&mut self, port: u16) -> &mut Self {
-        self.port = port;
-        self
+    pub async fn config(&self, path: &str) -> Self {
+        // Generates a default config file if non exist.
+        if !fs::try_exists(path)
+            .await
+            .expect(&format!("{} io error", path))
+        {
+            fs::File::create(path)
+                .await
+                .expect(&format!("{} io error", path));
+            let c = toml(config().await.clone());
+            fs::write(path, c)
+                .await
+                .expect(&format!("{} io error", path));
+            return Server;
+        }
+        config().await.clone_from(&obj::<ServerConfig>(
+            &fs::read_to_string(path)
+                .await
+                .expect(&format!("{} io error", path)),
+        ));
+        Server
     }
     /// The function to run the server.
     #[tokio::main]
@@ -220,21 +266,24 @@ impl Server {
         tracing_subscriber::fmt()
             .with_max_level(tracing::Level::TRACE)
             .init();
+        self.config("./config.toml").await;
         // build our application with a route
         let app = Router::new()
             .route("/hello", get(hello))
             .route("/chat", get(recv_chat))
             .route("/player", get(get_player))
             .route("/chara", get(get_chara))
+            .route("/sync", get(sync))
             .route("/chat", post(send_chat))
             .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
             .route("/chara", post(edit_chara))
             .route("/act", post(act))
             .route("/cmd", post(cmd))
+            .route("/exit", post(exit))
             .layer(TraceLayer::new_for_http());
         // listening globally on port 3000
-        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port))
+        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config().await.port))
             .await
             .expect("failed to bind TCP listener");
         // run our app with hyper

@@ -1,4 +1,4 @@
-use crate::player::Token;
+use crate::{json::JSON, player::Token};
 use serde_derive::{Deserialize, Serialize};
 
 /// An internal command processed by the game.
@@ -13,6 +13,7 @@ pub struct Cmd {
     pub cmd: Command,
     pub token: Token,
 }
+impl JSON for Cmd {}
 
 #[test]
 fn see_json() {
@@ -20,5 +21,5 @@ fn see_json() {
         cmd: Command::Hello,
         token: Token::new("114", "514"),
     };
-    println!("{}", crate::json::json(c));
+    println!("{}", c.json());
 }

@@ -9,3 +9,16 @@ static CHARA: Lazy<Mutex<HashMap<i128, Chara>>> =
 pub async fn chara() -> MutexGuard<'static, HashMap<i128, Chara>> {
     CHARA.lock().await
 }
+
+/// Whether a character is enrolled in the game.
+pub async fn enrolled(uid: i128) -> bool {
+    chara().await.contains_key(&uid)
+}
+
+/// Make a character temporarily exit the game, returns true if success.
+pub async fn exit(uid: i128) -> bool {
+    match chara().await.remove(&uid) {
+        Some(_) => true,
+        None => false,
+    }
+}

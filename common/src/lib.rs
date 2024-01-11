@@ -9,12 +9,12 @@ pub mod item;
 pub mod json;
 pub mod module;
 pub mod player;
+pub mod record;
 pub mod registry;
-pub mod request;
+pub mod req;
 pub mod response;
 pub mod scene;
 pub mod skill;
-pub mod story;
 pub mod util;
 pub mod vehicle;
 
