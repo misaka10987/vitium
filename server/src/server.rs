@@ -11,6 +11,7 @@ use std::{
     sync::Arc,
 };
 use tokio::{
+    net::TcpListener,
     signal,
     sync::{Mutex, MutexGuard},
 };
@@ -93,6 +94,11 @@ impl Server {
     }
     /// Consumes `self` and start the server.
     pub async fn run(self) -> Result<(), std::io::Error> {
+        // listening globally on the port specified
+        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
+            .await
+            .expect("failed to bind TCP listener");
+        // initialize router
         let app = Router::new()
             .route("/hello", get(hello))
             .route("/chat", get(recv_chat))
@@ -103,10 +109,6 @@ impl Server {
             .route("/chara", post(edit_chara))
             .with_state(self)
             .layer(TraceLayer::new_for_http());
-        // listening globally on port 3000
-        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", 54321))
-            .await
-            .expect("failed to bind TCP listener");
         // run our app with hyper
         axum::serve(listener, app)
             .with_graceful_shutdown(sig_shut())

@@ -77,6 +77,13 @@ pub async fn act() -> MutexGuard<'static, VecDeque<Act>> {
     ACT.lock().await
 }
 
+/// Internal game server.
+pub struct Game {
+    pub on: bool,
+    pub turn: i128,
+    pub act: VecDeque<Act>,
+}
+
 /// Pushes `act` to the act queue waiting for process.
 pub async fn push_act(raw_act: Act) -> StatusCode {
     self::act()

@@ -25,8 +25,6 @@ pub mod save;
 pub mod scene;
 /// New server.
 pub mod server;
-/// Defines the server.
-pub mod server_;
 
 #[derive(Parser, Debug)]
 struct Args {
