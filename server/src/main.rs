@@ -1,7 +1,7 @@
 use std::process::exit;
 
 use clap::Parser;
-use server::Server;
+use server_::Server;
 use tokio::spawn;
 use tracing::info;
 
@@ -11,6 +11,8 @@ pub mod chara;
 pub mod dice;
 /// Specific game logics goes here.
 pub mod game;
+/// The http server.
+pub mod http;
 /// Process the input when running server.
 pub mod input;
 /// Load game saves.
@@ -21,8 +23,10 @@ pub mod registry;
 pub mod save;
 /// In-game scenario.
 pub mod scene;
-/// Defines the server.
+/// New server.
 pub mod server;
+/// Defines the server.
+pub mod server_;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -40,7 +44,7 @@ async fn main() {
     info!("Running with {:?}", arg);
     spawn(input::input());
     // run the server
-    Server::start()
+    Server::new()
         .config("./config.toml")
         .await
         .run()

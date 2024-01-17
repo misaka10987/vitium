@@ -3,7 +3,7 @@ use once_cell::sync::Lazy;
 use std::{io::stdin, process::exit};
 use tokio::sync::{Mutex, MutexGuard};
 
-use crate::server::root::{ban, grant};
+use crate::server_::root::{ban, grant};
 
 static RUNNING: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 async fn running() -> MutexGuard<'static, bool> {
