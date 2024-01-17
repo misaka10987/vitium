@@ -8,11 +8,12 @@ use axum::http::StatusCode;
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use tokio::sync::{Mutex, MutexGuard};
+use tracing::info;
 use vitium_common::{
     act::{Act, Action},
-    cmd::Command,
     item::Item,
     scene::Scene,
+    sync::Sync,
     vehicle::Vehicle,
     UID,
 };
@@ -84,6 +85,31 @@ pub struct Game {
     pub act: VecDeque<Act>,
 }
 
+impl Game {
+    pub fn new() -> Self {
+        Self {
+            on: false,
+            turn: 0,
+            act: VecDeque::new(),
+        }
+    }
+    pub fn update(&self) {
+        todo!()
+    }
+    pub fn fetch(&self, player: String) -> (StatusCode, Sync) {
+        info!("player[id={}] synchronizes game state", player);
+        (StatusCode::NOT_IMPLEMENTED, Sync::new())
+    }
+    pub fn proc(&self, act: Act) -> StatusCode {
+        info!(
+            "{} submitted an act: {}",
+            act.token.id,
+            format!("act[uid={}]", act.uid)
+        );
+        StatusCode::NOT_IMPLEMENTED
+    }
+}
+
 /// Pushes `act` to the act queue waiting for process.
 pub async fn push_act(raw_act: Act) -> StatusCode {
     self::act()
@@ -104,13 +130,6 @@ static TERM_GAME: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 pub async fn term_game() {
     *ON_GAME.lock().await = false;
     *TERM_GAME.lock().await = true;
-}
-
-/// Process server command.
-pub async fn cmd(command: Command) {
-    match command {
-        Command::Hello => println!("[cmd] Hello, world!"),
-    }
 }
 
 /// Calculate all waiting requests.

@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{item::Inventory, util::Bottle, UID};
 use serde_derive::{Deserialize, Serialize};
 
@@ -25,17 +27,19 @@ pub struct Chara {
     pub descr: String,
     pub attr: Vec<Attr>,
     pub invt: Inventory,
+    pub mods: HashSet<String>,
 }
 
 impl Chara {
-    pub fn new(player: &str, name: &str, descr: &str, attr: Vec<Attr>, invt: Inventory) -> Self {
+    pub fn new() -> Self {
         Self {
             uid: 0,
-            player: player.to_string(),
-            name: name.to_string(),
-            descr: descr.to_string(),
-            attr,
-            invt,
+            player: "debug-player".to_string(),
+            name: "debug-chara".to_string(),
+            descr: "If you see this in game, it is a bug.".to_string(),
+            attr: vec![],
+            invt: vec![],
+            mods: HashSet::new(),
         }
     }
 }

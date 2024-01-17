@@ -1,4 +1,4 @@
-use crate::{age::Age, dice::Dice, ID, UID};
+use crate::{age::Age, dice::Dice, DEBUG_MSG, ID, UID};
 use serde_derive::{Deserialize, Serialize};
 pub type Price = Vec<(Age, u64)>;
 
@@ -44,33 +44,20 @@ impl UID for Weapon {
 }
 
 impl Weapon {
-    pub fn new(
-        uid: i128,
-        id: &str,
-        name: &str,
-        descr: &str,
-        age: Vec<Age>,
-        atk: &str,
-        rng: u32,
-        pntr: bool,
-        per_turn: u8,
-        charge: u8,
-        load: u8,
-        price: Price,
-    ) -> Self {
+    pub fn new() -> Self {
         Self {
-            uid,
-            id: id.to_string(),
-            name: name.to_string(),
-            descr: descr.to_string(),
-            age,
-            atk: atk.to_string(),
-            rng,
-            pntr,
-            per_turn,
-            charge,
-            load,
-            price,
+            uid: 0,
+            id: "debug-weapon".to_string(),
+            name: "Debug Weapon".to_string(),
+            descr: DEBUG_MSG.to_string(),
+            age: vec![],
+            atk: "11d45+14".to_string(),
+            rng: 114514,
+            pntr: true,
+            per_turn: 11,
+            charge: 45,
+            load: 14,
+            price: vec![],
         }
     }
 }
@@ -126,29 +113,18 @@ impl UID for Armor {
 }
 
 impl Armor {
-    pub fn new(
-        uid: i128,
-        id: &str,
-        name: &str,
-        descr: &str,
-        age: Vec<Age>,
-        def: &str,
-        cover: Vec<BodyPart>,
-        species: Species,
-        rerist_pntr: bool,
-        price: Price,
-    ) -> Self {
+    pub fn new() -> Self {
         Self {
-            uid,
-            id: id.to_string(),
-            name: name.to_string(),
-            descr: descr.to_string(),
-            age,
-            def: def.to_string(),
-            cover,
-            species,
-            rerist_pntr,
-            price,
+            uid: 0,
+            id: "debug-armor".to_string(),
+            name: "Debug Armor".to_string(),
+            descr: DEBUG_MSG.to_string(),
+            age: vec![],
+            def: "11d45+14".to_string(),
+            cover: vec![],
+            species: Species::Human,
+            rerist_pntr: true,
+            price: vec![],
         }
     }
 }
@@ -178,12 +154,12 @@ impl UID for OtherItem {
 }
 
 impl OtherItem {
-    pub fn new(uid: i128, id: &str, name: &str, descr: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            uid,
-            id: id.to_string(),
-            name: name.to_string(),
-            descr: descr.to_string(),
+            uid: 0,
+            id: "debug-otheritem".to_string(),
+            name: "Debug Other Item".to_string(),
+            descr: DEBUG_MSG.to_string(),
         }
     }
 }

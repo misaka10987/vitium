@@ -1,7 +1,7 @@
-pub use crate::{act::Act, cmd::Cmd};
+pub use crate::{act::Act, cmd::Cmd, player::Token};
 use crate::{
     chara::Chara,
-    player::{Player, Token},
+    player::Player,
 };
 use serde_derive::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -115,29 +115,10 @@ impl Req {
 
 #[test]
 fn see_json() {
-    use crate::{
-        chara::{Attr, Chara},
-        item::{Item, OtherItem},
-        player::{Player, Token},
-        util::Bottle,
-    };
+    use crate::{chara::Chara, player::Token};
     use serde_json::to_string as json;
-    let a = Attr::new("example_attribution", Some(Bottle::new(10)));
-    let i = Item::Other(OtherItem::new(
-        0,
-        "example_id",
-        "example_name",
-        "This is description of an OtherItem.",
-    ));
-    let p = Player::new("example_player", "Player P Example", None);
     let t = Token::new("example_player", "example_password");
-    let c = Chara::new(
-        &p.id,
-        "example_Chara",
-        "This is an example Chara",
-        vec![a],
-        vec![Some(i)],
-    );
+    let c = Chara::new();
     println!("{}", json(&Req::ServerStatus).unwrap());
     println!("{}", json(&Req::Sync(t.clone())).unwrap());
     println!("{}", json(&Req::RecvChat).unwrap());

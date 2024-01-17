@@ -11,8 +11,6 @@ pub mod chara;
 pub mod dice;
 /// Specific game logics goes here.
 pub mod game;
-/// The http server.
-pub mod http;
 /// Process the input when running server.
 pub mod input;
 /// Load game saves.
