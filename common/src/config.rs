@@ -9,43 +9,16 @@ pub struct ServerConfig {
     pub module: Vec<String>,
 }
 impl ServerConfig {
-    pub fn new(port: u16, chat_cap: usize, module: Vec<String>) -> Self {
+    pub fn new() -> Self {
         Self {
-            port,
-            chat_cap,
-            module,
+            port: 54321,
+            chat_cap: 255,
+            module: vec![],
         }
     }
 }
 
-pub trait FromTOML<T>
-where
-    T: de::DeserializeOwned,
-{
-    fn obj(&self) -> T;
-}
-
-impl<T> FromTOML<T> for String
-where
-    T: de::DeserializeOwned,
-{
-    fn obj(&self) -> T {
-        toml::from_str(self).expect("deserialize error")
-    }
-}
-
-pub trait TOML
-where
-    Self: ser::Serialize + de::DeserializeOwned,
-{
-    fn toml(&self) -> String {
-        toml::to_string(self).expect("serialize error")
-    }
-}
-
-impl TOML for ServerConfig {}
-
-pub fn toml<T>(obj: T) -> String
+pub fn toml<T>(obj: &T) -> String
 where
     T: ser::Serialize,
 {
@@ -58,3 +31,4 @@ where
 {
     toml::from_str(toml).expect("deserialize error")
 }
+

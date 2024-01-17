@@ -1,7 +1,7 @@
 use std::process::exit;
 
 use clap::Parser;
-use server_::Server;
+use server::Server;
 use tokio::spawn;
 use tracing::info;
 
@@ -46,7 +46,6 @@ async fn main() {
     // run the server
     Server::new()
         .config("./config.toml")
-        .await
         .run()
         .await
         .expect("internal server error");

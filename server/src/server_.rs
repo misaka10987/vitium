@@ -6,7 +6,7 @@ use axum::{
     Json, Router,
 };
 use once_cell::sync::Lazy;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 use tokio::fs;
 use tokio::{
     signal,
@@ -21,7 +21,7 @@ use vitium_common::{
     cmd::Cmd,
     //module::Module,
     player::{Player, Token},
-    req::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
+    req::EditPswd,
 };
 
 static CONFIG: Lazy<Mutex<ServerConfig>> = Lazy::new(|| {
@@ -37,8 +37,6 @@ async fn config() -> MutexGuard<'static, ServerConfig> {
 
 pub static mut ON: bool = false;
 
-static CHAT: Lazy<Mutex<VecDeque<Chat>>> = Lazy::new(|| Mutex::new(VecDeque::new()));
-
 type Map<K, V> = Lazy<Mutex<HashMap<K, V>>>;
 macro_rules! map {
     () => {
@@ -51,9 +49,6 @@ static PSWD: Map<String, String> = map!();
 static CHARA: Map<String, Chara> = map!();
 static OP: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
 
-async fn chat() -> MutexGuard<'static, VecDeque<Chat>> {
-    CHAT.lock().await
-}
 async fn player() -> MutexGuard<'static, HashMap<String, Player>> {
     PLAYER.lock().await
 }
@@ -86,18 +81,6 @@ async fn banned(id: &str) -> bool {
     banned_player().await.contains(id)
 }
 
-async fn recv_chat() -> (StatusCode, Json<VecDeque<Chat>>) {
-    (StatusCode::OK, Json(chat().await.clone()))
-}
-
-async fn get_player() -> (StatusCode, Json<HashMap<String, Player>>) {
-    (StatusCode::OK, Json(player().await.clone()))
-}
-
-async fn get_chara() -> (StatusCode, Json<HashMap<String, Chara>>) {
-    (StatusCode::OK, Json(chara().await.clone()))
-}
-
 async fn sync(Json(req): Json<Token>) -> (StatusCode, String) {
     if !verify(&req).await {
         return (
@@ -111,22 +94,6 @@ async fn sync(Json(req): Json<Token>) -> (StatusCode, String) {
     )
 }
 
-async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
-    if !verify(&req.token).await {
-        StatusCode::FORBIDDEN
-    } else if req.token.id != req.chat.player {
-        StatusCode::FORBIDDEN
-    } else {
-        let mut dat = chat().await;
-        while dat.len() >= config().await.chat_cap {
-            dat.pop_front();
-        }
-        let mut content = req.chat;
-        dat.push_back(content.renew().clone());
-        StatusCode::ACCEPTED
-    }
-}
-
 async fn edit_pswd(Json(req): Json<EditPswd>) -> StatusCode {
     if verify(&req.token).await {
         *pswd()
@@ -136,39 +103,6 @@ async fn edit_pswd(Json(req): Json<EditPswd>) -> StatusCode {
         StatusCode::ACCEPTED
     } else {
         StatusCode::FORBIDDEN
-    }
-}
-
-async fn edit_player(Json(req): Json<EditPlayer>) -> StatusCode {
-    let mut dat = player().await;
-    if let Some(player) = dat.get_mut(&req.player.id) {
-        if let Some(token) = req.token {
-            if verify(&token).await {
-                *player = req.player.clone();
-                StatusCode::ACCEPTED
-            } else {
-                StatusCode::FORBIDDEN
-            }
-        } else {
-            StatusCode::UNAUTHORIZED
-        }
-    } else {
-        dat.insert(req.player.id.clone(), req.player.clone());
-        StatusCode::CREATED
-    }
-}
-
-async fn edit_chara(Json(req): Json<EditChara>) -> StatusCode {
-    let mut dat = chara().await;
-    if !verify(&req.token).await {
-        return StatusCode::FORBIDDEN;
-    }
-    if let Some(chara) = dat.get_mut(&req.chara.player) {
-        *chara = req.chara;
-        StatusCode::ACCEPTED
-    } else {
-        dat.insert(req.token.id, req.chara);
-        StatusCode::CREATED
     }
 }
 
@@ -223,11 +157,6 @@ async fn exit(Json(req): Json<Exit>) -> StatusCode {
     }
 }
 
-/// A handler always returns `Hello, world!\n`.
-async fn hello() -> &'static str {
-    "Hello, World!\n"
-}
-
 /// Defines the server. This is a more abstract one, see crate::game for specific game logics.
 ///
 /// Note that only one static instance exists for this struct and it should **NEVER** be manually created.
@@ -254,7 +183,7 @@ impl Server {
             fs::File::create(path)
                 .await
                 .expect(&format!("{} io error", path));
-            let c = toml(config().await.clone());
+            let c = toml(&config().await.clone());
             fs::write(path, c)
                 .await
                 .expect(&format!("{} io error", path));
@@ -267,17 +196,10 @@ impl Server {
         ));
         Server::new()
     }
-    pub async fn run(&self) -> Result<(), std::io::Error> {
+    pub async fn run(self) -> Result<(), std::io::Error> {
         let app = Router::new()
-            .route("/hello", get(hello))
-            .route("/chat", get(recv_chat))
-            .route("/player", get(get_player))
-            .route("/chara", get(get_chara))
             .route("/sync", get(sync))
-            .route("/chat", post(send_chat))
             .route("/pswd", post(edit_pswd))
-            .route("/player", post(edit_player))
-            .route("/chara", post(edit_chara))
             .route("/act", post(act))
             .route("/cmd", post(cmd))
             .route("/exit", post(exit))
