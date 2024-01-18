@@ -110,21 +110,24 @@ int main()
     story_window = &_story_window;
     buffer_window = &_buffer_window;
     life_window = &_life_window;
+
     init();
     cc::terminal init;
     maxX = main_win->max_yx().second;
     maxY = main_win->max_yx().first;
     *main_win << cc::format(0)("vitium");
-    ip_address = "IP: " + ip_address;
-    *main_win << cc::format(1, 1)(ip_address.c_str());
-    std::thread input_proc(input_func);
+    // ip_address = "IP: " + ip_address;
+    // *main_win << cc::format(0, 1)(ip_address.c_str());
+
+    // std::thread input_proc(input_func);
     exit_loop = 0;
     client_welcome_page();
-    while (!exit_loop)
-    {
-        main_loop();
-    }
-    input_proc.join();
+    // while (!exit_loop)
+    // {
+    //     main_loop();
+    // }
+    // input_proc.join();
+
     main_win->get_char();
     return 0;
 }
