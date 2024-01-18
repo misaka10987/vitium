@@ -1,3 +1,4 @@
+use crate::DEBUG_MSG;
 use serde_derive::{Deserialize, Serialize};
 
 /// Defines a real-world player.
@@ -9,11 +10,11 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(id: &str, name: &str, profile: Option<String>) -> Self {
+    pub fn new() -> Self {
         Self {
-            id: id.to_string(),
-            name: name.to_string(),
-            profile,
+            id: "debug-player".to_string(),
+            name: "Debug Player".to_string(),
+            profile: Some(DEBUG_MSG.to_string()),
         }
     }
 }
@@ -26,10 +27,10 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(id: &str, pswd: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            id: id.to_string(),
-            pswd: pswd.to_string(),
+            id: "debug-token".to_string(),
+            pswd: "debug-pswd".to_string(),
         }
     }
 }

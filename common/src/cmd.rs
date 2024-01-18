@@ -37,7 +37,7 @@ pub struct Echo {
 fn see_json() {
     let c = Cmd {
         cmd: Command::Hello,
-        token: Token::new("114", "514"),
+        token: Token::new(),
     };
     println!("{}", c.json());
 }
