@@ -9,5 +9,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 find_package(Curses REQUIRED)
 include_directories(vitium vitium/client ${CURSES_INCLUDE_DIR})
 
-add_executable(vitium client-main/client_main.cpp)
+add_executable(vitium client/client_main.cpp)
 target_link_libraries(vitium ${CURSES_LIBRARIES})
