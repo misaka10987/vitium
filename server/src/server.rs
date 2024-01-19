@@ -254,7 +254,7 @@ impl Server {
             fs::File::create(path)
                 .await
                 .expect(&format!("{} io error", path));
-            let c = toml(config().await.clone());
+            let c = toml(&config().await.clone());
             fs::write(path, c)
                 .await
                 .expect(&format!("{} io error", path));
