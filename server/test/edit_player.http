@@ -1,0 +1,14 @@
+POST http://127.0.0.1:54321/player HTTP/1.1
+Content-Type: application/json
+
+{
+    "player": {
+        "id": "debug-player",
+        "name": "Debug Player",
+        "profile": "If you see this in game, it is a bug."
+    },
+    "token": {
+        "id": "debug-token",
+        "pswd": "debug-pswd"
+    }
+}

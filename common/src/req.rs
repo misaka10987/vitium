@@ -32,14 +32,14 @@ impl Chat {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditPlayer {
     pub player: Player,
-    pub token: Option<Token>,
+    pub token: Token,
 }
 
 impl EditPlayer {
     pub fn new() -> Self {
         Self {
             player: Player::new(),
-            token: Some(Token::new()),
+            token: Token::new(),
         }
     }
 }

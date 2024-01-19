@@ -190,18 +190,15 @@ async fn send_chat(State(s): State<Server>, Json(req): Json<req::SendChat>) -> S
 async fn edit_player(State(s): State<Server>, Json(req): Json<req::EditPlayer>) -> StatusCode {
     let mut dat = s.player().await;
     if let Some(player) = dat.get_mut(&req.player.id) {
-        if let Some(token) = req.token {
-            if s.verify(&token).await {
-                *player = req.player.clone();
-                StatusCode::ACCEPTED
-            } else {
-                StatusCode::FORBIDDEN
-            }
+        if s.verify(&req.token).await {
+            *player = req.player.clone();
+            StatusCode::ACCEPTED
         } else {
-            StatusCode::UNAUTHORIZED
+            StatusCode::FORBIDDEN
         }
     } else {
         dat.insert(req.player.id.clone(), req.player.clone());
+        s.pswd().await.insert(req.player.id, req.token.pswd);
         StatusCode::CREATED
     }
 }
