@@ -226,7 +226,10 @@ async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
         StatusCode::FORBIDDEN
     } else if let Some(c) = s.chara().await.get(&req.token.id) {
         if c.player == req.token.id {
-            s.game().await.proc(req)
+            match s.game().await.proc(req).await.await {
+                Ok(c) => c,
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            }
         } else {
             // the request has a token but not matches the character it operates on
             StatusCode::UNAUTHORIZED

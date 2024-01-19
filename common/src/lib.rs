@@ -12,7 +12,7 @@ pub mod player;
 pub mod record;
 pub mod registry;
 pub mod req;
-pub mod response;
+pub mod res;
 pub mod scene;
 pub mod skill;
 pub mod sync;
