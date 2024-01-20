@@ -45,7 +45,7 @@ void input_func() {
         input_stream_lock.lock();
         my_input_stream << buff;
         input_stream_lock.unlock();
-        my_sleep(0.05);
+        my_sleep(0.1);
     }
 }
 
@@ -103,20 +103,23 @@ int main() {
     story_window = &_story_window;
     buffer_window = &_buffer_window;
     life_window = &_life_window;
+
+    // declares end here
+
     *main_win << cc::format(0)("vitium");
-    // ip_address = "IP: " + ip_address;
-    // *main_win << cc::format(0, 1)(ip_address.c_str());
-    // std::thread input_proc(input_func);
+    ip_address = "IP: " + ip_address;
+    *main_win << cc::format(0, 1)(ip_address.c_str());
+    std::thread input_proc(input_func);
     exit_loop = 0;
     auto some_window{ cc::widget::window { { 10, 5, 5, 30 },*main_win } };
     some_window << cc::format(2, 2)("Hello from sub-window!");
     window_refresh_all();
     client_welcome_page();
-    // while (!exit_loop)
-    // {
-    //     main_loop();
-    // }
-    // input_proc.join();
+    while (!exit_loop)
+    {
+        main_loop();
+    }
+    input_proc.join();
 
     main_win->get_char();
     return 0;
