@@ -35,6 +35,27 @@ cc::widget::window *life_window;
 bool exit_loop = 0;
 std::mutex input_stream_lock;
 
+void window_init()
+{
+    auto _info_window{cc::widget::window{{1, 0, 15, maxX - 21}, cc::terminal::main_win}}; //{int curserY,int curserX,int heightY,int widthX}
+    auto _stat_window{cc::widget::window{{1, maxX - 20, 15, 20}, cc::terminal::main_win}};
+    auto _story_window{cc::widget::window{{16, 0, maxY - 19, maxX}, cc::terminal::main_win}};
+    auto _buffer_window{cc::widget::window{{maxY - 3, 0, 3, maxX - 31}, cc::terminal::main_win}};
+    auto _life_window{cc::widget::window{{maxY - 3, maxX - 30, 3, 30}, cc::terminal::main_win}};
+    // 浪费我这么多时间去看了头文件，再看这个示例真的是...
+    // 但也不敢乱改，鄙人认为只需要 cc::widget::window _info_window({1,2,3,4},cc::terminal::main_win); 就行了。
+    // 注：{1,2,3,4} 其实已经隐式类型转换调用过 cxxcurses::widget::window::dimensions 的构造函数了。
+    // 这里面的回环调用真的是...
+    // 原作者重复调用构造函数应该是为了使用auto关键字，何意呢？ 完全没必要好吧。
+    info_window = &_info_window;
+    stat_window = &_stat_window;
+    story_window = &_story_window;
+    buffer_window = &_buffer_window;
+    life_window = &_life_window;
+    // 这里依然有持续性问题，widget不支持new也是服了
+    // 使用中文以表达我的愤恨...clang应该不会管注释里的中文的
+}
+
 void init()
 {
     std::cout << "Server IP: ";
@@ -46,7 +67,7 @@ void input_func()
     char buff;
     while (!exit_loop)
     {
-        buff = getch();
+        buff = wgetch(main_win->get());
         input_stream_lock.lock();
         my_input_stream << buff;
         input_stream_lock.unlock();
@@ -80,7 +101,7 @@ void main_loop()
     bool got_data = 0;
     while (counter < 3 && !input_stream_lock.try_lock()) // this will try to get the lock for three times, else skip
     {
-        my_sleep(0.1);
+        my_sleep(0.2);
         counter++;
     }
     if (counter < 3)
@@ -89,9 +110,10 @@ void main_loop()
         input_stream_lock.unlock();
         got_data = 1;
     }
-    // if (got_data) {
-    //     *buffer_window << cc::format(0, 0)(buffer_storage);
-    // }
+    if (got_data)
+    {
+        *buffer_window << cc::format(0, 0)(buffer_storage);
+    }
 
     // TODO
 
@@ -106,16 +128,6 @@ int main()
     cc::terminal init;
     maxX = main_win->max_yx().second;
     maxY = main_win->max_yx().first;
-    auto _info_window{cc::widget::window{{1, 0, 15, maxX - 21}, cc::terminal::main_win}}; //{int curserY,int curserX,int heightY,int widthX}
-    auto _stat_window{cc::widget::window{{1, maxX - 20, 15, 20}, cc::terminal::main_win}};
-    auto _story_window{cc::widget::window{{17, 0, maxY - 17, maxX}, cc::terminal::main_win}};
-    auto _buffer_window{cc::widget::window{{maxY, 0, 1, maxX - 21}, cc::terminal::main_win}};
-    auto _life_window{cc::widget::window{{maxY, maxX - 20, 1, 20}, cc::terminal::main_win}};
-    info_window = &_info_window;
-    stat_window = &_stat_window;
-    story_window = &_story_window;
-    buffer_window = &_buffer_window;
-    life_window = &_life_window;
 
     // declares end here
 
