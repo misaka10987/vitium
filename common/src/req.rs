@@ -109,7 +109,7 @@ pub enum Req {
     /// Synchronize character list.
     GetChara,
     /// Send out-game chat message.
-    SendChat(Token),
+    SendChat(SendChat),
     /// Create, edit or delete player.
     EditPlayer(EditPlayer),
     /// Create, edit or delete character.
