@@ -140,6 +140,7 @@ impl Server {
             .route("/player", get(get_player))
             .route("/chara", get(get_chara))
             .route("/chat", post(send_chat))
+            .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
             .route("/chara", post(edit_chara))
             .route("/act", post(act))
@@ -184,6 +185,17 @@ async fn send_chat(State(s): State<Server>, Json(req): Json<req::SendChat>) -> S
         let mut content = req.chat;
         dat.push_back(content.renew().clone());
         StatusCode::ACCEPTED
+    }
+}
+
+async fn edit_pswd(State(s): State<Server>, Json(req): Json<req::EditPswd>) -> StatusCode {
+    if !s.verify(&req.token).await {
+        StatusCode::FORBIDDEN
+    } else if let Some(p) = s.pswd().await.get_mut(&req.token.id) {
+        *p = req.pswd;
+        StatusCode::OK
+    } else {
+        StatusCode::NOT_FOUND
     }
 }
 
