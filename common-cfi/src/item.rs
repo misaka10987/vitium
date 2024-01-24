@@ -1,24 +1,18 @@
-use crate::{age::CAge, dice::CDice, CVector, Rust, C};
+use crate::{dice::CDice, hashmap, hashset, CHashMap, CVector, Rust, C};
 use std::ffi::c_char;
 use vitium_common::{
     age::Age,
-    item::{Armor, BodyPart, Item, OtherItem, Price, Species, Weapon},
+    item::{Armor, Item, OtherItem, Species, Weapon},
     json::{json, obj},
     UID,
 };
 
-#[repr(transparent)]
-pub struct CPrice(CVector<C_CAge_Cu64>);
-impl C<CPrice> for Price {
-    fn c(&self) -> CPrice {
-        CPrice(self.c())
-    }
-}
+pub type CPrice = CHashMap<*const i8, u64>;
 
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct C_CAge_Cu64 {
-    v1: CAge,
+    v1: *const i8,
     v2: u64,
 }
 impl C<C_CAge_Cu64> for (Age, u64) {
@@ -47,7 +41,7 @@ pub struct CWeapon {
     /// Description displayed in game.
     pub descr: *const c_char,
     /// Age periods available.
-    pub age: CVector<CAge>,
+    pub age: CVector<*const c_char>,
     /// Damage expression using dice, eg `1d4+1`.
     pub atk: CDice,
     /// In milimetres, `0` for melee weapons.
@@ -88,31 +82,19 @@ impl Rust<Weapon> for CWeapon {
             id: self.id.rs(),
             name: self.name.rs(),
             descr: self.descr.rs(),
-            age: self.age.rs(),
+            age: hashset(self.age.rs()),
             atk: self.atk.rs(),
             rng: self.rng,
             pntr: self.pntr,
             per_turn: self.per_turn,
             charge: self.charge,
             load: self.load,
-            price: self.price.0.rs(),
+            price: hashmap(self.price.rs()),
         }
     }
 }
 
-#[repr(transparent)]
-pub struct CBodyPart(*const c_char);
-impl C<CBodyPart> for BodyPart {
-    fn c(&self) -> CBodyPart {
-        CBodyPart(self.c())
-    }
-}
-impl Rust<BodyPart> for CBodyPart {
-    unsafe fn rs(&self) -> BodyPart {
-        self.0.rs()
-    }
-}
-
+pub type CBodyPart = *const i8;
 /// Defines species for deciding if an armor is able to wear.
 #[repr(C)]
 pub enum CSpecies {
@@ -156,7 +138,7 @@ pub struct CArmor {
     /// Description displayed in game.
     pub descr: *const c_char,
     /// Age periods available.
-    pub age: CVector<CAge>,
+    pub age: CVector<*const i8>,
     /// Damage
     pub def: *const c_char,
     /// Covered body parts.
@@ -191,12 +173,12 @@ impl Rust<Armor> for CArmor {
             id: self.id.rs(),
             name: self.name.rs(),
             descr: self.descr.rs(),
-            age: self.age.rs(),
+            age: hashset(self.age.rs()),
             def: self.def.rs(),
-            cover: self.cover.rs(),
+            cover: hashset(self.cover.rs()),
             species: self.species.rs(),
             rerist_pntr: self.rerist_pntr,
-            price: self.price.0.rs(),
+            price: hashmap(self.price.rs()),
         }
     }
 }

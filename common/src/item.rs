@@ -1,6 +1,8 @@
 use crate::{age::Age, dice::Dice, DEBUG_MSG, ID, UID};
 use serde_derive::{Deserialize, Serialize};
-pub type Price = Vec<(Age, u64)>;
+use std::collections::{HashMap, HashSet};
+
+pub type Price = HashMap<Age, u64>;
 
 /// Instance of weapon.
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -16,7 +18,7 @@ pub struct Weapon {
     /// Description displayed in game.
     pub descr: String,
     /// Age periods available.
-    pub age: Vec<Age>,
+    pub age: HashSet<Age>,
     /// Damage expression using dice, eg `1d4+1`.
     pub atk: Dice,
     /// In milimetres, `0` for melee weapons.
@@ -50,14 +52,14 @@ impl Weapon {
             id: "debug-weapon".to_string(),
             name: "Debug Weapon".to_string(),
             descr: DEBUG_MSG.to_string(),
-            age: vec![],
+            age: HashSet::new(),
             atk: "11d45+14".to_string(),
             rng: 114514,
             pntr: true,
             per_turn: 11,
             charge: 45,
             load: 14,
-            price: vec![],
+            price: HashMap::new(),
         }
     }
 }
@@ -89,11 +91,11 @@ pub struct Armor {
     /// Description displayed in game.
     pub descr: String,
     /// Age periods available.
-    pub age: Vec<Age>,
+    pub age: HashSet<Age>,
     /// Damage
     pub def: Dice,
     /// Covered body parts.
-    pub cover: Vec<BodyPart>,
+    pub cover: HashSet<BodyPart>,
     /// Species able to wear this armor.
     pub species: Species,
     /// Whether resists penetration.
@@ -119,12 +121,12 @@ impl Armor {
             id: "debug-armor".to_string(),
             name: "Debug Armor".to_string(),
             descr: DEBUG_MSG.to_string(),
-            age: vec![],
+            age: HashSet::new(),
             def: "11d45+14".to_string(),
-            cover: vec![],
+            cover: HashSet::new(),
             species: Species::Human,
             rerist_pntr: true,
-            price: vec![],
+            price: HashMap::new(),
         }
     }
 }

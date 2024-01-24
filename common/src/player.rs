@@ -29,7 +29,7 @@ pub struct Token {
 impl Token {
     pub fn new() -> Self {
         Self {
-            id: "debug-token".to_string(),
+            id: "debug-player".to_string(),
             pswd: "debug-pswd".to_string(),
         }
     }
