@@ -1,0 +1,4 @@
+POST http://127.0.0.1:54321/chara HTTP/1.1
+Content-Type: application/json
+
+{"chara":{"uid":0,"player":"debug-player","name":"debug-chara","descr":"If you see this in game, it is a bug.","attr":[],"invt":[],"mods":[]},"token":{"id":"debug-player","pswd":"debug-pswd"}}

@@ -12,12 +12,14 @@ pub mod player;
 pub mod record;
 pub mod registry;
 pub mod req;
-pub mod response;
+pub mod res;
 pub mod scene;
 pub mod skill;
 pub mod sync;
 pub mod util;
 pub mod vehicle;
+
+const DEBUG_MSG: &str = "If you see this in game, it is a bug.";
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

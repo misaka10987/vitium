@@ -1,0 +1,4 @@
+POST http://127.0.0.1:54321/chat HTTP/1.1
+Content-Type: application/json
+
+{"chat":{"msg":"If you see this in game, it is a bug.","player":"debug-player","time":{"secs_since_epoch":0,"nanos_since_epoch":0}},"token":{"id":"debug-player","pswd":"debug-pswd"}}

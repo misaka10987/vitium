@@ -1,124 +1,184 @@
-use crate::game;
-use crate::game::{push_act, turn};
 use axum::{
+    extract::State,
     http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
-use once_cell::sync::Lazy;
-use std::collections::{HashMap, HashSet, VecDeque};
-use tokio::fs;
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    fs,
+    net::IpAddr,
+    path::Path,
+    sync::Arc,
+};
 use tokio::{
+    net::TcpListener,
     signal,
     sync::{Mutex, MutexGuard},
 };
 use tower_http::trace::TraceLayer;
-use vitium_common::config::{obj, toml, ServerConfig};
-use vitium_common::req::Exit;
+use tracing::{error, info, trace};
 use vitium_common::{
-    act::Act,
     chara::Chara,
-    cmd::Cmd,
-    //module::Module,
+    cmd::{Command, Echo},
+    config::{obj, toml, ServerConfig},
     player::{Player, Token},
-    req::{Chat, EditChara, EditPlayer, EditPswd, SendChat},
+    req::{self, Chat, Cmd},
+    sync::Sync,
 };
 
-static CONFIG: Lazy<Mutex<ServerConfig>> = Lazy::new(|| {
-    Mutex::new(ServerConfig {
-        port: 19198,
-        chat_cap: 127,
-        module: vec![],
-    })
-});
-async fn config() -> MutexGuard<'static, ServerConfig> {
-    CONFIG.lock().await
+use crate::game::Game;
+
+type Lock<T> = Arc<Mutex<T>>;
+fn lock<T>(value: T) -> Lock<T> {
+    Arc::new(Mutex::new(value))
 }
 
-pub static mut ON: bool = false;
-
-static CHAT: Lazy<Mutex<VecDeque<Chat>>> = Lazy::new(|| Mutex::new(VecDeque::new()));
-
-type Map<K, V> = Lazy<Mutex<HashMap<K, V>>>;
-macro_rules! map {
-    () => {
-        Lazy::new(|| Mutex::new(HashMap::new()))
-    };
-}
-static PLAYER: Map<String, Player> = map!();
-static BANNED_PLAYER: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
-static PSWD: Map<String, String> = map!();
-static CHARA: Map<String, Chara> = map!();
-static OP: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
-
-async fn chat() -> MutexGuard<'static, VecDeque<Chat>> {
-    CHAT.lock().await
-}
-async fn player() -> MutexGuard<'static, HashMap<String, Player>> {
-    PLAYER.lock().await
-}
-async fn banned_player() -> MutexGuard<'static, HashSet<String>> {
-    BANNED_PLAYER.lock().await
-}
-async fn pswd() -> MutexGuard<'static, HashMap<String, String>> {
-    PSWD.lock().await
-}
-async fn chara() -> MutexGuard<'static, HashMap<String, Chara>> {
-    CHARA.lock().await
-}
-async fn op() -> MutexGuard<'static, HashSet<String>> {
-    OP.lock().await
+/// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
+/// ```
+/// use crate:server:Server;
+/// Server::new()
+///     .config("./config.toml")
+///     .run()
+///     .await
+///     .expect("internal server error");
+/// ```
+#[derive(Clone)]
+pub struct Server {
+    pub cfg: ServerConfig,
+    _player: Lock<HashMap<String, Player>>,
+    _banned_player: Lock<HashSet<String>>,
+    _banned_ip: Lock<HashSet<IpAddr>>,
+    _pswd: Lock<HashMap<String, String>>,
+    _chara: Lock<HashMap<String, Chara>>,
+    _op: Lock<HashSet<String>>,
+    _chat: Lock<VecDeque<Chat>>,
+    _game: Lock<Game>,
 }
 
-async fn verify(token: &Token) -> bool {
-    if let Some(pswd) = pswd().await.get(&token.id) {
-        pswd == &token.pswd
-    } else {
-        false
+impl Server {
+    pub fn new() -> Self {
+        Self {
+            cfg: ServerConfig::new(),
+            _player: lock(HashMap::new()),
+            _banned_player: lock(HashSet::new()),
+            _banned_ip: lock(HashSet::new()),
+            _pswd: lock(HashMap::new()),
+            _chara: lock(HashMap::new()),
+            _op: lock(HashSet::new()),
+            _chat: lock(VecDeque::new()),
+            _game: lock(Game::new()),
+        }
+    }
+    pub async fn player(&self) -> MutexGuard<'_, HashMap<String, Player>> {
+        self._player.lock().await
+    }
+    pub async fn banned_player(&self) -> MutexGuard<'_, HashSet<String>> {
+        self._banned_player.lock().await
+    }
+    pub async fn banned_ip(&self) -> MutexGuard<'_, HashSet<IpAddr>> {
+        self._banned_ip.lock().await
+    }
+    pub async fn pswd(&self) -> MutexGuard<'_, HashMap<String, String>> {
+        self._pswd.lock().await
+    }
+    pub async fn chara(&self) -> MutexGuard<'_, HashMap<String, Chara>> {
+        self._chara.lock().await
+    }
+    pub async fn op(&self) -> MutexGuard<'_, HashSet<String>> {
+        self._op.lock().await
+    }
+    pub async fn chat(&self) -> MutexGuard<'_, VecDeque<Chat>> {
+        self._chat.lock().await
+    }
+    pub async fn game(&self) -> MutexGuard<'_, Game> {
+        self._game.lock().await
+    }
+    /// Verifies if a `Token` is valid.
+    pub async fn verify(&self, token: &Token) -> bool {
+        if let Some(pswd) = self.pswd().await.get(&token.id) {
+            pswd == &token.pswd
+        } else {
+            false
+        }
+    }
+    /// Verifies if a `Token` is valid **and** has operator access.
+    pub async fn sudoer(&self, token: &Token) -> bool {
+        self.verify(token).await && self.op().await.contains(&token.id)
+    }
+    /// Load configuration from `path`.
+    pub fn config(mut self, path: &str) -> Self {
+        if !Path::new(path).exists() {
+            match fs::File::create(path) {
+                Ok(_) => {
+                    if let Err(e) = fs::write(path, toml(&self.cfg)) {
+                        error!("failed to generate configuration: {}", e);
+                    }
+                }
+                Err(_) => {
+                    error!("file {} non exist", path);
+                }
+            }
+            self.cfg.clone_from(&ServerConfig::new());
+        } else {
+            self.cfg.clone_from(&obj::<ServerConfig>(
+                &fs::read_to_string(path).expect(&format!("{} io error", path)),
+            ));
+        }
+        self
+    }
+    /// Consumes `self` and start the server.
+    pub async fn run(self) -> Result<(), std::io::Error> {
+        // listening globally on the port specified
+        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
+            .await
+            .expect("failed to bind TCP listener");
+        // initialize router
+        let app = Router::new()
+            .route("/hello", get(hello))
+            .route("/chat", get(recv_chat))
+            .route("/player", get(get_player))
+            .route("/chara", get(get_chara))
+            .route("/chat", post(send_chat))
+            .route("/player", post(edit_player))
+            .route("/chara", post(edit_chara))
+            .route("/act", post(act))
+            .route("/sync", get(sync))
+            .route("/cmd", post(cmd))
+            .with_state(self)
+            .layer(TraceLayer::new_for_http());
+        // run our app with hyper
+        axum::serve(listener, app)
+            .with_graceful_shutdown(sig_shut())
+            .await
     }
 }
 
-async fn access(token: Token) -> bool {
-    verify(&token).await && op().await.contains(&token.id)
+/// A handler always returns `Hello, world!\n`.
+async fn hello() -> &'static str {
+    "Hello, World!\n"
 }
 
-async fn banned(id: &str) -> bool {
-    banned_player().await.contains(id)
+async fn recv_chat(State(s): State<Server>) -> (StatusCode, Json<VecDeque<Chat>>) {
+    (StatusCode::OK, Json(s.chat().await.clone()))
 }
 
-async fn recv_chat() -> (StatusCode, Json<VecDeque<Chat>>) {
-    (StatusCode::OK, Json(chat().await.clone()))
+async fn get_player(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, Player>>) {
+    (StatusCode::OK, Json(s.player().await.clone()))
 }
 
-async fn get_player() -> (StatusCode, Json<HashMap<String, Player>>) {
-    (StatusCode::OK, Json(player().await.clone()))
+async fn get_chara(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, Chara>>) {
+    (StatusCode::OK, Json(s.chara().await.clone()))
 }
 
-async fn get_chara() -> (StatusCode, Json<HashMap<String, Chara>>) {
-    (StatusCode::OK, Json(chara().await.clone()))
-}
-
-async fn sync(Json(req): Json<Token>) -> (StatusCode, String) {
-    if !verify(&req).await {
-        return (
-            StatusCode::FORBIDDEN,
-            "sync: FORBIDDEN Hello, world!\n".to_string(),
-        );
-    }
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        "sync: Hello, world!\n".to_string(),
-    )
-}
-
-async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
-    if !verify(&req.token).await {
+async fn send_chat(State(s): State<Server>, Json(req): Json<req::SendChat>) -> StatusCode {
+    if !s.verify(&req.token).await {
         StatusCode::FORBIDDEN
     } else if req.token.id != req.chat.player {
         StatusCode::FORBIDDEN
     } else {
-        let mut dat = chat().await;
-        while dat.len() >= config().await.chat_cap {
+        let mut dat = s.chat().await;
+        while dat.len() >= s.cfg.chat_cap {
             dat.pop_front();
         }
         let mut content = req.chat;
@@ -127,40 +187,25 @@ async fn send_chat(Json(req): Json<SendChat>) -> StatusCode {
     }
 }
 
-async fn edit_pswd(Json(req): Json<EditPswd>) -> StatusCode {
-    if verify(&req.token).await {
-        *pswd()
-            .await
-            .get_mut(&req.token.id)
-            .expect("internal server error when trying to change password") = req.pswd;
-        StatusCode::ACCEPTED
-    } else {
-        StatusCode::FORBIDDEN
-    }
-}
-
-async fn edit_player(Json(req): Json<EditPlayer>) -> StatusCode {
-    let mut dat = player().await;
+async fn edit_player(State(s): State<Server>, Json(req): Json<req::EditPlayer>) -> StatusCode {
+    let mut dat = s.player().await;
     if let Some(player) = dat.get_mut(&req.player.id) {
-        if let Some(token) = req.token {
-            if verify(&token).await {
-                *player = req.player.clone();
-                StatusCode::ACCEPTED
-            } else {
-                StatusCode::FORBIDDEN
-            }
+        if s.verify(&req.token).await {
+            *player = req.player.clone();
+            StatusCode::ACCEPTED
         } else {
-            StatusCode::UNAUTHORIZED
+            StatusCode::FORBIDDEN
         }
     } else {
         dat.insert(req.player.id.clone(), req.player.clone());
+        s.pswd().await.insert(req.player.id, req.token.pswd);
         StatusCode::CREATED
     }
 }
 
-async fn edit_chara(Json(req): Json<EditChara>) -> StatusCode {
-    let mut dat = chara().await;
-    if !verify(&req.token).await {
+async fn edit_chara(State(s): State<Server>, Json(req): Json<req::EditChara>) -> StatusCode {
+    let mut dat = s.chara().await;
+    if !s.verify(&req.token).await {
         return StatusCode::FORBIDDEN;
     }
     if let Some(chara) = dat.get_mut(&req.chara.player) {
@@ -172,17 +217,16 @@ async fn edit_chara(Json(req): Json<EditChara>) -> StatusCode {
     }
 }
 
-async fn act(Json(req): Json<Act>) -> StatusCode {
-    if !verify(&req.token).await {
+async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
+    if !s.verify(&req.token).await {
         // token is invalid
         StatusCode::FORBIDDEN
-    } else if req.turn != *turn().await {
-        // the current turn has not yet ended but a new request is received
-        StatusCode::LOCKED
-    } else if let Some(c) = chara().await.get(&req.token.id) {
+    } else if let Some(c) = s.chara().await.get(&req.token.id) {
         if c.player == req.token.id {
-            push_act(req).await;
-            StatusCode::ACCEPTED
+            match s.game().await.proc(req).await.await {
+                Ok(c) => c,
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            }
         } else {
             // the request has a token but not matches the character it operates on
             StatusCode::UNAUTHORIZED
@@ -193,105 +237,73 @@ async fn act(Json(req): Json<Act>) -> StatusCode {
     }
 }
 
-async fn cmd(Json(req): Json<Cmd>) -> StatusCode {
-    if access(req.token).await {
-        game::cmd(req.cmd).await;
-        StatusCode::ACCEPTED
+async fn sync(State(s): State<Server>, Json(req): Json<req::Token>) -> (StatusCode, Json<Sync>) {
+    if !s.verify(&req).await {
+        (StatusCode::FORBIDDEN, Json(Sync::new()))
     } else {
-        StatusCode::FORBIDDEN
+        let (code, data) = s.game().await.fetch(req.id);
+        (code, Json(data))
     }
 }
 
-async fn exit(Json(req): Json<Exit>) -> StatusCode {
-    use crate::chara::chara as game_chara;
-    use crate::chara::exit;
-    if !game_chara().await.contains_key(&req.chara) {
-        return StatusCode::NOT_FOUND;
-    }
-    match game_chara().await.get(&req.chara) {
-        Some(c) => {
-            if req.token.id != c.player {
-                return StatusCode::UNAUTHORIZED;
-            }
-            if !verify(&req.token).await {
-                return StatusCode::FORBIDDEN;
-            }
-            exit(req.chara).await;
-            StatusCode::OK
+macro_rules! perm_deny {
+    () => {
+        Echo {
+            value: -1,
+            output: "Permission denied.".to_string(),
         }
-        None => StatusCode::NOT_FOUND,
+    };
+}
+
+async fn cmd(State(s): State<Server>, Json(req): Json<Cmd>) -> (StatusCode, Json<Echo>) {
+    if !s.verify(&req.token).await {
+        (StatusCode::FORBIDDEN, Json(perm_deny!()))
+    } else if req.cmd.op() && !s.sudoer(&req.token).await {
+        (StatusCode::FORBIDDEN, Json(perm_deny!()))
+    } else {
+        let p = req.token.id;
+        info!("executing command issued by player[id={}]", p);
+        let code = StatusCode::ACCEPTED;
+        let echo = match req.cmd {
+            Command::Hello => exec::hello(),
+            Command::Grant(p) => exec::grant(&s, &p).await,
+        };
+        trace!("player[id={}]: {}", p, echo.output);
+        info!("player[id={}]'s command returned {}", p, echo.value);
+        (code, Json(echo))
     }
 }
 
-/// A handler always returns `Hello, world!\n`.
-async fn hello() -> &'static str {
-    "Hello, World!\n"
-}
-
-/// Defines the server. This is a more abstract one, see crate::game for specific game logics.
-///
-/// Note that only one static instance exists for this struct and it should **NEVER** be manually created.
-/// # Examples
-/// ```
-/// use crate:server:Server;
-/// Server::start()
-///     .set_port(50000)
-///     .run()
-///     .unwrap();
-/// ```
-pub struct Server;
-
-impl Server {
-    pub fn start() -> Self {
-        Server
-    }
-    pub async fn config(&self, path: &str) -> Self {
-        // Generates a default config file if non exist.
-        if !fs::try_exists(path)
-            .await
-            .expect(&format!("{} io error", path))
-        {
-            fs::File::create(path)
-                .await
-                .expect(&format!("{} io error", path));
-            let c = toml(&config().await.clone());
-            fs::write(path, c)
-                .await
-                .expect(&format!("{} io error", path));
-            return Server;
+/// Command executors. Note that permission will **NOT** be verified.
+pub mod exec {
+    use super::Server;
+    use vitium_common::cmd::Echo;
+    pub fn hello() -> Echo {
+        Echo {
+            value: 0,
+            output: "Hello, world!\n".to_string(),
         }
-        config().await.clone_from(&obj::<ServerConfig>(
-            &fs::read_to_string(path)
-                .await
-                .expect(&format!("{} io error", path)),
-        ));
-        Server
     }
-    /// The function to run the server.
-    pub async fn run(&self) -> Result<(), std::io::Error> {
-        // build our application with a route
-        let app = Router::new()
-            .route("/hello", get(hello))
-            .route("/chat", get(recv_chat))
-            .route("/player", get(get_player))
-            .route("/chara", get(get_chara))
-            .route("/sync", get(sync))
-            .route("/chat", post(send_chat))
-            .route("/pswd", post(edit_pswd))
-            .route("/player", post(edit_player))
-            .route("/chara", post(edit_chara))
-            .route("/act", post(act))
-            .route("/cmd", post(cmd))
-            .route("/exit", post(exit))
-            .layer(TraceLayer::new_for_http());
-        // listening globally on port 3000
-        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config().await.port))
-            .await
-            .expect("failed to bind TCP listener");
-        // run our app with hyper
-        axum::serve(listener, app)
-            .with_graceful_shutdown(sig_shut())
-            .await
+    pub async fn grant(s: &Server, player: &str) -> Echo {
+        let p = s.player().await;
+        let mut o = s.op().await;
+        if !p.contains_key(player) {
+            Echo {
+                value: 1,
+                output: format!("player[id={}] non exist", player),
+            }
+        } else if o.contains(player) {
+            Echo {
+                value: 2,
+                output: format!("player[id={}] is already operator", player),
+            }
+        } else {
+            o.insert(player.to_string());
+            Echo {
+                value: 0,
+                output: format!("opped player[id={}]", player),
+            }
+        }
     }
 }
 
@@ -313,38 +325,5 @@ async fn sig_shut() {
     tokio::select! {
         _ = ctrl_c => {},
         _ = terminate => {},
-    }
-}
-
-pub mod root {
-    use super::{banned, banned_player, op, player, pswd};
-    use tracing::info;
-    pub async fn grant(arg: &str) -> i8 {
-        let id = arg.trim();
-        if player().await.contains_key(id) && pswd().await.contains_key(id) {
-            op().await.insert(id.to_string());
-            info!("opped player[id=\"{}\"]", id);
-            println!("  Success>> opped player[id=\"{}\"]", id);
-            0
-        } else {
-            println!("  Failure>> player[id=\"{}\"] not found", id);
-            -1
-        }
-    }
-    pub async fn ban(arg: &str) -> i8 {
-        let id = arg.trim();
-        if !player().await.contains_key(id) {
-            println!("  Failure>> player[id=\"{}\"] not found", id);
-            return -1;
-        }
-        if banned(id).await {
-            println!("  Failure>> player[id=\"{}\"] is already banned", id);
-            return -1;
-        }
-        player().await.remove(id);
-        pswd().await.remove(id);
-        banned_player().await.insert(id.to_string());
-        println!("  Success>> banned player[id=\"{}\"]", id);
-        0
     }
 }

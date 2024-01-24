@@ -21,7 +21,7 @@ pub mod registry;
 pub mod save;
 /// In-game scenario.
 pub mod scene;
-/// Defines the server.
+/// New server.
 pub mod server;
 
 #[derive(Parser, Debug)]
@@ -40,9 +40,8 @@ async fn main() {
     info!("Running with {:?}", arg);
     spawn(input::input());
     // run the server
-    Server::start()
+    Server::new()
         .config("./config.toml")
-        .await
         .run()
         .await
         .expect("internal server error");
