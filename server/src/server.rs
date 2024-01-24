@@ -223,6 +223,9 @@ async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
         StatusCode::FORBIDDEN
     } else if let Some(c) = s.chara().await.get(&req.token.id) {
         if c.player == req.token.id {
+            if !s.game().await.enrolled(req.chara).await {
+                return StatusCode::NOT_FOUND;
+            }
             match s.game().await.proc(req).await.await {
                 Ok(c) => c,
                 Err(_) => StatusCode::INTERNAL_SERVER_ERROR,

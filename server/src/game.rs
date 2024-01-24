@@ -2,13 +2,13 @@ pub use crate::load::load;
 pub use crate::save::save;
 use axum::http::StatusCode;
 use once_cell::sync::Lazy;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use tokio::sync::{
     oneshot::{channel, Receiver, Sender},
     Mutex, MutexGuard,
 };
 use tracing::info;
-use vitium_common::{act::Act, sync::Sync, UID};
+use vitium_common::{act::Act, chara::Chara, sync::Sync, UID};
 
 static TURN: Lazy<Mutex<i128>> = Lazy::new(|| Mutex::new(255));
 /// Starts from `0`, defines how many turns has passed after the game starts.
@@ -25,7 +25,9 @@ pub(self) struct ActProc {
 pub struct Game {
     pub on: bool,
     _turn: Mutex<i128>,
+    _chara_status: Mutex<HashMap<i128, bool>>,
     _act: Mutex<VecDeque<ActProc>>,
+    _chara: Mutex<HashMap<i128, Chara>>,
     _uid_alloc: Mutex<i128>,
 }
 
@@ -35,17 +37,38 @@ impl Game {
         Self {
             on: false,
             _turn: Mutex::new(0),
+            _chara_status: Mutex::new(HashMap::new()),
             _act: Mutex::new(VecDeque::new()),
+            _chara: Mutex::new(HashMap::new()),
             _uid_alloc: Mutex::new(255),
         }
+    }
+    /// Lock getter.
+    pub(self) async fn chara_status(&self) -> MutexGuard<'_, HashMap<i128, bool>> {
+        self._chara_status.lock().await
+    }
+    pub(self) async fn all_ready(&self) -> bool {
+        let mut ans = true;
+        for i in self.chara_status().await.values() {
+            ans = ans && *i;
+        }
+        ans
     }
     /// Lock getter.
     pub(self) async fn act(&self) -> MutexGuard<'_, VecDeque<ActProc>> {
         self._act.lock().await
     }
+    /// Lock getter.
+    pub(self) async fn chara(&self) -> MutexGuard<'_, HashMap<i128, Chara>> {
+        self._chara.lock().await
+    }
     /// Current game turn.
     pub async fn turn(&self) -> MutexGuard<'_, i128> {
         self._turn.lock().await
+    }
+    /// Whether a character is enrolled in the game.
+    pub async fn enrolled(&self, uid: i128) -> bool {
+        self.chara().await.contains_key(&uid)
     }
     /// Generate new uid.
     pub(self) async fn gen_uid(&self) -> i128 {
@@ -81,8 +104,21 @@ impl Game {
             act.token.id,
             format!("act[uid={}]", act.uid)
         );
-        self.act().await.push_back(ActProc { act, sender: s });
-        self.update().await;
+        match self.chara_status().await.get(&act.chara) {
+            Some(p) => {
+                if *p {
+                    s.send(StatusCode::CONFLICT).expect("channel error");
+                } else {
+                    self.act().await.push_back(ActProc { act, sender: s });
+                    if self.all_ready().await {
+                        self.update().await;
+                    }
+                }
+            }
+            None => {
+                s.send(StatusCode::NOT_FOUND).expect("channel error");
+            }
+        };
         r
     }
 }
