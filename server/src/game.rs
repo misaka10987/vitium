@@ -1,21 +1,15 @@
 pub use crate::load::load;
 pub use crate::save::save;
 use axum::http::StatusCode;
-use once_cell::sync::Lazy;
 use std::collections::{HashMap, VecDeque};
 use tokio::sync::{
     oneshot::{channel, Receiver, Sender},
     Mutex, MutexGuard,
 };
-use tracing::info;
+use tracing::{info, warn};
 use vitium_common::{act::Act, chara::Chara, sync::Sync, UID};
 
-static TURN: Lazy<Mutex<i128>> = Lazy::new(|| Mutex::new(255));
-/// Starts from `0`, defines how many turns has passed after the game starts.
-pub async fn turn() -> MutexGuard<'static, i128> {
-    TURN.lock().await
-}
-
+/// Action item waiting the server to process.
 pub(self) struct ActProc {
     pub act: Act,
     pub sender: Sender<StatusCode>,
@@ -47,6 +41,7 @@ impl Game {
     pub(self) async fn chara_status(&self) -> MutexGuard<'_, HashMap<i128, bool>> {
         self._chara_status.lock().await
     }
+    /// Whether all characters have submitted their action.
     pub(self) async fn all_ready(&self) -> bool {
         let mut ans = true;
         for i in self.chara_status().await.values() {
@@ -75,6 +70,20 @@ impl Game {
         let mut curr = self._uid_alloc.lock().await;
         *curr += 1;
         *curr
+    }
+    /// Shutdown the internal game server.
+    pub async fn shutdown(&self) {
+        let mut proc = self.act().await;
+        while let Some(a) = proc.pop_front() {
+            warn!(
+                "giving up act[uid={}] submitted by chara[uid={}]",
+                a.act.uid, a.act.chara
+            );
+            a.sender
+                .send(StatusCode::SERVICE_UNAVAILABLE)
+                .expect("channel error");
+            info!("act queue clear");
+        }
     }
     /// Calculates all waiting acts.
     pub(self) async fn update(&self) {

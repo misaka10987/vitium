@@ -270,6 +270,7 @@ async fn cmd(State(s): State<Server>, Json(req): Json<Cmd>) -> (StatusCode, Json
         let echo = match req.cmd {
             Command::Hello => exec::hello(),
             Command::Grant(p) => exec::grant(&s, &p).await,
+            Command::ShutDown => exec::shutdown(&s).await,
         };
         trace!("player[id={}]: {}", p, echo.output);
         info!("player[id={}]'s command returned {}", p, echo.value);
@@ -280,6 +281,8 @@ async fn cmd(State(s): State<Server>, Json(req): Json<Cmd>) -> (StatusCode, Json
 /// Command executors. Note that permission will **NOT** be verified.
 pub mod exec {
     use super::Server;
+    use tokio::{process, spawn};
+    use tracing::info;
     use vitium_common::cmd::Echo;
     pub fn hello() -> Echo {
         Echo {
@@ -306,6 +309,17 @@ pub mod exec {
                 value: 0,
                 output: format!("opped player[id={}]", player),
             }
+        }
+    }
+    pub async fn shutdown(s: &Server) -> Echo {
+        info!("shutting down internal server");
+        s.game().await.shutdown().await;
+        spawn(async {
+            process::Command::new(format!("kill -s SIGINT {}", std::process::id()));
+        });
+        Echo {
+            value: 0,
+            output: "exit".to_string(),
         }
     }
 }
