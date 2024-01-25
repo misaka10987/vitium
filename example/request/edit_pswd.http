@@ -1,0 +1,4 @@
+POST http://127.0.0.1:54321/pswd HTTP/1.1
+Content-Type: application/json
+
+{"token":{"id":"debug-player","pswd":"debug-pswd"},"pswd":"debug-pswd"}

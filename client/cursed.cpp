@@ -1,5 +1,7 @@
 #include "cxxcurses/cxxcurses.hpp"
 
+#pragma once
+
 namespace cursed
 {
     typedef cxxcurses::widget::window RawWindow;

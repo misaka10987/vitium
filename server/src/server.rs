@@ -140,6 +140,7 @@ impl Server {
             .route("/player", get(get_player))
             .route("/chara", get(get_chara))
             .route("/chat", post(send_chat))
+            .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
             .route("/chara", post(edit_chara))
             .route("/act", post(act))
@@ -187,6 +188,17 @@ async fn send_chat(State(s): State<Server>, Json(req): Json<req::SendChat>) -> S
     }
 }
 
+async fn edit_pswd(State(s): State<Server>, Json(req): Json<req::EditPswd>) -> StatusCode {
+    if !s.verify(&req.token).await {
+        StatusCode::FORBIDDEN
+    } else if let Some(p) = s.pswd().await.get_mut(&req.token.id) {
+        *p = req.pswd;
+        StatusCode::OK
+    } else {
+        StatusCode::NOT_FOUND
+    }
+}
+
 async fn edit_player(State(s): State<Server>, Json(req): Json<req::EditPlayer>) -> StatusCode {
     let mut dat = s.player().await;
     if let Some(player) = dat.get_mut(&req.player.id) {
@@ -223,6 +235,9 @@ async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
         StatusCode::FORBIDDEN
     } else if let Some(c) = s.chara().await.get(&req.token.id) {
         if c.player == req.token.id {
+            if !s.game().await.enrolled(req.chara).await {
+                return StatusCode::NOT_FOUND;
+            }
             match s.game().await.proc(req).await.await {
                 Ok(c) => c,
                 Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -267,6 +282,7 @@ async fn cmd(State(s): State<Server>, Json(req): Json<Cmd>) -> (StatusCode, Json
         let echo = match req.cmd {
             Command::Hello => exec::hello(),
             Command::Grant(p) => exec::grant(&s, &p).await,
+            Command::ShutDown => exec::shutdown(&s).await,
         };
         trace!("player[id={}]: {}", p, echo.output);
         info!("player[id={}]'s command returned {}", p, echo.value);
@@ -277,6 +293,8 @@ async fn cmd(State(s): State<Server>, Json(req): Json<Cmd>) -> (StatusCode, Json
 /// Command executors. Note that permission will **NOT** be verified.
 pub mod exec {
     use super::Server;
+    use tokio::{process, spawn};
+    use tracing::info;
     use vitium_common::cmd::Echo;
     pub fn hello() -> Echo {
         Echo {
@@ -303,6 +321,17 @@ pub mod exec {
                 value: 0,
                 output: format!("opped player[id={}]", player),
             }
+        }
+    }
+    pub async fn shutdown(s: &Server) -> Echo {
+        info!("shutting down internal server");
+        s.game().await.shutdown().await;
+        spawn(async {
+            process::Command::new(format!("kill -s SIGINT {}", std::process::id()));
+        });
+        Echo {
+            value: 0,
+            output: "exit".to_string(),
         }
     }
 }

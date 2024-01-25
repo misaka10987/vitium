@@ -6,12 +6,14 @@ use serde_derive::{Deserialize, Serialize};
 pub enum Command {
     Hello,
     Grant(String),
+    ShutDown,
 }
 impl Command {
     pub fn op(&self) -> bool {
         match self {
             Command::Hello => false,
             Command::Grant(_) => true,
+            Command::ShutDown => true,
         }
     }
 }
