@@ -51,6 +51,8 @@ pub extern "C" fn get(url : *const c_char) -> Conj{
         }
     }
 }
+
+#[no_mangle]
 pub extern "C" fn post(url : *const c_char,mes : *const c_char) -> Conj{
     unsafe {
         let res = reqwest::blocking::Client::new().post(r(url)).body(r(mes)).send();
