@@ -21,6 +21,7 @@ pub mod registry;
 pub mod save;
 /// In-game scenario.
 pub mod scene;
+pub mod script;
 /// New server.
 pub mod server;
 
