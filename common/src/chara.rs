@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::{item::Inventory, util::Bottle, UID};
+use crate::{item::Inventory, Bottle, UID};
 use serde_derive::{Deserialize, Serialize};
 
 /// Defines attribution of a Chara.
@@ -21,7 +21,7 @@ impl Attr {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chara {
-    pub uid: i128,
+    pub uid: u64,
     pub player: String,
     pub name: String,
     pub descr: String,
@@ -45,11 +45,11 @@ impl Chara {
 }
 
 impl UID for Chara {
-    fn uid(&self) -> i128 {
+    fn uid(&self) -> u64 {
         self.uid
     }
 
-    fn set_uid(&mut self, uid: i128) -> &mut Self {
+    fn set_uid(&mut self, uid: u64) -> &mut Self {
         self.uid = uid;
         self
     }

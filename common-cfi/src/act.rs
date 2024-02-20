@@ -7,7 +7,7 @@ use vitium_common::{
 
 pub struct CCast {
     pub skill: *const c_char,
-    pub object: i64,
+    pub object: u64,
 }
 impl C<CCast> for Cast {
     fn c(&self) -> CCast {
@@ -19,8 +19,8 @@ impl C<CCast> for Cast {
 }
 
 pub enum CAction {
-    Move(i64),
-    Wield(i64),
+    Move(u64),
+    Wield(u64),
     Cast(CCast),
     Hello,
 }
@@ -36,9 +36,9 @@ impl C<CAction> for Action {
 }
 
 pub struct CAct {
-    pub uid: i64,
-    pub chara: i64,
-    pub turn: i64,
+    pub uid: u64,
+    pub chara: u64,
+    pub turn: u64,
     pub action: CAction,
 }
 impl C<CAct> for Act {

@@ -1,4 +1,4 @@
-use crate::DEBUG_MSG;
+use crate::DEBUG_DESCR;
 use serde_derive::{Deserialize, Serialize};
 
 /// Defines a real-world player.
@@ -14,7 +14,7 @@ impl Player {
         Self {
             id: "debug-player".to_string(),
             name: "Debug Player".to_string(),
-            profile: Some(DEBUG_MSG.to_string()),
+            profile: Some(DEBUG_DESCR.to_string()),
         }
     }
 }

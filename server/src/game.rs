@@ -18,11 +18,11 @@ pub(self) struct ActProc {
 /// Internal game server.
 pub struct Game {
     pub on: bool,
-    _turn: Mutex<i128>,
-    _chara_status: Mutex<HashMap<i128, bool>>,
+    _turn: Mutex<u64>,
+    _chara_status: Mutex<HashMap<u64, bool>>,
     _act: Mutex<VecDeque<ActProc>>,
-    _chara: Mutex<HashMap<i128, Chara>>,
-    _uid_alloc: Mutex<i128>,
+    _chara: Mutex<HashMap<u64, Chara>>,
+    _uid_alloc: Mutex<u64>,
 }
 
 impl Game {
@@ -38,7 +38,7 @@ impl Game {
         }
     }
     /// Lock getter.
-    pub(self) async fn chara_status(&self) -> MutexGuard<'_, HashMap<i128, bool>> {
+    pub(self) async fn chara_status(&self) -> MutexGuard<'_, HashMap<u64, bool>> {
         self._chara_status.lock().await
     }
     /// Whether all characters have submitted their action.
@@ -54,19 +54,19 @@ impl Game {
         self._act.lock().await
     }
     /// Lock getter.
-    pub(self) async fn chara(&self) -> MutexGuard<'_, HashMap<i128, Chara>> {
+    pub(self) async fn chara(&self) -> MutexGuard<'_, HashMap<u64, Chara>> {
         self._chara.lock().await
     }
     /// Current game turn.
-    pub async fn turn(&self) -> MutexGuard<'_, i128> {
+    pub async fn turn(&self) -> MutexGuard<'_, u64> {
         self._turn.lock().await
     }
     /// Whether a character is enrolled in the game.
-    pub async fn enrolled(&self, uid: i128) -> bool {
+    pub async fn enrolled(&self, uid: u64) -> bool {
         self.chara().await.contains_key(&uid)
     }
     /// Generate new uid.
-    pub(self) async fn gen_uid(&self) -> i128 {
+    pub(self) async fn gen_uid(&self) -> u64 {
         let mut curr = self._uid_alloc.lock().await;
         *curr += 1;
         *curr

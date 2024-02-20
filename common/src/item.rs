@@ -1,14 +1,44 @@
-use crate::{age::Age, dice::Dice, DEBUG_MSG, ID, UID};
+use crate::{age::Age, dice::Dice, DEBUG_DESCR, ID, UID};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 pub type Price = HashMap<Age, u64>;
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ItemInfo {
+    pub uid: u64,
+    /// Extended description that will override the original one defined in registry.
+    pub descr: Option<String>,
+    /// In milimetres.
+    pub length: u16,
+    /// In mililitres.
+    pub volume: u16,
+    /// In grams.
+    pub weight: u16,
+}
+
+impl ItemInfo {
+    pub fn new() -> Self {
+        ItemInfo {
+            uid: 0,
+            descr: None,
+            length: 114,
+            volume: 514,
+            weight: 514,
+        }
+    }
+}
+
+pub trait ItemCommon {
+    fn info(&self) -> &ItemInfo;
+}
+
 /// Instance of weapon.
-#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Weapon {
+    pub info: ItemInfo,
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: i128,
+    pub uid: u64,
     /// String ID for `Item`, must be unique.
     ///
     /// Any char that is allowed in a valid filename is allowed here, like `-`.
@@ -36,10 +66,10 @@ pub struct Weapon {
 }
 
 impl UID for Weapon {
-    fn uid(&self) -> i128 {
+    fn uid(&self) -> u64 {
         self.uid
     }
-    fn set_uid(&mut self, uid: i128) -> &mut Self {
+    fn set_uid(&mut self, uid: u64) -> &mut Self {
         self.uid = uid;
         self
     }
@@ -48,10 +78,11 @@ impl UID for Weapon {
 impl Weapon {
     pub fn new() -> Self {
         Self {
+            info: ItemInfo::new(),
             uid: 0,
             id: "debug-weapon".to_string(),
             name: "Debug Weapon".to_string(),
-            descr: DEBUG_MSG.to_string(),
+            descr: DEBUG_DESCR.to_string(),
             age: HashSet::new(),
             atk: "11d45+14".to_string(),
             rng: 114514,
@@ -80,8 +111,9 @@ pub enum Species {
 /// Instance of armor.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Armor {
+    pub info: ItemInfo,
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: i128,
+    pub uid: u64,
     /// String ID for `Item`, must be unique.
     ///
     /// Any char that is allowed in a valid filename is allowed here, like `-`.
@@ -105,10 +137,10 @@ pub struct Armor {
 }
 
 impl UID for Armor {
-    fn uid(&self) -> i128 {
+    fn uid(&self) -> u64 {
         self.uid
     }
-    fn set_uid(&mut self, uid: i128) -> &mut Self {
+    fn set_uid(&mut self, uid: u64) -> &mut Self {
         self.uid = uid;
         self
     }
@@ -117,10 +149,11 @@ impl UID for Armor {
 impl Armor {
     pub fn new() -> Self {
         Self {
+            info: ItemInfo::new(),
             uid: 0,
             id: "debug-armor".to_string(),
             name: "Debug Armor".to_string(),
-            descr: DEBUG_MSG.to_string(),
+            descr: DEBUG_DESCR.to_string(),
             age: HashSet::new(),
             def: "11d45+14".to_string(),
             cover: HashSet::new(),
@@ -133,8 +166,9 @@ impl Armor {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct OtherItem {
+    pub info: ItemInfo,
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: i128,
+    pub uid: u64,
     /// String ID for `Item`, must be unique.
     ///
     /// Any char that is allowed in a valid filename is allowed here, like `-`.
@@ -146,10 +180,10 @@ pub struct OtherItem {
 }
 
 impl UID for OtherItem {
-    fn uid(&self) -> i128 {
+    fn uid(&self) -> u64 {
         self.uid
     }
-    fn set_uid(&mut self, uid: i128) -> &mut Self {
+    fn set_uid(&mut self, uid: u64) -> &mut Self {
         self.uid = uid;
         self
     }
@@ -158,10 +192,11 @@ impl UID for OtherItem {
 impl OtherItem {
     pub fn new() -> Self {
         Self {
+            info: ItemInfo::new(),
             uid: 0,
             id: "debug-otheritem".to_string(),
             name: "Debug Other Item".to_string(),
-            descr: DEBUG_MSG.to_string(),
+            descr: DEBUG_DESCR.to_string(),
         }
     }
 }
@@ -184,14 +219,14 @@ impl ID for Item {
 }
 
 impl UID for Item {
-    fn uid(&self) -> i128 {
+    fn uid(&self) -> u64 {
         match self {
             Item::Weapon(i) => i.uid,
             Item::Armor(i) => i.uid,
             Item::Other(i) => i.uid,
         }
     }
-    fn set_uid(&mut self, uid: i128) -> &mut Self {
+    fn set_uid(&mut self, uid: u64) -> &mut Self {
         match self {
             Item::Weapon(i) => i.uid = uid,
             Item::Armor(i) => i.uid = uid,

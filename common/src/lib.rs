@@ -9,6 +9,7 @@ pub mod item;
 pub mod json;
 pub mod module;
 pub mod player;
+mod prelude;
 pub mod record;
 pub mod registry;
 pub mod req;
@@ -19,7 +20,9 @@ pub mod sync;
 pub mod util;
 pub mod vehicle;
 
-const DEBUG_MSG: &str = "If you see this in game, it is a bug.";
+pub use crate::prelude::*;
+
+pub const DEBUG_DESCR: &str = "If you see this in game, it is a bug.";
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
@@ -30,8 +33,8 @@ pub trait ID {
 }
 
 pub trait UID {
-    fn uid(&self) -> i128;
-    fn set_uid(&mut self, uid: i128) -> &mut Self;
+    fn uid(&self) -> u64;
+    fn set_uid(&mut self, uid: u64) -> &mut Self;
     fn no_uid(&self) -> bool {
         self.uid() == 0
     }

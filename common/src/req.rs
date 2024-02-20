@@ -1,5 +1,5 @@
 pub use crate::{act::Act, cmd::Cmd, player::Token};
-use crate::{chara::Chara, player::Player, DEBUG_MSG};
+use crate::{chara::Chara, player::Player, DEBUG_DESCR};
 use serde_derive::{Deserialize, Serialize};
 use std::time::SystemTime;
 
@@ -18,7 +18,7 @@ pub struct Chat {
 impl Chat {
     pub fn new() -> Self {
         Self {
-            msg: DEBUG_MSG.to_string(),
+            msg: DEBUG_DESCR.to_string(),
             player: "debug-player".to_string(),
             time: SystemTime::now(),
         }

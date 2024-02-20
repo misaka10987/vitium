@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 /// Instance of vehicle.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Vehicle {
-    pub uid: i128,
+    pub uid: u64,
     pub id: String,
     /// Age periods available.
     pub age: Vec<Age>,
@@ -22,11 +22,11 @@ impl ID for Vehicle {
 }
 
 impl UID for Vehicle {
-    fn uid(&self) -> i128 {
+    fn uid(&self) -> u64 {
         self.uid
     }
 
-    fn set_uid(&mut self, uid: i128) -> &mut Self {
+    fn set_uid(&mut self, uid: u64) -> &mut Self {
         self.uid = uid;
         self
     }

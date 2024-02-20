@@ -31,7 +31,7 @@ impl Rust<(Age, u64)> for C_CAge_Cu64 {
 /// Instance of weapon.
 pub struct CWeapon {
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: i64,
+    pub uid: u64,
     /// String ID for `Item`, must be unique.
     ///
     /// Any char that is allowed in a valid filename is allowed here, like `-`.
@@ -60,7 +60,7 @@ pub struct CWeapon {
 impl C<CWeapon> for Weapon {
     fn c(&self) -> CWeapon {
         CWeapon {
-            uid: self.uid() as i64,
+            uid: self.uid() as u64,
             id: self.id.c(),
             name: self.name.c(),
             descr: self.descr.c(),
@@ -78,7 +78,7 @@ impl C<CWeapon> for Weapon {
 impl Rust<Weapon> for CWeapon {
     unsafe fn rs(&self) -> Weapon {
         Weapon {
-            uid: self.uid as i128,
+            uid: self.uid,
             id: self.id.rs(),
             name: self.name.rs(),
             descr: self.descr.rs(),
@@ -128,7 +128,7 @@ impl Rust<Species> for CSpecies {
 #[repr(C)]
 pub struct CArmor {
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: i64,
+    pub uid: u64,
     /// String ID for `Item`, must be unique.
     ///
     /// Any char that is allowed in a valid filename is allowed here, like `-`.
@@ -153,7 +153,7 @@ pub struct CArmor {
 impl C<CArmor> for Armor {
     fn c(&self) -> CArmor {
         CArmor {
-            uid: self.uid() as i64,
+            uid: self.uid() as u64,
             id: self.id.c(),
             name: self.name.c(),
             descr: self.descr.c(),
@@ -169,7 +169,7 @@ impl C<CArmor> for Armor {
 impl Rust<Armor> for CArmor {
     unsafe fn rs(&self) -> Armor {
         Armor {
-            uid: self.uid as i128,
+            uid: self.uid,
             id: self.id.rs(),
             name: self.name.rs(),
             descr: self.descr.rs(),
@@ -186,7 +186,7 @@ impl Rust<Armor> for CArmor {
 #[repr(C)]
 pub struct COtherItem {
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: i64,
+    pub uid: u64,
     /// String ID for `Item`, must be unique.
     ///
     /// Any char that is allowed in a valid filename is allowed here, like `-`.
@@ -199,7 +199,7 @@ pub struct COtherItem {
 impl C<COtherItem> for OtherItem {
     fn c(&self) -> COtherItem {
         COtherItem {
-            uid: self.uid() as i64,
+            uid: self.uid() as u64,
             id: self.id.c(),
             name: self.name.c(),
             descr: self.descr.c(),
@@ -209,7 +209,7 @@ impl C<COtherItem> for OtherItem {
 impl Rust<OtherItem> for COtherItem {
     unsafe fn rs(&self) -> OtherItem {
         OtherItem {
-            uid: self.uid as i128,
+            uid: self.uid,
             id: self.id.rs(),
             name: self.name.rs(),
             descr: self.descr.rs(),
