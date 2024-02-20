@@ -1,13 +1,18 @@
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdlib>
+#include <ostream>
+#include <new>
 
-typedef struct Conj {
+struct Conj {
   int32_t gotta;
   const char *resp;
-} Conj;
+};
 
-struct Conj get(const char *url);
+extern "C" {
 
-struct Conj post(const char *url, const char *mes);
+Conj get(const char *url);
+
+Conj post(const char *url, const char *mes);
+
+} // extern "C"
