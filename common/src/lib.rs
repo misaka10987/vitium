@@ -1,5 +1,6 @@
 pub mod act;
 pub mod age;
+pub mod attack;
 pub mod chara;
 pub mod cmd;
 pub mod config;
@@ -21,9 +22,28 @@ pub mod sync;
 pub mod util;
 pub mod vehicle;
 
+use serde::{Deserialize, Serialize};
+
 pub use crate::prelude::*;
 
 pub const DEBUG_DESCR: &str = "If you see this in game, it is a bug.";
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub enum ObjClass {
+    Item,
+    Chara,
+    Scene,
+    Vehicle,
+    Mob,
+    NPC,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub enum Target {
+    Chara(u64),
+    Mob(u64),
+    NPC(u64),
+}
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

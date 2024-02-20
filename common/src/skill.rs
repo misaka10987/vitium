@@ -1,4 +1,4 @@
-use crate::{age::Age, ID};
+use crate::{age::Age, ObjClass, ID};
 use serde::{Deserialize, Serialize};
 
 /// Defines a skill instance.
@@ -43,5 +43,22 @@ pub struct Prof {
 impl ID for Prof {
     fn id(&self) -> Option<&str> {
         Some(&self.id)
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct SkillAction {
+    pub cat: ObjClass,
+    pub obj: u64,
+    pub skill: String,
+}
+
+impl SkillAction {
+    pub fn example() -> Self {
+        Self {
+            cat: ObjClass::Mob,
+            obj: 1145141919810,
+            skill: "example-skill".to_string(),
+        }
     }
 }
