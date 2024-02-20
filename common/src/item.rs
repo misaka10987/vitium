@@ -4,39 +4,9 @@ use std::collections::{HashMap, HashSet};
 
 pub type Price = HashMap<Age, u64>;
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct ItemInfo {
-    pub uid: u64,
-    /// Extended description that will override the original one defined in registry.
-    pub descr: Option<String>,
-    /// In milimetres.
-    pub length: u16,
-    /// In mililitres.
-    pub volume: u16,
-    /// In grams.
-    pub weight: u16,
-}
-
-impl ItemInfo {
-    pub fn new() -> Self {
-        ItemInfo {
-            uid: 0,
-            descr: None,
-            length: 114,
-            volume: 514,
-            weight: 514,
-        }
-    }
-}
-
-pub trait ItemCommon {
-    fn info(&self) -> &ItemInfo;
-}
-
 /// Instance of weapon.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Weapon {
-    pub info: ItemInfo,
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
     pub uid: u64,
     /// String ID for `Item`, must be unique.
@@ -78,7 +48,6 @@ impl UID for Weapon {
 impl Weapon {
     pub fn new() -> Self {
         Self {
-            info: ItemInfo::new(),
             uid: 0,
             id: "debug-weapon".to_string(),
             name: "Debug Weapon".to_string(),
@@ -111,7 +80,6 @@ pub enum Species {
 /// Instance of armor.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Armor {
-    pub info: ItemInfo,
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
     pub uid: u64,
     /// String ID for `Item`, must be unique.
@@ -149,7 +117,6 @@ impl UID for Armor {
 impl Armor {
     pub fn new() -> Self {
         Self {
-            info: ItemInfo::new(),
             uid: 0,
             id: "debug-armor".to_string(),
             name: "Debug Armor".to_string(),
@@ -166,7 +133,6 @@ impl Armor {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct OtherItem {
-    pub info: ItemInfo,
     /// Unique in-game id generated automatically. Set to `0` to let the program generate.
     pub uid: u64,
     /// String ID for `Item`, must be unique.
@@ -192,7 +158,6 @@ impl UID for OtherItem {
 impl OtherItem {
     pub fn new() -> Self {
         Self {
-            info: ItemInfo::new(),
             uid: 0,
             id: "debug-otheritem".to_string(),
             name: "Debug Other Item".to_string(),
@@ -237,49 +202,3 @@ impl UID for Item {
 }
 
 pub type Inventory = Vec<Option<Item>>;
-
-// #[test]
-// fn see_json() {
-//     use serde_json::to_string as json;
-//     let id = "example_id".to_string();
-//     let a = vec!["1920s".to_string()];
-//     let c = vec!["torso".to_string(), "head".to_string()];
-//     let p = vec![("1920s".to_string(), 1919810)];
-//     let i1 = Item::Weapon(Weapon::new(
-//         0,
-//         &id,
-//         "example_name",
-//         "This is an example weapon.",
-//         a.clone(),
-//         "11d45+14",
-//         0,
-//         true,
-//         2,
-//         5,
-//         1,
-//         p.clone(),
-//     ));
-//     let i2 = Item::Armor(Armor::new(
-//         0,
-//         &id,
-//         "example_name",
-//         "This is an example armor.",
-//         a,
-//         "11d45+14",
-//         c,
-//         Species::Human,
-//         true,
-//         p,
-//     ));
-//     let i3 = Item::Other(OtherItem::new(
-//         0,
-//         "example_id",
-//         "example_name",
-//         "This is description of an OtherItem.",
-//     ));
-//     println!("{}", json(&i1).unwrap());
-//     println!("{}", json(&i2).unwrap());
-//     println!("{}", json(&i3).unwrap());
-//     let i: Inventory = vec![Some(i1), None];
-//     println!("{}", json(&i).unwrap());
-// }
