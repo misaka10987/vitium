@@ -1,4 +1,4 @@
-use crate::{age::Age, dice::Dice, DEBUG_DESCR, ID, UID};
+use crate::{age::Age, dice::Dice, Feature, DEBUG_DESCR, ID, UID};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -106,6 +106,7 @@ pub struct Item {
     pub weight: u16,
     /// In the smallest currency unit, like 1 USD cent.
     pub price: u32,
+    pub feature: HashSet<Feature>,
     /// Detailed class, like weapon and armor.
     pub spec: ItemSpec,
 }
@@ -121,6 +122,7 @@ impl Item {
             volume: 514,
             weight: 514,
             price: 1919810,
+            feature: HashSet::new(),
             spec: ItemSpec::Other(OtherItem::new()),
         }
     }

@@ -4,6 +4,7 @@ pub mod chara;
 pub mod cmd;
 pub mod config;
 pub mod dice;
+pub mod feature;
 pub mod game;
 pub mod item;
 pub mod json;
