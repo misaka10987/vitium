@@ -1,5 +1,5 @@
 use crate::DEBUG_DESCR;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Defines a real-world player.
 #[derive(Serialize, Deserialize, Clone)]

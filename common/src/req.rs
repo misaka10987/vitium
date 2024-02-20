@@ -1,6 +1,6 @@
 pub use crate::{act::Act, cmd::Cmd, player::Token};
 use crate::{chara::Chara, player::Player, DEBUG_DESCR};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
 #[derive(Serialize, Deserialize, Clone)]

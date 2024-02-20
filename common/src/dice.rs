@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Standard dice expression, eg `1d2+3`.
 pub type Dice = String;

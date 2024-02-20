@@ -29,7 +29,7 @@ pub fn add(left: usize, right: usize) -> usize {
 }
 
 pub trait ID {
-    fn id(&self) -> String;
+    fn id(&self) -> Option<&str>;
 }
 
 pub trait UID {

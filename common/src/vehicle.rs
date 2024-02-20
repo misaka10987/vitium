@@ -1,5 +1,5 @@
 use crate::{age::Age, ID, UID};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Instance of vehicle.
 #[derive(Serialize, Deserialize, Clone)]
@@ -16,8 +16,8 @@ pub struct Vehicle {
 }
 
 impl ID for Vehicle {
-    fn id(&self) -> String {
-        self.id.clone()
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }
 

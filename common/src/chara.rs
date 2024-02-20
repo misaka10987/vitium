@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use crate::{item::Inventory, Bottle, UID};
-use serde_derive::{Deserialize, Serialize};
+use crate::{Bottle, Item, DEBUG_DESCR, UID};
+use serde::{Deserialize, Serialize};
 
 /// Defines attribution of a Chara.
 #[derive(Serialize, Deserialize, Clone)]
@@ -26,7 +26,7 @@ pub struct Chara {
     pub name: String,
     pub descr: String,
     pub attr: Vec<Attr>,
-    pub invt: Inventory,
+    pub invt: Vec<Item>,
     pub mods: HashSet<String>,
 }
 
@@ -36,7 +36,7 @@ impl Chara {
             uid: 0,
             player: "debug-player".to_string(),
             name: "debug-chara".to_string(),
-            descr: "If you see this in game, it is a bug.".to_string(),
+            descr: DEBUG_DESCR.to_string(),
             attr: vec![],
             invt: vec![],
             mods: HashSet::new(),

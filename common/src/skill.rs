@@ -1,5 +1,5 @@
 use crate::{age::Age, ID};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Defines a skill instance.
 #[derive(Serialize, Deserialize, Clone)]
@@ -26,8 +26,8 @@ impl Skill {
 }
 
 impl ID for Skill {
-    fn id(&self) -> String {
-        self.id.clone()
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }
 
@@ -41,7 +41,7 @@ pub struct Prof {
 }
 
 impl ID for Prof {
-    fn id(&self) -> String {
-        self.id.clone()
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }

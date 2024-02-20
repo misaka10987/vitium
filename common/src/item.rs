@@ -1,24 +1,19 @@
 use crate::{age::Age, dice::Dice, DEBUG_DESCR, ID, UID};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 pub type Price = HashMap<Age, u64>;
 
+#[derive(Clone, Serialize, Deserialize)]
+pub enum ItemSpec {
+    Weapon(Weapon),
+    Armor(Armor),
+    Other(OtherItem),
+}
+
 /// Instance of weapon.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Weapon {
-    /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: u64,
-    /// String ID for `Item`, must be unique.
-    ///
-    /// Any char that is allowed in a valid filename is allowed here, like `-`.
-    pub id: String,
-    /// Name dieplayed in game.
-    pub name: String,
-    /// Description displayed in game.
-    pub descr: String,
-    /// Age periods available.
-    pub age: HashSet<Age>,
     /// Damage expression using dice, eg `1d4+1`.
     pub atk: Dice,
     /// In milimetres, `0` for melee weapons.
@@ -35,24 +30,9 @@ pub struct Weapon {
     pub price: Price,
 }
 
-impl UID for Weapon {
-    fn uid(&self) -> u64 {
-        self.uid
-    }
-    fn set_uid(&mut self, uid: u64) -> &mut Self {
-        self.uid = uid;
-        self
-    }
-}
-
 impl Weapon {
     pub fn new() -> Self {
         Self {
-            uid: 0,
-            id: "debug-weapon".to_string(),
-            name: "Debug Weapon".to_string(),
-            descr: DEBUG_DESCR.to_string(),
-            age: HashSet::new(),
             atk: "11d45+14".to_string(),
             rng: 114514,
             pntr: true,
@@ -64,10 +44,8 @@ impl Weapon {
     }
 }
 
-pub type BodyPart = String;
-
 /// Defines species for deciding if an armor is able to wear.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Species {
     /// Human-liked species.
     Human,
@@ -78,24 +56,12 @@ pub enum Species {
 }
 
 /// Instance of armor.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Armor {
-    /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: u64,
-    /// String ID for `Item`, must be unique.
-    ///
-    /// Any char that is allowed in a valid filename is allowed here, like `-`.
-    pub id: String,
-    /// Name dieplayed in game.
-    pub name: String,
-    /// Description displayed in game.
-    pub descr: String,
-    /// Age periods available.
-    pub age: HashSet<Age>,
     /// Damage
     pub def: Dice,
     /// Covered body parts.
-    pub cover: HashSet<BodyPart>,
+    pub cover: HashSet<String>,
     /// Species able to wear this armor.
     pub species: Species,
     /// Whether resists penetration.
@@ -104,24 +70,9 @@ pub struct Armor {
     pub price: Price,
 }
 
-impl UID for Armor {
-    fn uid(&self) -> u64 {
-        self.uid
-    }
-    fn set_uid(&mut self, uid: u64) -> &mut Self {
-        self.uid = uid;
-        self
-    }
-}
-
 impl Armor {
     pub fn new() -> Self {
         Self {
-            uid: 0,
-            id: "debug-armor".to_string(),
-            name: "Debug Armor".to_string(),
-            descr: DEBUG_DESCR.to_string(),
-            age: HashSet::new(),
             def: "11d45+14".to_string(),
             cover: HashSet::new(),
             species: Species::Human,
@@ -131,21 +82,57 @@ impl Armor {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct OtherItem {
-    /// Unique in-game id generated automatically. Set to `0` to let the program generate.
-    pub uid: u64,
-    /// String ID for `Item`, must be unique.
-    ///
-    /// Any char that is allowed in a valid filename is allowed here, like `-`.
-    pub id: String,
-    /// Name displayed in game.
-    pub name: String,
-    /// Description displayed in game.
-    pub descr: String,
+#[derive(Clone, Serialize, Deserialize)]
+pub struct OtherItem {}
+
+impl OtherItem {
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
-impl UID for OtherItem {
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Item {
+    /// The UID, set to 0 for not generated yet.
+    pub uid: u64,
+    pub id: Option<String>,
+    pub name: Option<String>,
+    pub descr: Option<String>,
+    /// In milimetres.
+    pub length: u16,
+    /// In mililitres.
+    pub volume: u16,
+    /// In grams.
+    pub weight: u16,
+    /// In the smallest currency unit, like 1 USD cent.
+    pub price: u32,
+    /// Detailed class, like weapon and armor.
+    pub spec: ItemSpec,
+}
+
+impl Item {
+    pub fn new() -> Self {
+        Self {
+            uid: 0,
+            id: None,
+            name: Some("Example Item".to_string()),
+            descr: Some(DEBUG_DESCR.to_string()),
+            length: 114,
+            volume: 514,
+            weight: 514,
+            price: 1919810,
+            spec: ItemSpec::Other(OtherItem::new()),
+        }
+    }
+}
+
+impl ID for Item {
+    fn id(&self) -> Option<&str> {
+        self.id.as_deref()
+    }
+}
+
+impl UID for Item {
     fn uid(&self) -> u64 {
         self.uid
     }
@@ -154,51 +141,3 @@ impl UID for OtherItem {
         self
     }
 }
-
-impl OtherItem {
-    pub fn new() -> Self {
-        Self {
-            uid: 0,
-            id: "debug-otheritem".to_string(),
-            name: "Debug Other Item".to_string(),
-            descr: DEBUG_DESCR.to_string(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub enum Item {
-    Weapon(Weapon),
-    Armor(Armor),
-    Other(OtherItem),
-}
-
-impl ID for Item {
-    fn id(&self) -> String {
-        match self {
-            Item::Weapon(i) => i.id.clone(),
-            Item::Armor(i) => i.id.clone(),
-            Item::Other(i) => i.id.clone(),
-        }
-    }
-}
-
-impl UID for Item {
-    fn uid(&self) -> u64 {
-        match self {
-            Item::Weapon(i) => i.uid,
-            Item::Armor(i) => i.uid,
-            Item::Other(i) => i.uid,
-        }
-    }
-    fn set_uid(&mut self, uid: u64) -> &mut Self {
-        match self {
-            Item::Weapon(i) => i.uid = uid,
-            Item::Armor(i) => i.uid = uid,
-            Item::Other(i) => i.uid = uid,
-        }
-        self
-    }
-}
-
-pub type Inventory = Vec<Option<Item>>;

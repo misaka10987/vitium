@@ -1,5 +1,5 @@
 use crate::{json::JSON, player::Token};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// An internal command processed by the game.
 #[derive(Serialize, Deserialize, Clone)]

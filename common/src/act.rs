@@ -1,5 +1,5 @@
 use crate::{player::Token, UID};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// To cast `skill` on `object`.
 #[derive(Serialize, Deserialize, Clone)]

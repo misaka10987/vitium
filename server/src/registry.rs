@@ -66,10 +66,10 @@ macro_rules! load_reg {
             .expect(&format!("io error with {}", $path));
         let mut reg = $reg;
         for i in obj::<Vec<$type>>(&buf) {
-            if reg.contains_key(&i.id()) {
+            if reg.contains_key(i.id().unwrap()) {
                 panic!("{} tried to register an existing id", $path)
             }
-            reg.insert(i.id(), Regis::Dynamic(i));
+            reg.insert(i.id().unwrap().to_string(), Regis::Dynamic(i));
         }
     };
 }

@@ -1,5 +1,5 @@
 use crate::{ID, UID};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Instance of scene.
 #[derive(Serialize, Deserialize, Clone)]
@@ -17,8 +17,8 @@ pub struct Scene {
 }
 
 impl ID for Scene {
-    fn id(&self) -> String {
-        self.id.clone()
+    fn id(&self) -> Option<&str> {
+        Some(&self.id)
     }
 }
 

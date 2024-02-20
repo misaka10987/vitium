@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, Ord};
 use std::convert::From;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
