@@ -1,4 +1,4 @@
-name: Rust
+name: Vitium core crates
 
 on:
   push:
@@ -16,10 +16,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Vitium Core Crates
+    - name: Compile crates
       run: cargo build
-    - name: Archive code coverage results
+    - name: Upload vitium-common build
       uses: actions/upload-artifact@v3
       with:
-          name: debug
-          path: /target/debug/*.a && /target/debug/*.rlib && /target/debug/vitium-server
+          name: libvitium_common.rlib
+          path: /target/debug
+    - name: Upload vitium-server build
+      uses: actions/upload-artifact@v3
+      with:
+          name: vitium-server
+          path: /target/debug
