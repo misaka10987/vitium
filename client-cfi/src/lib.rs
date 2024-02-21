@@ -17,22 +17,9 @@ pub struct Conj{
 }
 
 fn errana(e : reqwest::Error) -> Conj{
-    if e.is_timeout(){
-        Conj{
-            gotta : 20599,
-            resp : c("time out".to_string())
-        }
-    }else if e.is_redirect(){
-        Conj{
-            gotta : 20303,
-            resp : c(e.url().unwrap().to_string())
-        }
-    }
-    else{
-        Conj{
-            gotta : 20000,
-            resp : c("Unknown Reason".to_string())
-        }
+    Conj{
+        gotta : 20000 + e.status(),
+        resp : c(e.url)
     }
 }
 
