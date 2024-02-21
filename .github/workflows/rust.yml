@@ -22,9 +22,9 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
           name: libvitium_common.rlib
-          path: /target/debug/libvitium_common.rlib
+          path: target/debug
     - name: Upload vitium-server build
       uses: actions/upload-artifact@v3
       with:
           name: vitium-server
-          path: /target/debug/vitium-server
+          path: target/debug
