@@ -10,3 +10,5 @@ vitium-common = { path = "../common" }
 
 [lib]
 crate_type = ["staticlib"]
+
+[workspace]

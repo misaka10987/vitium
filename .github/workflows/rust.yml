@@ -16,14 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: vitium-common
-      run: cd common && cargo build && cd ..
-    - name: vitium-server
-      run: cd server && cargo build && cd ..
-    - name: vitium-common-cfi
-      run: cd common-cfi && cargo build && cd ..
+    - name: Vitium Core Crates
+      run: cargo build
     - name: Archive code coverage results
       uses: actions/upload-artifact@v3
       with:
-          name: debug product pack
-          path: common-cfi/target/debug/*.a && common/target/debug/*.rlib && server/target/debug/vitium-server
+          name: debug
+          path: /target/debug/*.a && /target/debug/*.rlib && /target/debug/vitium-server
