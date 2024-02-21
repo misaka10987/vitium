@@ -12,14 +12,14 @@ fn c(r : String) -> *const c_char{
 
 #[repr(C)]
 pub struct Conj{
-    pub gotta : i32,
+    pub gotta : u16,
     pub resp : *const c_char
 }
 
 fn errana(e : reqwest::Error) -> Conj{
     Conj{
-        gotta : 20000 + e.status(),
-        resp : c(e.url())
+        gotta : 20000 + e.status().unwrap().as_u16(),
+        resp : c(e.url().unwrap().to_string())
     }
 }
 
