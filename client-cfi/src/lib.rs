@@ -19,7 +19,7 @@ pub struct Conj{
 fn errana(e : reqwest::Error) -> Conj{
     Conj{
         gotta : 20000 + e.status(),
-        resp : c(e.url)
+        resp : c(e.url())
     }
 }
 
