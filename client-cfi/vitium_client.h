@@ -5,7 +5,7 @@
 #include <new>
 
 struct Conj {
-  int32_t gotta;
+  uint16_t gotta;
   const char *resp;
 };
 
