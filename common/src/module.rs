@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Defines a game module, eg `coc7`.
 #[derive(Serialize, Deserialize, Clone)]

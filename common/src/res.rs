@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// All possible responses are defined here.
 #[derive(Serialize, Deserialize)]

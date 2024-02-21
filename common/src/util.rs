@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, Ord};
 use std::convert::From;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
@@ -96,3 +96,47 @@ where
         self.now.sub_assign(rhs.now)
     }
 }
+
+/// This is a utility that reminds you whether some data should be available.
+pub struct Envelop<T> {
+    inside: T,
+}
+
+impl<T> Envelop<T> {
+    pub fn new(inside: T) -> Envelop<T> {
+        Envelop { inside }
+    }
+    pub fn expose(self) -> T {
+        self.inside
+    }
+    pub fn expose_if(self, condition: bool) -> Option<T> {
+        if condition {
+            Some(self.inside)
+        } else {
+            None
+        }
+    }
+    pub fn unseal(&self) -> &T {
+        &self.inside
+    }
+    pub fn unseal_if(&self, condition: bool) -> Option<&T> {
+        if condition {
+            Some(&self.inside)
+        } else {
+            None
+        }
+    }
+}
+
+impl<T> Clone for Envelop<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            inside: self.inside.clone(),
+        }
+    }
+}
+
+impl<T> Copy for Envelop<T> where T: Clone + Copy {}

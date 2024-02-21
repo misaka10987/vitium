@@ -1,5 +1,5 @@
 use serde::{de, ser};
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 /// Server configuration.
