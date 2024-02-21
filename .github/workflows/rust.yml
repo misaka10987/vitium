@@ -21,10 +21,10 @@ jobs:
     - name: Upload vitium-common build
       uses: actions/upload-artifact@v3
       with:
-          name: libvitium_common.rlib
-          path: target/debug
+          name: vitium-common
+          path: target/debug/libvitium_common.rlib
     - name: Upload vitium-server build
       uses: actions/upload-artifact@v3
       with:
           name: vitium-server
-          path: target/debug
+          path: target/debug/vitium-server
