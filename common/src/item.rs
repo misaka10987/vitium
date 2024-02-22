@@ -1,4 +1,4 @@
-use crate::{age::Age, dice::Dice, fight::DmgType, Feature, DEBUG_DESCR, ID, UID};
+use crate::{age::Age, dice::Dice, fight::DmgType, Feature, DEBUG_DESCR, ID};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -7,15 +7,44 @@ pub type Price = HashMap<Age, u64>;
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ItemSpec {
     Generic,
-    Weapon(Option<Box<Weapon>>),
-    Armor(Option<Box<Armor>>),
+    Container(Vec<Item>),
+    Melee(Melee),
+    Ranged(Ranged),
+    Food(Food),
+    Medicine(Medicine),
+    Armor(Armor),
     Other(OtherItem),
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Melee {
     pub atk: HashMap<DmgType, Dice>,
+    /// In milimetres.
     pub rng: u16,
+    pub one_hand: bool,
+    pub skill: HashSet<ID>,
+    pub m_art: HashSet<ID>,
 }
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Ranged {
+    pub atk: HashMap<DmgType, Dice>,
+    /// In metres.
+    pub rng: f32,
+    pub moa: f32,
+    pub speed: f32,
+    pub charge: HashSet<ID>,
+    pub load: u16,
+    pub one_shot: u8,
+    pub per_turn: u8,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Food {}
+
+/// todo
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Medicine {}
 
 /// Instance of weapon.
 #[derive(Clone, Serialize, Deserialize)]
@@ -93,9 +122,6 @@ impl OtherItem {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ItemInst {
-    /// The UID, set to 0 for not generated yet.
-    pub uid: u64,
-    pub id: Option<ID>,
     pub name: Option<String>,
     pub descr: Option<String>,
     /// In milimetres.
@@ -109,14 +135,12 @@ pub struct ItemInst {
     pub feature: HashSet<Feature>,
     pub ext_info: Vec<String>,
     /// Detailed class, like weapon and armor.
-    pub spec: ItemSpec,
+    pub spec: Box<ItemSpec>,
 }
 
 impl ItemInst {
-    pub fn new() -> Self {
+    pub fn example() -> Self {
         Self {
-            uid: 0,
-            id: None,
             name: Some("Example Item".to_string()),
             descr: Some(DEBUG_DESCR.to_string()),
             length: 114,
@@ -125,18 +149,8 @@ impl ItemInst {
             price: 1919810,
             feature: HashSet::new(),
             ext_info: vec![],
-            spec: ItemSpec::Other(OtherItem::new()),
+            spec: Box::new(ItemSpec::Generic),
         }
-    }
-}
-
-impl UID for ItemInst {
-    fn uid(&self) -> u64 {
-        self.uid
-    }
-    fn set_uid(&mut self, uid: u64) -> &mut Self {
-        self.uid = uid;
-        self
     }
 }
 
