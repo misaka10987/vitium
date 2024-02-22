@@ -19,7 +19,7 @@ pub struct Conj{
 fn errana(e : reqwest::Error) -> Conj{
     Conj{
         gotta : 20000 + if e.status().is_some(){e.status().unwrap().as_u16()}else {0},
-        resp : c(e.url().expect("resp").to_string())
+        resp : c("Error occured".to_string())
     }
 }
 
