@@ -6,3 +6,4 @@
 **/build
 /common-cfi/test
 **/test.exe
+**/a.out
