@@ -1,4 +1,4 @@
-use crate::{age::Age, dice::Dice, Feature, DEBUG_DESCR, ID, UID};
+use crate::{age::Age, dice::Dice, fight::DmgType, Feature, DEBUG_DESCR, ID, UID};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -6,9 +6,15 @@ pub type Price = HashMap<Age, u64>;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ItemSpec {
-    Weapon(Weapon),
-    Armor(Armor),
+    Generic,
+    Weapon(Option<Box<Weapon>>),
+    Armor(Option<Box<Armor>>),
     Other(OtherItem),
+}
+
+pub struct Melee {
+    pub atk: HashMap<DmgType, Dice>,
+    pub rng: u16,
 }
 
 /// Instance of weapon.
@@ -26,8 +32,6 @@ pub struct Weapon {
     pub charge: u8,
     /// Charges used per attack.
     pub load: u8,
-    /// Price in different time periods.
-    pub price: Price,
 }
 
 impl Weapon {
@@ -39,7 +43,6 @@ impl Weapon {
             per_turn: 11,
             charge: 45,
             load: 14,
-            price: HashMap::new(),
         }
     }
 }
@@ -65,9 +68,7 @@ pub struct Armor {
     /// Species able to wear this armor.
     pub species: Species,
     /// Whether resists penetration.
-    pub rerist_pntr: bool,
-    /// Price in different time periods.
-    pub price: Price,
+    pub resist_pntr: bool,
 }
 
 impl Armor {
@@ -76,8 +77,7 @@ impl Armor {
             def: "11d45+14".to_string(),
             cover: HashSet::new(),
             species: Species::Human,
-            rerist_pntr: true,
-            price: HashMap::new(),
+            resist_pntr: true,
         }
     }
 }
@@ -92,10 +92,10 @@ impl OtherItem {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Item {
+pub struct ItemInst {
     /// The UID, set to 0 for not generated yet.
     pub uid: u64,
-    pub id: Option<String>,
+    pub id: Option<ID>,
     pub name: Option<String>,
     pub descr: Option<String>,
     /// In milimetres.
@@ -107,11 +107,12 @@ pub struct Item {
     /// In the smallest currency unit, like 1 USD cent.
     pub price: u32,
     pub feature: HashSet<Feature>,
+    pub ext_info: Vec<String>,
     /// Detailed class, like weapon and armor.
     pub spec: ItemSpec,
 }
 
-impl Item {
+impl ItemInst {
     pub fn new() -> Self {
         Self {
             uid: 0,
@@ -123,18 +124,13 @@ impl Item {
             weight: 514,
             price: 1919810,
             feature: HashSet::new(),
+            ext_info: vec![],
             spec: ItemSpec::Other(OtherItem::new()),
         }
     }
 }
 
-impl ID for Item {
-    fn id(&self) -> Option<&str> {
-        self.id.as_deref()
-    }
-}
-
-impl UID for Item {
+impl UID for ItemInst {
     fn uid(&self) -> u64 {
         self.uid
     }
@@ -142,4 +138,10 @@ impl UID for Item {
         self.uid = uid;
         self
     }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub enum Item {
+    Reg(ID),
+    Inst(ItemInst),
 }

@@ -1,0 +1,16 @@
+pub enum DmgType {
+    Bashing,
+    Slashing,
+    Stabbing,
+    Bleeding,
+    Heat,
+    Poison,
+    Explosion,
+    Starving,
+    Thirst,
+    Virus,
+    Asphyxia,
+    Mental,
+    Magic,
+    System,
+}

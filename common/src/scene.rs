@@ -1,4 +1,4 @@
-use crate::{ID, UID};
+use crate::UID;
 use serde::{Deserialize, Serialize};
 
 /// Instance of scene.
@@ -14,12 +14,6 @@ pub struct Scene {
     pub descr: String,
     /// Path for optional ascii-art image.
     pub ascii: Option<String>,
-}
-
-impl ID for Scene {
-    fn id(&self) -> Option<&str> {
-        Some(&self.id)
-    }
 }
 
 impl UID for Scene {

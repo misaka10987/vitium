@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 /// Defines a skill instance.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Skill {
-    pub id: String,
+    pub id: ID,
     pub name: String,
     pub growth: Option<u16>,
     pub profession: Option<u16>,
@@ -25,12 +25,6 @@ impl Skill {
     }
 }
 
-impl ID for Skill {
-    fn id(&self) -> Option<&str> {
-        Some(&self.id)
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Prof {
     pub age: Age,
@@ -38,12 +32,6 @@ pub struct Prof {
     pub name: String,
     pub credit: u16,
     pub skills: Vec<(Skill, u16)>,
-}
-
-impl ID for Prof {
-    fn id(&self) -> Option<&str> {
-        Some(&self.id)
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]

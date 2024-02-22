@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Vehicle {
     pub uid: u64,
-    pub id: String,
+    pub id: Option<ID>,
     /// Age periods available.
     pub age: Vec<Age>,
     /// MOV
@@ -13,12 +13,6 @@ pub struct Vehicle {
     /// build
     pub build: u16,
     // todo
-}
-
-impl ID for Vehicle {
-    fn id(&self) -> Option<&str> {
-        Some(&self.id)
-    }
 }
 
 impl UID for Vehicle {
