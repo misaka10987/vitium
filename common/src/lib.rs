@@ -71,11 +71,12 @@ impl ID {
             id: id.to_string(),
         }
     }
-    pub fn example() -> Self {
-        Self {
-            module: "example-module".to_string(),
-            id: "example-id".to_string(),
-        }
+}
+
+#[cfg(test)]
+impl Example for ID {
+    fn examples() -> Vec<Self> {
+        vec![ID::new("example-module", "example-id")]
     }
 }
 

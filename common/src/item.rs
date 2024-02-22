@@ -1,3 +1,5 @@
+#[cfg(test)]
+use crate::Example;
 use crate::{age::Age, dice::Dice, fight::DmgType, Feature, DEBUG_DESCR, ID};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -16,6 +18,20 @@ pub enum ItemSpec {
     Other(OtherItem),
 }
 
+#[cfg(test)]
+impl Example for ItemSpec {
+    fn examples() -> Vec<Self> {
+        vec![
+            Self::Generic,
+            Self::Container(vec![]),
+            Self::Melee(Melee::example()),
+            Self::Ranged(Ranged::example()),
+            Self::Food(Food::example()),
+            Self::Medicine(Medicine::example()),
+        ]
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Melee {
     pub atk: HashMap<DmgType, Dice>,
@@ -24,6 +40,25 @@ pub struct Melee {
     pub one_hand: bool,
     pub skill: HashSet<ID>,
     pub m_art: HashSet<ID>,
+}
+
+#[cfg(test)]
+impl Example for Melee {
+    fn examples() -> Vec<Self> {
+        let mut atk = HashMap::new();
+        atk.insert(DmgType::System, "11d45+14".to_string());
+        let mut skill = HashSet::new();
+        skill.extend(ID::examples());
+        let mut m_art = HashSet::new();
+        m_art.extend(ID::examples());
+        vec![Self {
+            atk,
+            rng: 514,
+            one_hand: true,
+            skill,
+            m_art,
+        }]
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -39,40 +74,44 @@ pub struct Ranged {
     pub per_turn: u8,
 }
 
+#[cfg(test)]
+impl Example for Ranged {
+    fn examples() -> Vec<Self> {
+        let mut atk = HashMap::new();
+        atk.insert(DmgType::System, "11d45+14".to_string());
+        let mut charge = HashSet::new();
+        charge.extend(ID::examples());
+        vec![Self {
+            atk,
+            rng: 114.514,
+            moa: 1.14514,
+            speed: 114.514,
+            charge,
+            load: 114,
+            one_shot: 2,
+            per_turn: 2,
+        }]
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Food {}
+
+#[cfg(test)]
+impl Example for Food {
+    fn examples() -> Vec<Self> {
+        vec![Self {}]
+    }
+}
 
 /// todo
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Medicine {}
 
-/// Instance of weapon.
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Weapon {
-    /// Damage expression using dice, eg `1d4+1`.
-    pub atk: Dice,
-    /// In milimetres, `0` for melee weapons.
-    pub rng: u32,
-    /// Whether to apply penetration.
-    pub pntr: bool,
-    /// Number of attacks able to inflict in a turn.
-    pub per_turn: u8,
-    /// Charges remaining.
-    pub charge: u8,
-    /// Charges used per attack.
-    pub load: u8,
-}
-
-impl Weapon {
-    pub fn new() -> Self {
-        Self {
-            atk: "11d45+14".to_string(),
-            rng: 114514,
-            pntr: true,
-            per_turn: 11,
-            charge: 45,
-            load: 14,
-        }
+#[cfg(test)]
+impl Example for Medicine {
+    fn examples() -> Vec<Self> {
+        vec![Self {}]
     }
 }
 
@@ -93,22 +132,11 @@ pub struct Armor {
     /// Damage
     pub def: Dice,
     /// Covered body parts.
-    pub cover: HashSet<String>,
+    pub cover: HashSet<ID>,
     /// Species able to wear this armor.
     pub species: Species,
     /// Whether resists penetration.
     pub resist_pntr: bool,
-}
-
-impl Armor {
-    pub fn new() -> Self {
-        Self {
-            def: "11d45+14".to_string(),
-            cover: HashSet::new(),
-            species: Species::Human,
-            resist_pntr: true,
-        }
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
