@@ -1,6 +1,7 @@
 use clearscreen::clear;
 use once_cell::sync::Lazy;
-use std::{io::stdin, process::exit};
+use std::process::{id as pid, Command};
+use std::{collections::VecDeque, io::stdin, process::exit};
 use tokio::sync::{Mutex, MutexGuard};
 
 //use crate::server_::root::{ban, grant};
@@ -19,23 +20,28 @@ pub async fn input() {
     }
 }
 
+fn term() -> i8 {
+    let _ = Command::new("kill")
+        .arg("-INT")
+        .arg(pid().to_string())
+        .status();
+    0
+}
+
 pub async fn stop() {
     *running().await = false;
 }
 
-fn resolve(cmd: &str) -> (&str, &str) {
-    for (i, &item) in cmd.as_bytes().iter().enumerate() {
-        if item == b' ' {
-            return (&cmd[0..i], &cmd[i..]);
-        }
-    }
-    (&cmd[..], "")
+fn resolve(cmd: &str) -> (&str, Vec<&str>) {
+    let mut token: VecDeque<_> = cmd.split(' ').collect();
+    (token.pop_front().unwrap(), token.into())
 }
 
 async fn proc(cmd: &str) -> i8 {
     match resolve(cmd) {
+        ("exit", _) => term(),
         ("help", _) => {
-            println!("  TODO");
+            println!("  => TODO");
             -1
         }
         ("clear", _) => {
@@ -46,7 +52,7 @@ async fn proc(cmd: &str) -> i8 {
         // ("grant", arg) => grant(arg).await,
         // ("ban", arg) => ban(arg).await,
         _ => {
-            println!("  Failure>> \"{}\" not found", cmd);
+            println!("  => failure: \"{}\" not found", cmd);
             -1
         }
     }
