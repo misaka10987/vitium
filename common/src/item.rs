@@ -1,6 +1,6 @@
+use crate::{age::Age, dice::Dice, fight::DmgType, Feature, ID};
 #[cfg(test)]
-use crate::Example;
-use crate::{age::Age, dice::Dice, fight::DmgType, Feature, DEBUG_DESCR, ID};
+use crate::{Example, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -126,17 +126,60 @@ pub enum Species {
     Else(String),
 }
 
+#[cfg(test)]
+impl Example for Species {
+    fn examples() -> Vec<Self> {
+        vec![Self::Human, Self::NonHuman, Self::Else("cat".to_string())]
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ArmorLayer {
+    pub material: ID,
+    pub cover: HashSet<ID>,
+    pub rate: u16,
+    pub thickness: u16,
+}
+
+#[cfg(test)]
+impl Example for ArmorLayer {
+    fn examples() -> Vec<Self> {
+        let mut cover = HashSet::new();
+        cover.extend(ID::examples());
+        vec![Self {
+            material: ID::example(),
+            cover,
+            rate: 95,
+            thickness: 3000,
+        }]
+    }
+}
+
 /// Instance of armor.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Armor {
     /// Damage
     pub def: Dice,
-    /// Covered body parts.
-    pub cover: HashSet<ID>,
     /// Species able to wear this armor.
     pub species: Species,
+    pub layer: Vec<ArmorLayer>,
     /// Whether resists penetration.
     pub resist_pntr: bool,
+}
+
+#[cfg(test)]
+impl Example for Armor {
+    fn examples() -> Vec<Self> {
+        Species::examples()
+            .into_iter()
+            .map(|s| Self {
+                def: "11d45+14".to_string(),
+                species: s,
+                layer: ArmorLayer::examples(),
+                resist_pntr: true,
+            })
+            .collect()
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -150,8 +193,8 @@ impl OtherItem {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ItemInst {
-    pub name: Option<String>,
-    pub descr: Option<String>,
+    pub name: String,
+    pub descr: String,
     /// In milimetres.
     pub length: u16,
     /// In mililitres.
@@ -166,19 +209,23 @@ pub struct ItemInst {
     pub spec: Box<ItemSpec>,
 }
 
-impl ItemInst {
-    pub fn example() -> Self {
-        Self {
-            name: Some("Example Item".to_string()),
-            descr: Some(DEBUG_DESCR.to_string()),
-            length: 114,
-            volume: 514,
-            weight: 514,
-            price: 1919810,
-            feature: HashSet::new(),
-            ext_info: vec![],
-            spec: Box::new(ItemSpec::Generic),
-        }
+#[cfg(test)]
+impl Example for ItemInst {
+    fn examples() -> Vec<Self> {
+        ItemSpec::examples()
+            .into_iter()
+            .map(|s| Self {
+                name: "Example Item Instance".to_string(),
+                descr: DEBUG_DESCR.to_string(),
+                length: 114,
+                volume: 514,
+                weight: 514,
+                price: 1919810,
+                feature: HashSet::new(),
+                ext_info: vec![],
+                spec: Box::new(s),
+            })
+            .collect()
     }
 }
 
@@ -186,4 +233,24 @@ impl ItemInst {
 pub enum Item {
     Reg(ID),
     Inst(ItemInst),
+}
+
+#[cfg(test)]
+impl Example for Item {
+    fn examples() -> Vec<Self> {
+        let mut v: Vec<_> = ItemInst::examples()
+            .into_iter()
+            .map(|i| Self::Inst(i))
+            .collect();
+        v.push(Self::Reg(ID::example()));
+        v
+    }
+}
+
+#[test]
+fn see_json() {
+    use serde_json::to_string as json;
+    for i in Item::examples() {
+        println!("{}", json(&i).unwrap());
+    }
 }
