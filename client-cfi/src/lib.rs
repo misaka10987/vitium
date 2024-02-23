@@ -12,27 +12,14 @@ fn c(r : String) -> *const c_char{
 
 #[repr(C)]
 pub struct Conj{
-    pub gotta : i32,
+    pub gotta : u16,
     pub resp : *const c_char
 }
 
 fn errana(e : reqwest::Error) -> Conj{
-    if e.is_timeout(){
-        Conj{
-            gotta : 20599,
-            resp : c("time out".to_string())
-        }
-    }else if e.is_redirect(){
-        Conj{
-            gotta : 20303,
-            resp : c(e.url().unwrap().to_string())
-        }
-    }
-    else{
-        Conj{
-            gotta : 20000,
-            resp : c("Unknown Reason".to_string())
-        }
+    Conj{
+        gotta : 20000 + if e.status().is_some(){e.status().unwrap().as_u16()}else {0},
+        resp : c("Error occured".to_string())
     }
 }
 
@@ -41,9 +28,11 @@ pub extern "C" fn get(url : *const c_char) -> Conj{
     unsafe{
         let txt = reqwest::blocking::get(r(url));
         if txt.is_ok(){
+            let txt = txt.unwrap();
             Conj{
-                gotta : 20200,
-                resp : c(txt.unwrap().text().unwrap())
+            
+                gotta : 20000 + txt.status().as_u16(),
+                resp : c(txt.text().unwrap())
             }
         }
         else{
@@ -57,9 +46,13 @@ pub extern "C" fn post(url : *const c_char,mes : *const c_char) -> Conj{
     unsafe {
         let res = reqwest::blocking::Client::new().post(r(url)).body(r(mes)).send();
         if res.is_ok(){
+            let res = res.unwrap();
             Conj{
-                gotta : 20201,
-                resp : c("The message has sent sucessfully.".to_string())
+                gotta : 20000 + res.status().as_u16(),
+                resp : c({
+                    if let Ok(s)=res.text(){s}
+                    else{"No content".to_string()}
+                })
             }
         }
         else {
