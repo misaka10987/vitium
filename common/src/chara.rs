@@ -7,15 +7,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Attr {
     pub id: String,
-    pub value: Option<Bottle<u16>>,
+    pub value: Bottle<i16>,
 }
 
 impl Attr {
-    pub fn new(id: &str, value: Option<Bottle<u16>>) -> Self {
+    pub fn new(id: &str, value: Bottle<i16>) -> Self {
         Self {
             id: id.to_string(),
             value,
         }
+    }
+    pub fn fix(&self) -> i8 {
+        ((self.value.now - 10) / 2) as i8
     }
 }
 
