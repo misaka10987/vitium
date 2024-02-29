@@ -9,13 +9,13 @@ pub type Price = HashMap<Age, u64>;
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ItemSpec {
     Generic,
-    Container(Vec<Item>),
-    Melee(Melee),
-    Ranged(Ranged),
-    Food(Food),
-    Medicine(Medicine),
-    Armor(Armor),
-    Other(OtherItem),
+    Container(Box<Container>),
+    Melee(Box<Melee>),
+    Ranged(Box<Ranged>),
+    Food(Box<Food>),
+    Medicine(Box<Medicine>),
+    Armor(Box<Armor>),
+    Other(Box<OtherItem>),
 }
 
 #[cfg(test)]
@@ -23,12 +23,23 @@ impl Example for ItemSpec {
     fn examples() -> Vec<Self> {
         vec![
             Self::Generic,
-            Self::Container(vec![]),
-            Self::Melee(Melee::example()),
-            Self::Ranged(Ranged::example()),
-            Self::Food(Food::example()),
-            Self::Medicine(Medicine::example()),
+            Self::Container(Box::new(Container::new())),
+            Self::Melee(Box::new(Melee::example())),
+            Self::Ranged(Box::new(Ranged::example())),
+            Self::Food(Box::new(Food::example())),
+            Self::Medicine(Box::new(Medicine::example())),
         ]
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Container {
+    pub inside: Vec<Item>,
+}
+
+impl Container {
+    pub fn new() -> Self {
+        Self { inside: vec![] }
     }
 }
 
@@ -39,7 +50,7 @@ pub struct Melee {
     pub rng: u16,
     pub one_hand: bool,
     pub skill: HashSet<ID>,
-    pub m_art: HashSet<ID>,
+    pub mart: HashSet<ID>,
 }
 
 #[cfg(test)]
@@ -49,14 +60,14 @@ impl Example for Melee {
         atk.insert(DmgType::System, "11d45+14".to_string());
         let mut skill = HashSet::new();
         skill.extend(ID::examples());
-        let mut m_art = HashSet::new();
-        m_art.extend(ID::examples());
+        let mut mart = HashSet::new();
+        mart.extend(ID::examples());
         vec![Self {
             atk,
             rng: 514,
             one_hand: true,
             skill,
-            m_art,
+            mart,
         }]
     }
 }
@@ -163,8 +174,6 @@ pub struct Armor {
     /// Species able to wear this armor.
     pub species: Species,
     pub layer: Vec<ArmorLayer>,
-    /// Whether resists penetration.
-    pub resist_pntr: bool,
 }
 
 #[cfg(test)]
@@ -176,7 +185,6 @@ impl Example for Armor {
                 def: "11d45+14".to_string(),
                 species: s,
                 layer: ArmorLayer::examples(),
-                resist_pntr: true,
             })
             .collect()
     }
@@ -206,7 +214,7 @@ pub struct ItemInst {
     pub feature: HashSet<Feature>,
     pub ext_info: Vec<String>,
     /// Detailed class, like weapon and armor.
-    pub spec: Box<ItemSpec>,
+    pub spec: ItemSpec,
 }
 
 #[cfg(test)]
@@ -223,7 +231,7 @@ impl Example for ItemInst {
                 price: 1919810,
                 feature: HashSet::new(),
                 ext_info: vec![],
-                spec: Box::new(s),
+                spec: s,
             })
             .collect()
     }
