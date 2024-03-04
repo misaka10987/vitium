@@ -11,7 +11,6 @@ pub enum ItemSpec {
     Melee(Box<Melee>),
     Ranged(Box<Ranged>),
     Food(Box<Food>),
-    Medicine(Box<Medicine>),
     Armor(Box<Armor>),
     Other(Box<OtherItem>),
 }
@@ -25,7 +24,6 @@ impl Example for ItemSpec {
             Self::Melee(Box::new(Melee::example())),
             Self::Ranged(Box::new(Ranged::example())),
             Self::Food(Box::new(Food::example())),
-            Self::Medicine(Box::new(Medicine::example())),
         ]
     }
 }
@@ -121,23 +119,20 @@ impl Example for Ranged {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Food {}
+pub struct Food {
+    pub taste: i8,
+    pub energy: i32,
+    pub purified: bool,
+}
 
 #[cfg(test)]
 impl Example for Food {
     fn examples() -> Vec<Self> {
-        vec![Self {}]
-    }
-}
-
-/// todo
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Medicine {}
-
-#[cfg(test)]
-impl Example for Medicine {
-    fn examples() -> Vec<Self> {
-        vec![Self {}]
+        vec![Self {
+            taste: 50,
+            energy: 1000,
+            purified: true,
+        }]
     }
 }
 
