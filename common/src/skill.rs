@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 /// Defines a skill instance.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Skill {
-    pub name: String,
     pub growth: Option<u16>,
     pub profession: Option<u16>,
     pub interest: Option<u16>,
@@ -26,7 +25,6 @@ impl Skill {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Prof {
-    pub name: String,
     pub credit: u16,
     pub skills: Vec<(Skill, u16)>,
 }
