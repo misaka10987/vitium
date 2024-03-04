@@ -1,10 +1,9 @@
-use crate::{age::Age, ObjClass, ID};
+use crate::ObjClass;
 use serde::{Deserialize, Serialize};
 
 /// Defines a skill instance.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Skill {
-    pub id: ID,
     pub name: String,
     pub growth: Option<u16>,
     pub profession: Option<u16>,
@@ -27,8 +26,6 @@ impl Skill {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Prof {
-    pub age: Age,
-    pub id: String,
     pub name: String,
     pub credit: u16,
     pub skills: Vec<(Skill, u16)>,

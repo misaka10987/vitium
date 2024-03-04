@@ -1,10 +1,8 @@
-use crate::{age::Age, dice::Dice, fight::DmgType, Feature, ID};
+use crate::{dice::Dice, fight::DmgType, Feature, ID};
 #[cfg(test)]
 use crate::{Example, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-
-pub type Price = HashMap<Age, u64>;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ItemSpec {
@@ -34,12 +32,29 @@ impl Example for ItemSpec {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Container {
+    /// Time to store an item.
+    pub time_cost: i32,
+    /// In milimetres.
+    pub length: i32,
+    /// In mililitres.
+    pub volume: i32,
+    /// In grams.
+    pub weight: i32,
+    /// If the container is waterproof.
+    pub waterproof: bool,
     pub inside: Vec<Item>,
 }
 
 impl Container {
     pub fn new() -> Self {
-        Self { inside: vec![] }
+        Self {
+            time_cost: 114514,
+            length: 114514,
+            volume: 114514,
+            weight: 114514,
+            inside: vec![],
+            waterproof: true,
+        }
     }
 }
 
@@ -47,7 +62,7 @@ impl Container {
 pub struct Melee {
     pub atk: HashMap<DmgType, Dice>,
     /// In milimetres.
-    pub rng: u16,
+    pub rng: i32,
     pub one_hand: bool,
     pub skill: HashSet<ID>,
     pub mart: HashSet<ID>,
@@ -80,7 +95,7 @@ pub struct Ranged {
     pub moa: f32,
     pub speed: f32,
     pub charge: HashSet<ID>,
-    pub load: u16,
+    pub load: i16,
     pub one_shot: u8,
     pub per_turn: u8,
 }
@@ -201,16 +216,20 @@ impl OtherItem {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ItemInst {
+    /// If this `ItemInst` is created from extending an existed registry then its id will be here.
+    pub origin: Option<ID>,
     pub name: String,
     pub descr: String,
     /// In milimetres.
-    pub length: u16,
+    pub length: i32,
     /// In mililitres.
-    pub volume: u16,
+    pub volume: i32,
     /// In grams.
-    pub weight: u16,
+    pub weight: i32,
+    /// If the item is opaque.
+    pub opaque: bool,
     /// In the smallest currency unit, like 1 USD cent.
-    pub price: u32,
+    pub price: i32,
     pub feature: HashSet<Feature>,
     pub ext_info: Vec<String>,
     /// Detailed class, like weapon and armor.
@@ -223,11 +242,13 @@ impl Example for ItemInst {
         ItemSpec::examples()
             .into_iter()
             .map(|s| Self {
+                origin: None,
                 name: "Example Item Instance".to_string(),
                 descr: DEBUG_DESCR.to_string(),
                 length: 114,
                 volume: 514,
                 weight: 514,
+                opaque: true,
                 price: 1919810,
                 feature: HashSet::new(),
                 ext_info: vec![],

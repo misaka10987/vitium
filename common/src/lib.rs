@@ -1,5 +1,4 @@
 pub mod act;
-pub mod age;
 pub mod attack;
 pub mod chara;
 pub mod cmd;
@@ -13,6 +12,7 @@ pub mod json;
 pub mod module;
 pub mod player;
 mod prelude;
+pub mod race;
 pub mod record;
 pub mod registry;
 pub mod req;
