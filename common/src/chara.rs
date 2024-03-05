@@ -1,24 +1,26 @@
 use std::collections::HashSet;
 
-use crate::{Bottle, Item, DEBUG_DESCR, UID};
+use crate::{Item, DEBUG_DESCR, UID};
 use serde::{Deserialize, Serialize};
 
 /// Defines attribution of a Chara.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Attr {
     pub id: String,
-    pub value: Bottle<i16>,
+    pub base: i16,
+    pub curr: i16,
 }
 
 impl Attr {
-    pub fn new(id: &str, value: Bottle<i16>) -> Self {
+    pub fn new(id: &str) -> Self {
         Self {
             id: id.to_string(),
-            value,
+            base: 10,
+            curr: 12,
         }
     }
     pub fn fix(&self) -> i8 {
-        ((self.value.now - 10) / 2) as i8
+        ((self.curr - 10) / 2) as i8
     }
 }
 
