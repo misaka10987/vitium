@@ -4,8 +4,6 @@ use std::process::{id as pid, Command};
 use std::{collections::VecDeque, io::stdin, process::exit};
 use tokio::sync::{Mutex, MutexGuard};
 
-//use crate::server_::root::{ban, grant};
-
 static RUNNING: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 async fn running() -> MutexGuard<'static, bool> {
     RUNNING.lock().await
@@ -49,8 +47,6 @@ async fn proc(cmd: &str) -> i8 {
             0
         }
         ("kill", _) => exit(-1),
-        // ("grant", arg) => grant(arg).await,
-        // ("ban", arg) => ban(arg).await,
         _ => {
             println!("  => failure: \"{}\" not found", cmd);
             -1
