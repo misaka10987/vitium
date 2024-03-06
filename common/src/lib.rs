@@ -50,14 +50,6 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
-pub trait UID {
-    fn uid(&self) -> u64;
-    fn set_uid(&mut self, uid: u64) -> &mut Self;
-    fn no_uid(&self) -> bool {
-        self.uid() == 0
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ID {
     pub module: String,

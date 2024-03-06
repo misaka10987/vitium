@@ -1,4 +1,4 @@
-use crate::{feature::FeatureAction, player::Token, skill::SkillAction, Target, DEBUG_DESCR, UID};
+use crate::{feature::FeatureAction, player::Token, skill::SkillAction, Target, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 
 /// Used for in-game chat.
@@ -103,18 +103,6 @@ impl Act {
                 token: Token::new(),
             })
             .collect()
-    }
-}
-
-impl UID for Act {
-    /// UID getter.
-    fn uid(&self) -> u64 {
-        self.uid
-    }
-    /// UID setter.
-    fn set_uid(&mut self, uid: u64) -> &mut Self {
-        self.uid = uid;
-        self
     }
 }
 
