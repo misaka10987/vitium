@@ -79,10 +79,8 @@ impl Action {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Act {
-    /// Action serial number.
-    pub uid: u64,
     /// Character that does the action.
-    pub chara: u64,
+    pub chara: String,
     /// In-game turn number.
     pub turn: u64,
     /// Detailed action.
@@ -96,8 +94,7 @@ impl Act {
         Action::examples()
             .into_iter()
             .map(|a| Act {
-                uid: 1145141919810,
-                chara: 114514,
+                chara: "example-chara".to_string(),
                 turn: 12345,
                 action: a,
                 token: Token::new(),
