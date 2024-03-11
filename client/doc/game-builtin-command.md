@@ -16,7 +16,7 @@
 |`mv`|`$place-uid`|Moves to the specified place|
 |`attack`|`$target [$[fallback-targets]]`|Launch a melee attack to specified target with current item|
 |`shoot`|`$target [$[fallback-targets]]`|Shoot specified target with current item|
-|`cast`|`$spell $target $[fallback-targets]`|Casts selected spell to target(s)|
+|`cast`|`$spell $target [$[fallback-targets]]`|Casts selected spell to target(s)|
 |`wear`|`$[item-uid]`|Wears specified armor(s)|
 ||None|Show wearing armors|
 |`takeoff`|`$[item-uid]`|Takes off specified armor(s)|

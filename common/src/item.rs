@@ -273,7 +273,7 @@ impl Example for Item {
 
 #[test]
 fn see_json() {
-    use serde_json::to_string as json;
+    use crate::json;
     for i in Item::examples() {
         println!("{}", json(&i).unwrap());
     }

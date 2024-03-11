@@ -6,5 +6,8 @@ pub use crate::item::Item;
 pub use crate::skill::{Prof, Skill};
 pub use crate::util::{Bottle, Envelop};
 
+pub use serde_json::from_str as obj;
+pub use serde_json::to_string as json;
+
 #[cfg(test)]
 pub use crate::util::Example;

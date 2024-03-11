@@ -8,7 +8,6 @@ pub mod feature;
 pub mod fight;
 pub mod game;
 pub mod item;
-pub mod json;
 pub mod module;
 pub mod player;
 mod prelude;
