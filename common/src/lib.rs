@@ -1,17 +1,18 @@
 pub mod act;
-pub mod age;
 pub mod attack;
 pub mod chara;
 pub mod cmd;
 pub mod config;
 pub mod dice;
 pub mod feature;
+pub mod fight;
 pub mod game;
 pub mod item;
 pub mod json;
 pub mod module;
 pub mod player;
 mod prelude;
+pub mod race;
 pub mod record;
 pub mod registry;
 pub mod req;
@@ -49,15 +50,25 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
-pub trait ID {
-    fn id(&self) -> Option<&str>;
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ID {
+    pub module: String,
+    pub id: String,
 }
 
-pub trait UID {
-    fn uid(&self) -> u64;
-    fn set_uid(&mut self, uid: u64) -> &mut Self;
-    fn no_uid(&self) -> bool {
-        self.uid() == 0
+impl ID {
+    pub fn new(module: &str, id: &str) -> Self {
+        Self {
+            module: module.to_string(),
+            id: id.to_string(),
+        }
+    }
+}
+
+#[cfg(test)]
+impl Example for ID {
+    fn examples() -> Vec<Self> {
+        vec![ID::new("example-module", "example-id")]
     }
 }
 

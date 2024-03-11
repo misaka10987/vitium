@@ -1,27 +1,26 @@
 use std::collections::HashSet;
 
-use crate::{Bottle, Item, DEBUG_DESCR, UID};
+use crate::{Item, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 
 /// Defines attribution of a Chara.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Attr {
-    pub id: String,
-    pub value: Option<Bottle<u16>>,
+    pub base: i16,
+    pub curr: i16,
 }
 
 impl Attr {
-    pub fn new(id: &str, value: Option<Bottle<u16>>) -> Self {
-        Self {
-            id: id.to_string(),
-            value,
-        }
+    pub fn new(base: i16) -> Self {
+        Self { base, curr: base }
+    }
+    pub fn fix(&self, zero: i16, coef: i16) -> i16 {
+        (self.curr - zero) / coef
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chara {
-    pub uid: u64,
     pub player: String,
     pub name: String,
     pub descr: String,
@@ -33,7 +32,6 @@ pub struct Chara {
 impl Chara {
     pub fn new() -> Self {
         Self {
-            uid: 0,
             player: "debug-player".to_string(),
             name: "debug-chara".to_string(),
             descr: DEBUG_DESCR.to_string(),
@@ -41,16 +39,5 @@ impl Chara {
             invt: vec![],
             mods: HashSet::new(),
         }
-    }
-}
-
-impl UID for Chara {
-    fn uid(&self) -> u64 {
-        self.uid
-    }
-
-    fn set_uid(&mut self, uid: u64) -> &mut Self {
-        self.uid = uid;
-        self
     }
 }

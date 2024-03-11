@@ -1,4 +1,4 @@
-use crate::{feature::FeatureAction, player::Token, skill::SkillAction, Target, DEBUG_DESCR, UID};
+use crate::{feature::FeatureAction, player::Token, skill::SkillAction, Target, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 
 /// Used for in-game chat.
@@ -79,10 +79,8 @@ impl Action {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Act {
-    /// Action serial number.
-    pub uid: u64,
     /// Character that does the action.
-    pub chara: u64,
+    pub chara: String,
     /// In-game turn number.
     pub turn: u64,
     /// Detailed action.
@@ -96,25 +94,12 @@ impl Act {
         Action::examples()
             .into_iter()
             .map(|a| Act {
-                uid: 1145141919810,
-                chara: 114514,
+                chara: "example-chara".to_string(),
                 turn: 12345,
                 action: a,
                 token: Token::new(),
             })
             .collect()
-    }
-}
-
-impl UID for Act {
-    /// UID getter.
-    fn uid(&self) -> u64 {
-        self.uid
-    }
-    /// UID setter.
-    fn set_uid(&mut self, uid: u64) -> &mut Self {
-        self.uid = uid;
-        self
     }
 }
 

@@ -46,14 +46,16 @@ impl EditPlayer {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditChara {
-    pub chara: Chara,
+    pub dest: String,
+    pub new: Chara,
     pub token: Token,
 }
 
 impl EditChara {
     pub fn new() -> Self {
         Self {
-            chara: Chara::new(),
+            dest: "example-chara".to_string(),
+            new: Chara::new(),
             token: Token::new(),
         }
     }

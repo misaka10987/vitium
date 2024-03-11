@@ -1,13 +1,13 @@
 pub use crate::load::load;
 pub use crate::save::save;
 use axum::http::StatusCode;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use tokio::sync::{
     oneshot::{channel, Receiver, Sender},
     Mutex, MutexGuard,
 };
 use tracing::{info, warn};
-use vitium_common::{act::Act, chara::Chara, sync::Sync, UID};
+use vitium_common::{act::Act, chara::Chara, sync::Sync};
 
 /// Action item waiting the server to process.
 pub(self) struct ActProc {
@@ -19,9 +19,9 @@ pub(self) struct ActProc {
 pub struct Game {
     pub on: bool,
     _turn: Mutex<u64>,
-    _chara_status: Mutex<HashMap<u64, bool>>,
-    _act: Mutex<VecDeque<ActProc>>,
-    _chara: Mutex<HashMap<u64, Chara>>,
+    _chara_status: Mutex<HashMap<String, bool>>,
+    _act: Mutex<HashMap<u64, ActProc>>,
+    _chara: Mutex<HashMap<String, Chara>>,
     _uid_alloc: Mutex<u64>,
 }
 
@@ -32,13 +32,13 @@ impl Game {
             on: false,
             _turn: Mutex::new(0),
             _chara_status: Mutex::new(HashMap::new()),
-            _act: Mutex::new(VecDeque::new()),
+            _act: Mutex::new(HashMap::new()),
             _chara: Mutex::new(HashMap::new()),
             _uid_alloc: Mutex::new(255),
         }
     }
     /// Lock getter.
-    pub(self) async fn chara_status(&self) -> MutexGuard<'_, HashMap<u64, bool>> {
+    pub(self) async fn chara_status(&self) -> MutexGuard<'_, HashMap<String, bool>> {
         self._chara_status.lock().await
     }
     /// Whether all characters have submitted their action.
@@ -50,11 +50,11 @@ impl Game {
         ans
     }
     /// Lock getter.
-    pub(self) async fn act(&self) -> MutexGuard<'_, VecDeque<ActProc>> {
+    pub(self) async fn act(&self) -> MutexGuard<'_, HashMap<u64, ActProc>> {
         self._act.lock().await
     }
     /// Lock getter.
-    pub(self) async fn chara(&self) -> MutexGuard<'_, HashMap<u64, Chara>> {
+    pub(self) async fn chara(&self) -> MutexGuard<'_, HashMap<String, Chara>> {
         self._chara.lock().await
     }
     /// Current game turn.
@@ -62,8 +62,8 @@ impl Game {
         self._turn.lock().await
     }
     /// Whether a character is enrolled in the game.
-    pub async fn enrolled(&self, uid: u64) -> bool {
-        self.chara().await.contains_key(&uid)
+    pub async fn enrolled(&self, id: &str) -> bool {
+        self.chara().await.contains_key(id)
     }
     /// Generate new uid.
     pub(self) async fn gen_uid(&self) -> u64 {
@@ -74,12 +74,12 @@ impl Game {
     /// Shutdown the internal game server.
     pub async fn shutdown(&self) {
         let mut proc = self.act().await;
-        while let Some(a) = proc.pop_front() {
+        for (k, v) in proc.drain() {
             warn!(
                 "giving up act[uid={}] submitted by chara[uid={}]",
-                a.act.uid, a.act.chara
+                k, v.act.chara
             );
-            a.sender
+            v.sender
                 .send(StatusCode::SERVICE_UNAVAILABLE)
                 .expect("channel error");
             info!("act queue clear");
@@ -88,13 +88,13 @@ impl Game {
     /// Calculates all waiting acts.
     pub(self) async fn update(&self) {
         let mut proc = self.act().await;
-        while let Some(a) = proc.pop_front() {
+        for (k, v) in proc.drain() {
             info!(
                 "processing act[uid={}] submitted by player[id={}]",
-                a.act.uid(),
-                a.act.token.id
+                k, v.act.token.id
             );
-            a.sender
+            warn!("act unimplemented");
+            v.sender
                 .send(StatusCode::NOT_IMPLEMENTED)
                 .expect("game server failed to connect with http server");
         }
@@ -105,20 +105,20 @@ impl Game {
         (StatusCode::NOT_IMPLEMENTED, Sync::new())
     }
     /// Process an `Act` to the act queue, returns `Receiver` for status of future execution.
-    pub async fn proc(&self, mut act: Act) -> Receiver<StatusCode> {
-        act.set_uid(self.gen_uid().await);
+    pub async fn proc(&self, act: Act) -> Receiver<StatusCode> {
+        let uid = self.gen_uid().await;
         let (s, r) = channel::<StatusCode>();
         info!(
             "{} submitted an act: {}",
             act.token.id,
-            format!("act[uid={}]", act.uid)
+            format!("act[uid={}]", uid)
         );
         match self.chara_status().await.get(&act.chara) {
             Some(p) => {
                 if *p {
                     s.send(StatusCode::CONFLICT).expect("channel error");
                 } else {
-                    self.act().await.push_back(ActProc { act, sender: s });
+                    self.act().await.insert(uid, ActProc { act, sender: s });
                     if self.all_ready().await {
                         self.update().await;
                     }

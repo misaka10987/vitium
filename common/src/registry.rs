@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::ID;
+
 /// Registry.
 /// # Todo
 /// `Static` is temporarily disabled as it makes compiler unhappy
@@ -31,8 +33,5 @@ where
     }
 }
 
-/// String ID for a registry.
-pub type RegID = String;
-
 /// Generic registry table using `HashMap`.
-pub type RegTable<T> = HashMap<RegID, Regis<T>>;
+pub type RegTable<T> = HashMap<ID, Regis<T>>;

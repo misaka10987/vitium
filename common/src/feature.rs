@@ -2,25 +2,25 @@ use serde::{Deserialize, Serialize};
 
 use crate::ObjClass;
 
-#[derive(Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
-pub enum Feature {
-    RegID(String),
-    Script(Script),
-}
-
 #[derive(Clone, Serialize, Deserialize, Hash)]
-pub struct Script {
-    pub name: String,
-    pub script: String,
+pub struct Feature {
+    pub id: String,
+    pub script: Script,
 }
 
-impl PartialEq for Script {
+impl PartialEq for Feature {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name
+        self.id == other.id
     }
 }
 
-impl Eq for Script {}
+impl Eq for Feature {}
+
+#[derive(Clone, Serialize, Deserialize, Hash)]
+pub enum Script {
+    Reg(String),
+    Inst(String),
+}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct FeatureAction {

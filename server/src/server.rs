@@ -215,16 +215,19 @@ async fn edit_player(State(s): State<Server>, Json(req): Json<req::EditPlayer>) 
     }
 }
 
+/// Handler for `POST /chara`.
 async fn edit_chara(State(s): State<Server>, Json(req): Json<req::EditChara>) -> StatusCode {
     let mut dat = s.chara().await;
     if !s.verify(&req.token).await {
-        return StatusCode::FORBIDDEN;
-    }
-    if let Some(chara) = dat.get_mut(&req.chara.player) {
-        *chara = req.chara;
+        StatusCode::FORBIDDEN
+    } else if let Some(chara) = dat.get_mut(&req.dest) {
+        if chara.player != req.token.id {
+            return StatusCode::FORBIDDEN;
+        }
+        *chara = req.new;
         StatusCode::ACCEPTED
     } else {
-        dat.insert(req.token.id, req.chara);
+        dat.insert(req.dest, req.new);
         StatusCode::CREATED
     }
 }
@@ -235,7 +238,7 @@ async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
         StatusCode::FORBIDDEN
     } else if let Some(c) = s.chara().await.get(&req.token.id) {
         if c.player == req.token.id {
-            if !s.game().await.enrolled(req.chara).await {
+            if !s.game().await.enrolled(&req.chara).await {
                 return StatusCode::NOT_FOUND;
             }
             match s.game().await.proc(req).await.await {

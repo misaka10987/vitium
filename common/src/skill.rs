@@ -1,49 +1,41 @@
-use crate::{age::Age, ObjClass, ID};
+use std::collections::{HashMap, HashSet};
+
+use crate::{Item, ObjClass, ID};
 use serde::{Deserialize, Serialize};
 
 /// Defines a skill instance.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Skill {
-    pub id: String,
-    pub name: String,
-    pub growth: Option<u16>,
-    pub profession: Option<u16>,
-    pub interest: Option<u16>,
+    /// Base level that is created with the character.
+    pub base: i16,
+    /// Growth level during the game.
+    pub growth: i16,
+    /// Bonus provided by profession.
+    pub prof_bonus: i16,
+    /// Bonus provided by race.
+    pub race_bonus: i16,
+    /// Attributions that can give bonus to this skill.
+    pub attr: HashSet<ID>,
 }
 
 impl Skill {
-    /// Sum up the skill profession, interest and growth level.
-    pub fn level(&self) -> Option<u16> {
-        if let Some(g) = self.growth {
-            if let Some(p) = self.profession {
-                if let Some(i) = self.interest {
-                    return Some(g + p + i);
-                }
-            }
-        }
-        None
+    /// Sum up the skill base, profession and growth level.
+    pub fn level(&self) -> i16 {
+        self.base + self.growth + self.prof_bonus + self.race_bonus
     }
 }
 
-impl ID for Skill {
-    fn id(&self) -> Option<&str> {
-        Some(&self.id)
-    }
-}
-
+/// Profession.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Prof {
-    pub age: Age,
-    pub id: String,
-    pub name: String,
+    /// Coefficient of money for an initial character, timed by level.
     pub credit: u16,
-    pub skills: Vec<(Skill, u16)>,
-}
-
-impl ID for Prof {
-    fn id(&self) -> Option<&str> {
-        Some(&self.id)
-    }
+    /// Attribution bonus provided by this profession.
+    pub attr_bonus: HashMap<ID, i16>,
+    /// Skills which this professions provides bonus.
+    pub skill_bonus: HashMap<ID, i16>,
+    /// Initial items given by this profession.
+    pub item: Vec<Item>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
