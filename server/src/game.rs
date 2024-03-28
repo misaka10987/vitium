@@ -43,11 +43,12 @@ impl Game {
     }
     /// Whether all characters have submitted their action.
     pub(self) async fn all_ready(&self) -> bool {
-        let mut ans = true;
         for i in self.chara_status().await.values() {
-            ans = ans && *i;
+            if !*i {
+                return false;
+            }
         }
-        ans
+        true
     }
     /// Lock getter.
     pub(self) async fn act(&self) -> MutexGuard<'_, HashMap<u64, ActProc>> {
