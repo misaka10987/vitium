@@ -8,6 +8,7 @@ pub mod feature;
 pub mod fight;
 pub mod game;
 pub mod item;
+pub mod material;
 pub mod module;
 pub mod player;
 mod prelude;
