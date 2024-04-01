@@ -34,4 +34,22 @@ where
 }
 
 /// Generic registry table using `HashMap`.
-pub type RegTable<T> = HashMap<ID, Regis<T>>;
+pub type RegTable<T> = HashMap<ID, T>;
+
+#[macro_export]
+macro_rules! gen_reg {
+    ($t:ty) => {
+        use crate::reg::RegTable;
+        use once_cell::sync::Lazy;
+
+        static mut REG: Lazy<RegTable<$t>> = Lazy::new(|| HashMap::new());
+
+        pub fn reg() -> &'static RegTable<$t> {
+            unsafe { &REG }
+        }
+
+        pub fn reg_mut() -> &'static mut RegTable<$t> {
+            unsafe { &mut REG }
+        }
+    };
+}

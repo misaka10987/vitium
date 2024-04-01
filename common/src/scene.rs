@@ -1,5 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+use crate::ID;
+
+pub struct Block {
+    pub id: ID,
+}
+
 /// Instance of scene.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Scene {

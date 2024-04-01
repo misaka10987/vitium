@@ -1,6 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use crate::{Item, ObjClass, ID};
+use crate::{ObjClass, ID};
 use serde::{Deserialize, Serialize};
 
 /// Defines a skill instance.
@@ -23,19 +23,6 @@ impl Skill {
     pub fn level(&self) -> i16 {
         self.base + self.growth + self.prof_bonus + self.race_bonus
     }
-}
-
-/// Profession.
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Prof {
-    /// Coefficient of money for an initial character, timed by level.
-    pub credit: u16,
-    /// Attribution bonus provided by this profession.
-    pub attr_bonus: HashMap<ID, i16>,
-    /// Skills which this professions provides bonus.
-    pub skill_bonus: HashMap<ID, i16>,
-    /// Initial items given by this profession.
-    pub item: Vec<Item>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

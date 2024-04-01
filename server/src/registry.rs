@@ -1,14 +1,7 @@
 use once_cell::sync::Lazy;
-use tokio::
-    sync::{Mutex, MutexGuard}
-;
-use vitium_common::{
-    item::Item,
-    registry::RegTable,
-    scene::Scene,
-    skill::{Prof, Skill},
-    vehicle::Vehicle,
-};
+use tokio::sync::{Mutex, MutexGuard};
+use vitium_common::prof::Prof;
+use vitium_common::{item::Item, reg::RegTable, scene::Scene, skill::Skill, vehicle::Vehicle};
 
 type REG<T> = Lazy<Mutex<RegTable<T>>>;
 macro_rules! reg {
