@@ -45,9 +45,8 @@ pub enum ObjClass {
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Target {
-    Chara(u64),
-    Mob(u64),
-    NPC(u64),
+    Entity(u64),
+    Pos(i16, i16),
 }
 
 pub fn add(left: usize, right: usize) -> usize {
