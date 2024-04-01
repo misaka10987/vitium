@@ -1,12 +1,12 @@
 use once_cell::sync::Lazy;
 use tokio::sync::{Mutex, MutexGuard};
 use vitium_common::prof::Prof;
-use vitium_common::{item::Item, reg::RegTable, scene::Scene, skill::Skill, vehicle::Vehicle};
+use vitium_common::{item::Item, reg::Reg, scene::Scene, skill::Skill, vehicle::Vehicle};
 
-type REG<T> = Lazy<Mutex<RegTable<T>>>;
+type REG<T> = Lazy<Mutex<Reg<T>>>;
 macro_rules! reg {
     () => {
-        Lazy::new(|| Mutex::new(RegTable::new()))
+        Lazy::new(|| Mutex::new(Reg::new()))
     };
 }
 static REG_ITEM: REG<Item> = reg!();
@@ -15,24 +15,24 @@ static REG_PROF: REG<Prof> = reg!();
 static REG_SCENE: REG<Scene> = reg!();
 static REG_VEHICLE: REG<Vehicle> = reg!();
 
-pub async fn reg_item() -> MutexGuard<'static, RegTable<Item>> {
+pub async fn reg_item() -> MutexGuard<'static, Reg<Item>> {
     REG_ITEM.lock().await
 }
-pub async fn reg_skill() -> MutexGuard<'static, RegTable<Skill>> {
+pub async fn reg_skill() -> MutexGuard<'static, Reg<Skill>> {
     REG_SKILL.lock().await
 }
-pub async fn reg_prof() -> MutexGuard<'static, RegTable<Prof>> {
+pub async fn reg_prof() -> MutexGuard<'static, Reg<Prof>> {
     REG_PROF.lock().await
 }
-pub async fn reg_scene() -> MutexGuard<'static, RegTable<Scene>> {
+pub async fn reg_scene() -> MutexGuard<'static, Reg<Scene>> {
     REG_SCENE.lock().await
 }
-pub async fn reg_vehicle() -> MutexGuard<'static, RegTable<Vehicle>> {
+pub async fn reg_vehicle() -> MutexGuard<'static, Reg<Vehicle>> {
     REG_VEHICLE.lock().await
 }
 
 // /// Ganked by compiler, therefore rewritten using macro.
-// async fn load_reg<'a, T>(reg: MutexGuard<'static, RegTable<T>>, path: &str)
+// async fn load_reg<'a, T>(reg: MutexGuard<'static, Reg<T>>, path: &str)
 // where
 //     T: serde::de::Deserialize<'a> + ID + Clone,
 // {
