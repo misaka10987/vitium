@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{gen_reg, Item, ID};
+use crate::{Item, ID};
 use serde::{Deserialize, Serialize};
 
 /// Profession.
@@ -19,5 +19,3 @@ pub struct Prof {
     /// Initial items given by this profession.
     pub item: Vec<Item>,
 }
-
-gen_reg!(Prof);

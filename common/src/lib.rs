@@ -1,5 +1,6 @@
 pub mod act;
 pub mod atk;
+pub mod attr;
 pub mod card;
 pub mod chara;
 pub mod cmd;
@@ -10,7 +11,7 @@ pub mod fight;
 pub mod game;
 pub mod item;
 pub mod mart;
-pub mod material;
+pub mod mat;
 pub mod module;
 pub mod player;
 mod prelude;
@@ -24,6 +25,7 @@ pub mod scene;
 pub mod skill;
 pub mod spell;
 pub mod sync;
+pub mod terra;
 pub mod util;
 pub mod vehicle;
 
