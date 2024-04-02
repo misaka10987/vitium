@@ -22,7 +22,7 @@ pub mod record;
 pub mod reg;
 pub mod req;
 pub mod res;
-pub mod scene;
+pub mod scena;
 pub mod skill;
 pub mod spell;
 pub mod sync;

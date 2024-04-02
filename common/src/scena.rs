@@ -8,7 +8,7 @@ pub struct Block {
 
 /// Instance of scene.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Scene {
+pub struct Scenario {
     /// Displayed name.
     pub name: String,
     /// Description showed when a character enters.

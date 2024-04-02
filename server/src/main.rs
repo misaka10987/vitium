@@ -5,22 +5,14 @@ use server::Server;
 use tokio::spawn;
 use tracing::info;
 
-/// In-game characters.
-pub mod cha;
 /// Dice implementation using `ndm`.
 pub mod dice;
 /// Specific game logics goes here.
 pub mod game;
 /// Process the input when running server.
 pub mod input;
-/// Load game saves.
-pub mod load;
 /// Registry.
 pub mod reg;
-/// Save the game.
-pub mod save;
-/// In-game scenario.
-pub mod scene;
 pub mod script;
 /// New server.
 pub mod server;
