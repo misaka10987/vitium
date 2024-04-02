@@ -1,6 +1,6 @@
-use crate::{dice::Dice, fight::DmgType, Feature, ID};
 #[cfg(test)]
-use crate::{Example, DEBUG_DESCR};
+use crate::test::*;
+use crate::{dice::Dice, fight::DmgType, Feature, ID};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 

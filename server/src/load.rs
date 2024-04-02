@@ -1,4 +1,4 @@
-use crate::chara::chara;
+use crate::cha::chara;
 use tokio::fs::read_to_string;
 use vitium_common::obj;
 

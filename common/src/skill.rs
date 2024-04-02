@@ -6,23 +6,12 @@ use serde::{Deserialize, Serialize};
 /// Defines a skill instance.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Skill {
-    /// Base level that is created with the character.
-    pub base: i16,
-    /// Growth level during the game.
-    pub growth: i16,
     /// Bonus provided by profession.
     pub prof_bonus: i16,
     /// Bonus provided by race.
     pub race_bonus: i16,
     /// Attributions that can give bonus to this skill.
     pub attr: HashSet<ID>,
-}
-
-impl Skill {
-    /// Sum up the skill base, profession and growth level.
-    pub fn level(&self) -> i16 {
-        self.base + self.growth + self.prof_bonus + self.race_bonus
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]

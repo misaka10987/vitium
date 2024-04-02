@@ -6,7 +6,7 @@ use tokio::spawn;
 use tracing::info;
 
 /// In-game characters.
-pub mod chara;
+pub mod cha;
 /// Dice implementation using `ndm`.
 pub mod dice;
 /// Specific game logics goes here.
@@ -16,7 +16,7 @@ pub mod input;
 /// Load game saves.
 pub mod load;
 /// Registry.
-pub mod registry;
+pub mod reg;
 /// Save the game.
 pub mod save;
 /// In-game scenario.

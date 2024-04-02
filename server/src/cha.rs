@@ -1,12 +1,12 @@
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use tokio::sync::{Mutex, MutexGuard};
-use vitium_common::chara::Chara;
+use vitium_common::cha::Char;
 
-static CHARA: Lazy<Mutex<HashMap<i128, Chara>>> =
-    Lazy::new(|| Mutex::new(HashMap::<i128, Chara>::new()));
+static CHARA: Lazy<Mutex<HashMap<i128, Char>>> =
+    Lazy::new(|| Mutex::new(HashMap::<i128, Char>::new()));
 
-pub async fn chara() -> MutexGuard<'static, HashMap<i128, Chara>> {
+pub async fn chara() -> MutexGuard<'static, HashMap<i128, Char>> {
     CHARA.lock().await
 }
 

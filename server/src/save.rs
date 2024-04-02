@@ -1,4 +1,4 @@
-use crate::chara::chara;
+use crate::cha::chara;
 use tokio::fs::write;
 use vitium_common::json;
 

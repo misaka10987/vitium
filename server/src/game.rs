@@ -7,7 +7,7 @@ use tokio::sync::{
     Mutex, MutexGuard,
 };
 use tracing::{info, warn};
-use vitium_common::{act::Act, chara::Chara, sync::Sync};
+use vitium_common::{act::Act, cha::Char, sync::Sync};
 
 /// Action item waiting the server to process.
 pub(self) struct ActProc {
@@ -21,7 +21,7 @@ pub struct Game {
     _turn: Mutex<u64>,
     _chara_status: Mutex<HashMap<String, bool>>,
     _act: Mutex<HashMap<u64, ActProc>>,
-    _chara: Mutex<HashMap<String, Chara>>,
+    _chara: Mutex<HashMap<String, Char>>,
     _uid_alloc: Mutex<u64>,
 }
 
@@ -55,7 +55,7 @@ impl Game {
         self._act.lock().await
     }
     /// Lock getter.
-    pub(self) async fn chara(&self) -> MutexGuard<'_, HashMap<String, Chara>> {
+    pub(self) async fn chara(&self) -> MutexGuard<'_, HashMap<String, Char>> {
         self._chara.lock().await
     }
     /// Current game turn.

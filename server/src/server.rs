@@ -19,12 +19,12 @@ use tokio::{
 use tower_http::trace::TraceLayer;
 use tracing::{error, info, trace};
 use vitium_common::{
-    chara::Chara,
     cmd::{Command, Echo},
     config::{obj, toml, ServerConfig},
     player::{Player, Token},
     req::{self, Chat, Cmd},
     sync::Sync,
+    PC,
 };
 
 use crate::game::Game;
@@ -50,7 +50,7 @@ pub struct Server {
     _banned_player: Lock<HashSet<String>>,
     _banned_ip: Lock<HashSet<IpAddr>>,
     _pswd: Lock<HashMap<String, String>>,
-    _chara: Lock<HashMap<String, Chara>>,
+    _pc: Lock<HashMap<String, PC>>,
     _op: Lock<HashSet<String>>,
     _chat: Lock<VecDeque<Chat>>,
     _game: Lock<Game>,
@@ -64,7 +64,7 @@ impl Server {
             _banned_player: lock(HashSet::new()),
             _banned_ip: lock(HashSet::new()),
             _pswd: lock(HashMap::new()),
-            _chara: lock(HashMap::new()),
+            _pc: lock(HashMap::new()),
             _op: lock(HashSet::new()),
             _chat: lock(VecDeque::new()),
             _game: lock(Game::new()),
@@ -82,8 +82,8 @@ impl Server {
     pub async fn pswd(&self) -> MutexGuard<'_, HashMap<String, String>> {
         self._pswd.lock().await
     }
-    pub async fn chara(&self) -> MutexGuard<'_, HashMap<String, Chara>> {
-        self._chara.lock().await
+    pub async fn pc(&self) -> MutexGuard<'_, HashMap<String, PC>> {
+        self._pc.lock().await
     }
     pub async fn op(&self) -> MutexGuard<'_, HashSet<String>> {
         self._op.lock().await
@@ -138,11 +138,11 @@ impl Server {
             .route("/hello", get(hello))
             .route("/chat", get(recv_chat))
             .route("/player", get(get_player))
-            .route("/chara", get(get_chara))
+            .route("/chara", get(get_pc))
             .route("/chat", post(send_chat))
             .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
-            .route("/chara", post(edit_chara))
+            .route("/chara", post(edit_pc))
             .route("/act", post(act))
             .route("/sync", get(sync))
             .route("/cmd", post(cmd))
@@ -168,8 +168,8 @@ async fn get_player(State(s): State<Server>) -> (StatusCode, Json<HashMap<String
     (StatusCode::OK, Json(s.player().await.clone()))
 }
 
-async fn get_chara(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, Chara>>) {
-    (StatusCode::OK, Json(s.chara().await.clone()))
+async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC>>) {
+    (StatusCode::OK, Json(s.pc().await.clone()))
 }
 
 async fn send_chat(State(s): State<Server>, Json(req): Json<req::SendChat>) -> StatusCode {
@@ -216,8 +216,8 @@ async fn edit_player(State(s): State<Server>, Json(req): Json<req::EditPlayer>) 
 }
 
 /// Handler for `POST /chara`.
-async fn edit_chara(State(s): State<Server>, Json(req): Json<req::EditChara>) -> StatusCode {
-    let mut dat = s.chara().await;
+async fn edit_pc(State(s): State<Server>, Json(req): Json<req::EditChara>) -> StatusCode {
+    let mut dat = s.pc().await;
     if !s.verify(&req.token).await {
         StatusCode::FORBIDDEN
     } else if let Some(chara) = dat.get_mut(&req.dest) {
@@ -236,7 +236,7 @@ async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
     if !s.verify(&req.token).await {
         // token is invalid
         StatusCode::FORBIDDEN
-    } else if let Some(c) = s.chara().await.get(&req.token.id) {
+    } else if let Some(c) = s.pc().await.get(&req.token.id) {
         if c.player == req.token.id {
             if !s.game().await.enrolled(&req.chara).await {
                 return StatusCode::NOT_FOUND;

@@ -2,7 +2,7 @@ pub mod act;
 pub mod atk;
 pub mod attr;
 pub mod card;
-pub mod chara;
+pub mod cha;
 pub mod cmd;
 pub mod config;
 pub mod dice;
@@ -10,6 +10,7 @@ pub mod feature;
 pub mod fight;
 pub mod game;
 pub mod item;
+pub mod level;
 pub mod mart;
 pub mod mat;
 pub mod module;
@@ -26,6 +27,7 @@ pub mod skill;
 pub mod spell;
 pub mod sync;
 pub mod terra;
+pub mod test;
 pub mod util;
 pub mod vehicle;
 
@@ -34,6 +36,9 @@ use serde::{Deserialize, Serialize};
 pub use crate::prelude::*;
 
 pub const DEBUG_DESCR: &str = "If you see this in game, it is a bug.";
+
+#[cfg(test)]
+use crate::test::*;
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum ObjClass {
