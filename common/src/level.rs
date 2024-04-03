@@ -28,6 +28,22 @@ impl Sub<i16> for Level {
     }
 }
 
+impl Add<Self> for Level {
+    type Output = i16;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        self.curr() + rhs.curr()
+    }
+}
+
+impl Sub<Self> for Level {
+    type Output = i16;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.curr() - rhs.curr()
+    }
+}
+
 impl Level {
     pub fn new(born: i16) -> Self {
         Self {

@@ -1,6 +1,5 @@
 pub mod act;
 pub mod atk;
-pub mod attr;
 pub mod card;
 pub mod cha;
 pub mod cmd;
