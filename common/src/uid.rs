@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Hash, Serialize, Deserialize)]
 pub struct UID<T> {
     pub value: u64,
-    _type: PhantomData<T>,
+    _t: PhantomData<T>,
 }
 
 impl<T> UID<T> {
     pub fn new(value: u64) -> Self {
         Self {
             value,
-            _type: PhantomData,
+            _t: PhantomData,
         }
     }
 }
@@ -28,8 +28,8 @@ impl<T> Eq for UID<T> {}
 impl<T> Clone for UID<T> {
     fn clone(&self) -> Self {
         Self {
-            value: self.value.clone(),
-            _type: self._type.clone(),
+            value: self.value,
+            _t: PhantomData,
         }
     }
 }
