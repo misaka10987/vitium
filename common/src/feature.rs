@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ObjClass;
+use crate::Obj;
 
 #[derive(Clone, Serialize, Deserialize, Hash)]
 pub struct Feature {
@@ -24,22 +24,21 @@ pub enum Script {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct FeatureAction {
-    pub cat: ObjClass,
-    pub obj: u64,
+    pub obj: Obj,
     pub feature: String,
     pub arg: Vec<String>,
 }
 
-impl FeatureAction {
-    pub fn example() -> Self {
-        Self {
-            cat: ObjClass::Item,
-            obj: 114514,
-            feature: "example-feature".to_string(),
-            arg: vec!["arg1", "arg2"]
-                .into_iter()
-                .map(|s| s.to_string())
-                .collect(),
-        }
-    }
-}
+// impl FeatureAction {
+//     pub fn example() -> Self {
+//         Self {
+//             cat: ObjClass::Item,
+//             obj: 114514,
+//             feature: "example-feature".to_string(),
+//             arg: vec!["arg1", "arg2"]
+//                 .into_iter()
+//                 .map(|s| s.to_string())
+//                 .collect(),
+//         }
+//     }
+// }

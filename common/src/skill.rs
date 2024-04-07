@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::{ObjClass, ID};
+use crate::{Obj, ID};
 use serde::{Deserialize, Serialize};
 
 /// Defines a skill instance.
@@ -16,17 +16,6 @@ pub struct Skill {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SkillAction {
-    pub cat: ObjClass,
-    pub obj: u64,
+    pub obj: Obj,
     pub skill: String,
-}
-
-impl SkillAction {
-    pub fn example() -> Self {
-        Self {
-            cat: ObjClass::Mob,
-            obj: 1145141919810,
-            skill: "example-skill".to_string(),
-        }
-    }
 }

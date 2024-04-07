@@ -1,6 +1,8 @@
+use std::marker::PhantomData;
+
 use axum::http::StatusCode;
 use tokio::sync::{oneshot::Sender, Mutex};
-use vitium_common::act::Act;
+use vitium_common::{act::Act, Item, UID};
 
 /// Action item waiting the server to process.
 pub(self) struct ActProc {
@@ -8,30 +10,39 @@ pub(self) struct ActProc {
     pub sender: Sender<StatusCode>,
 }
 
-pub struct UIDAlloc {
+/// A UID allocator that thread-safely generates ascending UIDs.
+pub struct UIDAlloc<T> {
     now: Mutex<u64>,
+    _t: PhantomData<T>,
 }
 
-impl UIDAlloc {
-    pub fn new(start: u64) -> Self {
+impl<T> UIDAlloc<T> {
+    /// Creates a new allocator.
+    pub fn new() -> Self {
         Self {
-            now: Mutex::new(start),
+            now: Mutex::new(0),
+            _t: PhantomData,
         }
     }
-    pub async fn curr(&self) -> u64 {
-        *self.now.lock().await
+    /// Creates a new allocator with specified starting point.
+    pub fn with_start(start: u64) -> Self {
+        Self {
+            now: Mutex::new(start),
+            _t: PhantomData,
+        }
     }
-    pub async fn gen(&self) -> u64 {
+    /// Generate a new UID.
+    pub async fn gen(&self) -> UID<T> {
         let mut x = self.now.lock().await;
         *x += 1;
-        *x
+        UID::new(*x)
     }
 }
 
 /// Internal game server.
 pub struct Game {
     pub on: bool,
-    pub uid: UIDAlloc,
+    pub uid: UIDAlloc<Item>,
 }
 
 impl Game {
@@ -39,7 +50,7 @@ impl Game {
     pub fn new() -> Self {
         Self {
             on: false,
-            uid: UIDAlloc::new(65535),
+            uid: UIDAlloc::new(),
         }
     }
 }

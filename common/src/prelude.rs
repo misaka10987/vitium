@@ -6,6 +6,7 @@ pub use crate::item::Item;
 pub use crate::level::Level;
 pub use crate::prof::Prof;
 pub use crate::skill::Skill;
+pub use crate::uid::UID;
 pub use crate::util::{Bottle, Envelop};
 
 pub use serde_json::from_str as obj;

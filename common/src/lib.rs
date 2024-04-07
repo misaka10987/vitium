@@ -26,10 +26,13 @@ pub mod spell;
 pub mod sync;
 pub mod terra;
 pub mod test;
+pub mod uid;
 pub mod util;
 pub mod vehicle;
 
+use scena::Scena;
 use serde::{Deserialize, Serialize};
+use vehicle::Vehicle;
 
 pub use crate::prelude::*;
 
@@ -39,13 +42,11 @@ pub const DEBUG_DESCR: &str = "If you see this in game, it is a bug.";
 use crate::test::*;
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum ObjClass {
-    Item,
-    Chara,
-    Scene,
-    Vehicle,
-    Mob,
-    NPC,
+pub enum Obj {
+    Item(UID<Item>),
+    Char(UID<Char>),
+    Scena(UID<Scena>),
+    Vehicle(UID<Vehicle>),
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
