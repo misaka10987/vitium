@@ -238,13 +238,14 @@ async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
         StatusCode::FORBIDDEN
     } else if let Some(c) = s.pc().await.get(&req.token.id) {
         if c.player == req.token.id {
-            if !s.game().await.enrolled(&req.chara).await {
-                return StatusCode::NOT_FOUND;
-            }
-            match s.game().await.proc(req).await.await {
-                Ok(c) => c,
-                Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            }
+            // if !s.game().await.enrolled(&req.chara).await {
+            //     return StatusCode::NOT_FOUND;
+            // }
+            // match s.game().await.proc(req).await.await {
+            //     Ok(c) => c,
+            //     Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            // }
+            todo!()
         } else {
             // the request has a token but not matches the character it operates on
             StatusCode::UNAUTHORIZED
@@ -259,8 +260,9 @@ async fn sync(State(s): State<Server>, Json(req): Json<req::Token>) -> (StatusCo
     if !s.verify(&req).await {
         (StatusCode::FORBIDDEN, Json(Sync::new()))
     } else {
-        let (code, data) = s.game().await.fetch(req.id);
-        (code, Json(data))
+        // let (code, data) = s.game().await.fetch(req.id);
+        // (code, Json(data))
+        todo!()
     }
 }
 
@@ -296,8 +298,6 @@ async fn cmd(State(s): State<Server>, Json(req): Json<Cmd>) -> (StatusCode, Json
 /// Command executors. Note that permission will **NOT** be verified.
 pub mod exec {
     use super::Server;
-    use tokio::{process, spawn};
-    use tracing::info;
     use vitium_common::cmd::Echo;
     pub fn hello() -> Echo {
         Echo {
@@ -326,16 +326,17 @@ pub mod exec {
             }
         }
     }
-    pub async fn shutdown(s: &Server) -> Echo {
-        info!("shutting down internal server");
-        s.game().await.shutdown().await;
-        spawn(async {
-            process::Command::new(format!("kill -s SIGINT {}", std::process::id()));
-        });
-        Echo {
-            value: 0,
-            output: "exit".to_string(),
-        }
+    pub async fn shutdown(_s: &Server) -> Echo {
+        todo!()
+        // info!("shutting down internal server");
+        // s.game().await.shutdown().await;
+        // spawn(async {
+        //     process::Command::new(format!("kill -s SIGINT {}", std::process::id()));
+        // });
+        // Echo {
+        //     value: 0,
+        //     output: "exit".to_string(),
+        // }
     }
 }
 

@@ -1,6 +1,18 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use crate::ID;
 
-/// Generic registry table using `HashMap`.
-pub type Reg<T> = HashMap<ID, T>;
+pub struct Reg<T> {
+    table: HashMap<ID, T>,
+}
+
+impl<T: Clone> Reg<T> {
+    pub fn new() -> Reg<T> {
+        Reg {
+            table: HashMap::new(),
+        }
+    }
+    pub fn id(&self, id: &ID) -> Option<Cow<T>> {
+        self.table.get(id).map(|x| Cow::Borrowed(x))
+    }
+}
