@@ -3,6 +3,8 @@ use std::cmp::{Eq, Ord};
 use std::convert::From;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
+use crate::ID;
+
 /// Container for values with maximum.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Bottle<T> {
@@ -140,3 +142,19 @@ where
 }
 
 impl<T> Copy for Envelop<T> where T: Clone + Copy {}
+
+pub enum Ox<'a, T> {
+    Reg(&'a ID),
+    Inst(&'a T),
+}
+
+impl<T: Clone> Clone for Ox<'_, T> {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Reg(x) => Self::Reg(x),
+            Self::Inst(x) => Self::Inst(x),
+        }
+    }
+}
+
+impl<T: Clone> Copy for Ox<'_, T> {}

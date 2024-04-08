@@ -1,37 +1,17 @@
 use std::collections::HashMap;
 
-use once_cell::sync::Lazy;
+use crate::{util::Ox, ID};
 
-use crate::ID;
+pub struct Reg<T>(HashMap<ID, T>);
 
-pub type Item = ();
-
-pub struct RegTable<T>(HashMap<ID, T>);
-
-impl<T> RegTable<T> {
-    fn new() -> Self {
-        Self(HashMap::new())
+impl<T> Reg<T> {
+    pub fn id(&self, id: &ID) -> Option<&T> {
+        self.0.get(id)
     }
-}
-
-pub struct Reg {
-    pub item: RegTable<Item>,
-}
-
-impl Reg {
-    fn new() -> Self {
-        Self {
-            item: RegTable::new(),
+    pub fn inst<'a>(&'a self, ox: Ox<'a, T>) -> Option<&'a T> {
+        match ox {
+            Ox::Reg(id) => self.id(&id),
+            Ox::Inst(inst) => Some(&inst),
         }
     }
-}
-
-static mut REG: Lazy<Reg> = Lazy::new(|| Reg::new());
-
-pub fn reg() -> &'static Lazy<Reg> {
-    unsafe { &REG }
-}
-
-pub fn reg_mut() -> &'static mut Lazy<Reg> {
-    unsafe { &mut REG }
 }
