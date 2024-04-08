@@ -31,7 +31,7 @@ pub mod util;
 pub mod vehicle;
 
 use scena::Scena;
-use serde::{Deserialize, Serialize};
+use serde::{de::Visitor, Deserialize, Serialize};
 use vehicle::Vehicle;
 
 pub use crate::prelude::*;
@@ -51,18 +51,56 @@ pub enum Obj {
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Target {
-    Entity(u64),
+    Entity(Obj),
     Pos(i16, i16),
 }
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ID {
     pub module: String,
     pub id: String,
+}
+
+impl Serialize for ID {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&format!("{}:{}", self.module, self.id))
+    }
+}
+
+struct IDVisitor;
+
+impl<'de> Visitor<'de> for IDVisitor {
+    type Value = ID;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            formatter,
+            "a string that can be splitted by a ':' into two valid identifiers"
+        )
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        let s: Vec<&str> = v.split(':').collect();
+        if s.len() != 2 {
+            return Err(E::missing_field("id"));
+        }
+        Ok(ID::new(s[0], s[1]))
+    }
+}
+
+impl<'de> Deserialize<'de> for ID {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_str(IDVisitor)
+    }
 }
 
 impl ID {
@@ -86,7 +124,7 @@ mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        let x: ID = obj("\"homo:sapiens\"").unwrap();
+        println!("{}", json(&x).unwrap());
     }
 }

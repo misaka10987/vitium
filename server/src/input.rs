@@ -19,6 +19,10 @@ pub async fn input() {
 }
 
 fn term() -> i8 {
+    #[cfg(not(unix))]
+    {
+        println!("! Not supported for non-unix OS. Use Ctrl+C instead");
+    }
     let _ = Command::new("kill")
         .arg("-INT")
         .arg(pid().to_string())

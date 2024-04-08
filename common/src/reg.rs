@@ -1,18 +1,37 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
+
+use once_cell::sync::Lazy;
 
 use crate::ID;
 
-pub struct Reg<T> {
-    table: HashMap<ID, T>,
+pub type Item = ();
+
+pub struct RegTable<T>(HashMap<ID, T>);
+
+impl<T> RegTable<T> {
+    fn new() -> Self {
+        Self(HashMap::new())
+    }
 }
 
-impl<T: Clone> Reg<T> {
-    pub fn new() -> Reg<T> {
-        Reg {
-            table: HashMap::new(),
+pub struct Reg {
+    pub item: RegTable<Item>,
+}
+
+impl Reg {
+    fn new() -> Self {
+        Self {
+            item: RegTable::new(),
         }
     }
-    pub fn id(&self, id: &ID) -> Option<Cow<T>> {
-        self.table.get(id).map(|x| Cow::Borrowed(x))
-    }
+}
+
+static mut REG: Lazy<Reg> = Lazy::new(|| Reg::new());
+
+pub fn reg() -> &'static Lazy<Reg> {
+    unsafe { &REG }
+}
+
+pub fn reg_mut() -> &'static mut Lazy<Reg> {
+    unsafe { &mut REG }
 }
