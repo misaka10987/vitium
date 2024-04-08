@@ -1,11 +1,8 @@
 #[cfg(test)]
 use crate::test::*;
 use crate::{dice::Dice, fight::DmgType, Feature, ID};
-use serde::{Deserialize, Serialize, Serializer};
-use std::{
-    borrow::Cow,
-    collections::{HashMap, HashSet},
-};
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ItemSpec {
