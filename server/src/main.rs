@@ -16,6 +16,7 @@ pub mod reg;
 pub mod script;
 /// New server.
 pub mod server;
+pub mod table;
 
 #[derive(Parser, Debug)]
 struct Args {
