@@ -67,3 +67,9 @@ impl AsRef<Character> for PC {
         &self.chara
     }
 }
+
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Pos {
+    pub scena: u64,
+    pub coord: (f32, f32),
+}

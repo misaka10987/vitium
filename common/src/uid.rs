@@ -25,6 +25,18 @@ impl<T> PartialEq for UID<T> {
 
 impl<T> Eq for UID<T> {}
 
+impl<T> PartialOrd for UID<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.value.partial_cmp(&other.value)
+    }
+}
+
+impl<T> Ord for UID<T> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.value.cmp(&other.value)
+    }
+}
+
 impl<T> Clone for UID<T> {
     fn clone(&self) -> Self {
         Self {

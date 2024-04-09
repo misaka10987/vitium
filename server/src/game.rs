@@ -1,8 +1,27 @@
-use std::marker::PhantomData;
+use std::{collections::BTreeMap, marker::PhantomData};
 
 use axum::http::StatusCode;
-use tokio::sync::{oneshot::Sender, Mutex};
+use tokio::sync::{oneshot::Sender, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use vitium_common::{act::Act, Item, UID};
+
+pub struct Table<T> {
+    alloc: UIDAlloc<T>,
+    pub table: BTreeMap<UID<T>, RwLock<T>>,
+}
+
+impl<T> Table<T> {
+    pub async fn insert(&mut self, content: T) -> UID<T> {
+        let uid = self.alloc.gen().await;
+        self.table.insert(uid, RwLock::new(content));
+        uid
+    }
+    pub async fn read(&self, uid: UID<T>) -> Option<RwLockReadGuard<T>> {
+        self.table.get(&uid).map(|x| x.blocking_read())
+    }
+    pub async fn write(&self, uid: UID<T>) -> Option<RwLockWriteGuard<T>> {
+        self.table.get(&uid).map(|x| x.blocking_write())
+    }
+}
 
 /// Action item waiting the server to process.
 pub(self) struct ActProc {
