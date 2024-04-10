@@ -1,8 +1,6 @@
 use axum::http::StatusCode;
 use tokio::sync::oneshot::Sender;
-use vitium_common::{act::Act, PC};
-
-use crate::table::Table;
+use vitium_common::{act::Act};
 
 /// Action item waiting the server to process.
 pub(self) struct ActProc {
@@ -13,7 +11,6 @@ pub(self) struct ActProc {
 /// Internal game server.
 pub struct Game {
     pub on: bool,
-    pub pc: Table<PC>,
 }
 
 impl Game {
@@ -21,7 +18,6 @@ impl Game {
     pub fn new() -> Self {
         Self {
             on: false,
-            pc: Table::new(),
         }
     }
 }

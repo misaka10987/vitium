@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -12,12 +12,6 @@ impl<T: Clone> Reg<T> {
     }
     pub fn id(&self, id: &ID) -> Option<&T> {
         self.0.get(id)
-    }
-    pub fn inst<'a>(&'a self, ox: &'a Ox<T>) -> Option<Cow<'a, T>> {
-        match ox {
-            Ox::Reg(id) => self.id(&id).map(|x| Cow::Borrowed(x)),
-            Ox::Inst(inst) => Some(Cow::Borrowed(inst)),
-        }
     }
 }
 

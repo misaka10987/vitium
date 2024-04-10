@@ -23,7 +23,6 @@ impl Index<(i8, i8)> for Chunk {
     }
 }
 
-
 /// Instance of scene.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Scena {
