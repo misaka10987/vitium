@@ -1,4 +1,40 @@
+pub mod cha;
+pub mod fight;
+pub mod item;
+pub mod level;
+pub mod mart;
+pub mod mat;
+pub mod prelude;
+pub mod prof;
+pub mod race;
+pub mod reg;
+pub mod scena;
+pub mod skill;
+pub mod spell;
+pub mod terra;
+pub mod vehicle;
+
+use serde::{Deserialize, Serialize};
+
+use crate::UID;
+
+pub use self::prelude::*;
+
 use std::collections::{HashMap, HashSet};
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub enum Obj {
+    Item(UID<Item>),
+    Char(UID<Char>),
+    Scena(UID<Scena>),
+    Vehicle(UID<Vehicle>),
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub enum Target {
+    Entity(Obj),
+    Pos(i16, i16),
+}
 
 /// Refers to the current game status.
 pub struct GameStat {
