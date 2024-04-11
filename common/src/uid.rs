@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
+use std::{hash::Hash, marker::PhantomData};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Hash, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct UID<T> {
     pub value: u64,
     _t: PhantomData<T>,
@@ -47,3 +47,9 @@ impl<T> Clone for UID<T> {
 }
 
 impl<T> Copy for UID<T> {}
+
+impl<T> Hash for UID<T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
+    }
+}
