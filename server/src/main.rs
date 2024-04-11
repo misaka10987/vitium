@@ -10,8 +10,6 @@ pub mod dice;
 pub mod game;
 /// Process the input when running server.
 pub mod input;
-/// Registry.
-pub mod reg;
 pub mod script;
 /// New server.
 pub mod server;

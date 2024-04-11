@@ -1,7 +1,7 @@
-use std::collections::{HashMap, HashSet};
-
-use crate::{Item, ID};
+use super::Item;
+use crate::ID;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 /// Profession.
 #[derive(Serialize, Deserialize, Clone)]

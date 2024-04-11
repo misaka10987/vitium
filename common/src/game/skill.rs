@@ -1,7 +1,7 @@
-use std::collections::HashSet;
-
-use crate::{Obj, ID};
+use super::Obj;
+use crate::ID;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 /// Defines a skill instance.
 #[derive(Serialize, Deserialize, Clone)]

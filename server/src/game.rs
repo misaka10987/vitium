@@ -1,3 +1,5 @@
+pub mod reg;
+
 // use axum::http::StatusCode;
 // use tokio::sync::oneshot::Sender;
 // use vitium_common::act::Act;
@@ -16,8 +18,6 @@ pub struct Game {
 impl Game {
     /// Creates new instance without config.
     pub fn new() -> Self {
-        Self {
-            on: false,
-        }
+        Self { on: false }
     }
 }

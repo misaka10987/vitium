@@ -1,5 +1,5 @@
 pub use crate::{act::Act, cmd::Cmd};
-use crate::{player::Player, PC};
+use crate::{game::PC, player::Player};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 

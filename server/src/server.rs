@@ -4,6 +4,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use http_auth_basic::Credentials;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
@@ -16,10 +17,9 @@ use tracing::error;
 use vitium_common::{
     cmd::Echo,
     config::{obj, toml, ServerConfig},
+    game::PC,
     player::Player,
     req::{self, Chat},
-    sync::Sync,
-    PC,
 };
 
 use crate::game::Game;
@@ -65,15 +65,12 @@ impl Server {
     pub async fn auth(&self, head: &HeaderMap) -> Option<String> {
         if let Some(token) = head.get(AUTHORIZATION) {
             if let Ok(s) = token.to_str() {
-                let v: Vec<_> = s.split(' ').collect();
-                if v.len() == 3 && v[0] == "vitium" {
-                    return self.pswd.read().await.get(v[1]).map_or(None, |p| {
-                        if v[2] == p {
-                            Some(v[1].to_string())
-                        } else {
-                            None
+                if let Ok(b) = Credentials::from_header(s.to_string()) {
+                    if let Some(p) = self.pswd.read().await.get(&b.user_id) {
+                        if b.password == *p {
+                            return Some(b.user_id);
                         }
-                    });
+                    }
                 }
             }
         }
@@ -244,7 +241,7 @@ async fn act(State(s): State<Server>, head: HeaderMap, Json(req): Json<req::Act>
     }
 }
 
-async fn sync(State(s): State<Server>, head: HeaderMap) -> (StatusCode, Json<Sync>) {
+async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
     if let Some(_) = s.auth(&head).await {};
     todo!()
 }

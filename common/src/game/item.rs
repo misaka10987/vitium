@@ -1,6 +1,7 @@
+use super::DmgType;
 #[cfg(test)]
 use crate::test::*;
-use crate::{dice::Dice, fight::DmgType, Feature, ID};
+use crate::{dice::Dice, ID};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -225,7 +226,6 @@ pub struct Item {
     pub opaque: bool,
     /// In the smallest currency unit, like 1 USD cent.
     pub price: i32,
-    pub feature: HashSet<Feature>,
     pub ext_info: Vec<String>,
     /// Detailed class, like weapon and armor.
     pub spec: ItemSpec,
@@ -245,7 +245,6 @@ impl Example for Item {
                 weight: 514,
                 opaque: true,
                 price: 1919810,
-                feature: HashSet::new(),
                 ext_info: vec![],
                 spec: s,
             })

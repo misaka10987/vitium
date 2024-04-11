@@ -1,4 +1,4 @@
-use crate::{feature::FeatureAction, skill::SkillAction, Target, DEBUG_DESCR};
+use crate::{game::skill::SkillAction, game::Target, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 
 /// Used for in-game chat.
@@ -28,8 +28,6 @@ pub enum Action {
     Move(u64),
     /// To wield an item with given uid.
     Wield(u64),
-    /// Activate a feature.
-    Feature(FeatureAction),
     /// Apply a skill.
     Skill(SkillAction),
     /// Launch melee attack.

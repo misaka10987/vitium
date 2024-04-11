@@ -1,4 +1,4 @@
-use crate::DmgType;
+use super::DmgType;
 use std::collections::HashMap;
 
 pub struct Mat {
