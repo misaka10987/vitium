@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cursive = {version = "0.20.0",default-features =  false, features = ["crossterm-backend"]}
+cursive = {version = "0.20.0",default-features =  false, features = ["crossterm-backend","toml"]}
 vitium-common = { path = "../common" }
