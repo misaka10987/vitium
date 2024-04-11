@@ -2,7 +2,6 @@ use std::process::exit;
 
 use clap::Parser;
 use server::Server;
-use tokio::spawn;
 use tracing::info;
 
 /// Dice implementation using `ndm`.
@@ -24,21 +23,17 @@ struct Args {
     pub config: Option<String>,
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     // initialize logger
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::TRACE)
         .init();
     let arg = Args::parse();
     info!("Running with {:?}", arg);
-    spawn(input::input());
     // run the server
     Server::new()
         .config("./config.toml")
         .run()
-        .await
         .expect("internal server error");
-    input::stop().await;
     exit(0)
 }

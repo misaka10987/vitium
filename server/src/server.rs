@@ -7,7 +7,6 @@ use axum::{
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
-    net::IpAddr,
     path::Path,
     sync::Arc,
 };
@@ -43,8 +42,6 @@ fn lock<T>(value: T) -> Lock<T> {
 pub struct Server {
     pub cfg: ServerConfig,
     player: Lock<HashMap<String, Player>>,
-    banned_player: Lock<HashSet<String>>,
-    banned_ip: Lock<HashSet<IpAddr>>,
     pswd: Lock<HashMap<String, String>>,
     pc: Lock<HashMap<String, PC>>,
     op: Lock<HashSet<String>>,
@@ -57,8 +54,6 @@ impl Server {
         Self {
             cfg: ServerConfig::new(),
             player: lock(HashMap::new()),
-            banned_player: lock(HashSet::new()),
-            banned_ip: lock(HashSet::new()),
             pswd: lock(HashMap::new()),
             pc: lock(HashMap::new()),
             op: lock(HashSet::new()),
@@ -106,6 +101,7 @@ impl Server {
         self
     }
     /// Consumes `self` and start the server.
+    #[tokio::main]
     pub async fn run(self) -> Result<(), std::io::Error> {
         // listening globally on the port specified
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
@@ -233,13 +229,7 @@ async fn act(State(s): State<Server>, head: HeaderMap, Json(req): Json<req::Act>
     if let Some(name) = s.auth(&head).await {
         if let Some(c) = s.pc.read().await.get(&req.chara) {
             if c.player == name {
-                // if !s.game().await.enrolled(&req.chara).await {
-                //     return StatusCode::NOT_FOUND;
-                // }
-                // match s.game().await.proc(req).await.await {
-                //     Ok(c) => c,
-                //     Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-                // }
+                let _ = s.game.read().await;
                 todo!()
             } else {
                 // the request has a token but not matches the character it operates on
