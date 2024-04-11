@@ -210,8 +210,8 @@ impl OtherItem {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct ItemInst {
-    /// If this `ItemInst` is created from extending an existed registry then its id will be here.
+pub struct Item {
+    /// If this `Item` is a registry then its id will be here.
     pub origin: Option<ID>,
     pub name: String,
     pub descr: String,
@@ -232,7 +232,7 @@ pub struct ItemInst {
 }
 
 #[cfg(test)]
-impl Example for ItemInst {
+impl Example for Item {
     fn examples() -> Vec<Self> {
         ItemSpec::examples()
             .into_iter()
@@ -250,31 +250,5 @@ impl Example for ItemInst {
                 spec: s,
             })
             .collect()
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub enum Item {
-    Reg(ID),
-    Inst(ItemInst),
-}
-
-#[cfg(test)]
-impl Example for Item {
-    fn examples() -> Vec<Self> {
-        let mut v: Vec<_> = ItemInst::examples()
-            .into_iter()
-            .map(|i| Self::Inst(i))
-            .collect();
-        v.push(Self::Reg(ID::example()));
-        v
-    }
-}
-
-#[test]
-fn see_json() {
-    use crate::json;
-    for i in Item::examples() {
-        println!("{}", json(&i).unwrap());
     }
 }

@@ -1,4 +1,4 @@
-use crate::{feature::FeatureAction, player::Token, skill::SkillAction, Target, DEBUG_DESCR};
+use crate::{feature::FeatureAction, skill::SkillAction, Target, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 
 /// Used for in-game chat.
@@ -64,6 +64,4 @@ pub struct Act {
     pub turn: u64,
     /// Detailed action.
     pub action: Action,
-    /// Authentication.
-    pub token: Token,
 }

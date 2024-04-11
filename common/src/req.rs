@@ -1,5 +1,5 @@
-pub use crate::{act::Act, cmd::Cmd, player::Token};
-use crate::{player::Player, DEBUG_DESCR, PC};
+pub use crate::{act::Act, cmd::Cmd};
+use crate::{player::Player, PC};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
@@ -9,20 +9,18 @@ use crate::test::*;
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Enroll {
     pub chara: String,
-    pub token: Token,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chat {
     pub msg: String,
-    pub player: String,
     pub time: SystemTime,
 }
+
 impl Chat {
-    pub fn new() -> Self {
+    pub fn new(msg: &str) -> Self {
         Self {
-            msg: DEBUG_DESCR.to_string(),
-            player: "debug-player".to_string(),
+            msg: msg.to_string(),
             time: SystemTime::now(),
         }
     }
@@ -32,26 +30,12 @@ impl Chat {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct EditPlayer {
-    pub player: Player,
-    pub token: Token,
-}
-
-impl EditPlayer {
-    pub fn new() -> Self {
-        Self {
-            player: Player::new(),
-            token: Token::new(),
-        }
-    }
-}
+pub type EditPlayer = Player;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditChara {
     pub dest: String,
     pub new: PC,
-    pub token: Token,
 }
 
 #[cfg(test)]
@@ -64,28 +48,16 @@ impl Example for EditChara {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SendChat {
     pub chat: Chat,
-    pub token: Token,
-}
-
-impl SendChat {
-    pub fn new() -> Self {
-        Self {
-            chat: Chat::new(),
-            token: Token::new(),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditPswd {
-    pub token: Token,
     pub pswd: String,
 }
 
 impl EditPswd {
     pub fn new() -> Self {
         Self {
-            token: Token::new(),
             pswd: "debug-pswd".to_string(),
         }
     }
@@ -94,7 +66,6 @@ impl EditPswd {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Exit {
     pub chara: i128,
-    pub token: Token,
 }
 
 /// All possible requests are defined here.
@@ -103,7 +74,7 @@ pub enum Req {
     /// Get current server status.
     ServerStatus,
     /// Synchronize all available data.
-    Sync(Token),
+    Sync,
     /// Receive out-game chat messages.
     RecvChat,
     /// Synchronize player list.
@@ -128,7 +99,7 @@ impl Req {
     pub fn route(&self) -> &'static str {
         match self {
             Req::ServerStatus => "GET /",
-            Req::Sync(_) => "GET /sync",
+            Req::Sync => "GET /sync",
             Req::RecvChat => "GET /chat",
             Req::GetPlayer => "GET /player",
             Req::GetChara => "GET /chara",

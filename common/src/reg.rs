@@ -1,33 +1,52 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    ops::{Deref, DerefMut},
+};
 
 use crate::ID;
 
-pub struct Reg<T> {
-    map: HashMap<ID, T>,
-    inv: HashMap<usize, ID>,
+pub struct Reg<T: AsRef<Option<ID>>>(HashMap<ID, T>);
+
+impl<T> Deref for Reg<T>
+where
+    T: Clone + AsRef<Option<ID>>,
+{
+    type Target = HashMap<ID, T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-impl<T: Clone> Reg<T> {
+impl<T> DerefMut for Reg<T>
+where
+    T: Clone + AsRef<Option<ID>>,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T> Reg<T>
+where
+    T: Clone + AsRef<Option<ID>>,
+{
     pub fn new() -> Self {
-        Self {
-            map: HashMap::new(),
-            inv: HashMap::new(),
-        }
+        Self(HashMap::new())
     }
     pub fn inst(&self, ox: Ox<T>) -> Option<Cow<T>> {
         match ox {
-            Ox::Reg(id) => self.map.get(&id).map(|r| Cow::Borrowed(r)),
+            Ox::Reg(id) => self.get(&id).map(|r| Cow::Borrowed(r)),
             Ox::Inst(p) => Some(Cow::Owned(*p)),
         }
     }
-    pub fn save(&self, cow: &Cow<T>) -> Option<Ox<T>> {
+    /// # Panics
+    /// Panic if `cow` is `Borrowed` from a registry item that does not specify an `ID`.
+    pub fn save(&self, cow: &Cow<T>) -> Ox<T> {
         match cow {
-            Cow::Borrowed(r) => {
-                let r: &T = r;
-                let p = r as *const T as usize;
-                self.inv.get(&p).map(|id| Ox::Reg(id.clone()))
-            }
-            Cow::Owned(t) => Some(Ox::Inst(Box::new(t.clone()))),
+            Cow::Borrowed(r) => Ox::Reg(r.as_ref().clone().unwrap()),
+            Cow::Owned(t) => Ox::Inst(Box::new(t.clone())),
         }
     }
 }

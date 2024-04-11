@@ -1,6 +1,6 @@
 use axum::http::StatusCode;
 use tokio::sync::oneshot::Sender;
-use vitium_common::{act::Act};
+use vitium_common::act::Act;
 
 /// Action item waiting the server to process.
 pub(self) struct ActProc {
