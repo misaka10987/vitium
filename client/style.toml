@@ -20,24 +20,24 @@ borders = "simple" # Alternatives are "none" and "simple"
 
 	# If the terminal doesn't support custom color (like the linux TTY),
 	# non-base colors will be skipped.
-	shadow     = ["#000000", "blue"]
-	view       = "111"
+	shadow     = ["blue"]
+	view       = "#111111"
 
 	# An array with a single value has the same effect as a simple value.
 	primary   = ["white"]
 	secondary = "black"
-	tertiary  = "red"
+	tertiary  = "blue"
 
 	# Hex values can use lower or uppercase.
 	# (base color MUST be lowercase)
-	title_primary   = ["white", "yellow"] # `BLUE` will be skipped.
-	title_secondary = "#000000"
+	title_primary   = ["white", "yellow"]
+	title_secondary = "#ffffff"
 
 	# Lower precision values can use only 3 digits.
-	highlight          = "#000"
+	highlight          = "#ffffff"
 	highlight_inactive = "#5555FF"
 
 [styles.highlight]
     effects = []
-    front = "red"
+    front = "white"
     back = "inherit_parent"
