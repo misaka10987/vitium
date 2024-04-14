@@ -1,8 +1,8 @@
-use std::process::exit;
+use std::error::Error;
 
 use clap::Parser;
 use server::Server;
-use tracing::info;
+use tracing::{info, Level};
 
 /// Dice implementation using `ndm`.
 pub mod dice;
@@ -21,17 +21,14 @@ struct Args {
     pub config: Option<String>,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     // initialize logger
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::TRACE)
+        .with_max_level(Level::TRACE)
         .init();
     let arg = Args::parse();
-    info!("Running with {:?}", arg);
+    info!("running with {:?}", arg);
     // run the server
-    Server::new()
-        .config("./config.toml")
-        .run()
-        .expect("internal server error");
-    exit(0)
+    Server::new().config("./config.toml").run()?;
+    Ok(())
 }
