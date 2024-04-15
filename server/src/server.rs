@@ -1,37 +1,32 @@
 use axum::{
     extract::State,
-    http::StatusCode,
+    http::{header::AUTHORIZATION, HeaderMap, StatusCode},
     routing::{get, post},
     Json, Router,
 };
+use http_auth_basic::Credentials;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
-    net::IpAddr,
     path::Path,
     sync::Arc,
 };
-use tokio::{
-    net::TcpListener,
-    signal,
-    sync::{Mutex, MutexGuard},
-};
+use tokio::{net::TcpListener, signal, sync::RwLock};
 use tower_http::trace::TraceLayer;
-use tracing::{error, info, trace};
+use tracing::error;
 use vitium_common::{
-    chara::Chara,
-    cmd::{Command, Echo},
+    cmd::Echo,
     config::{obj, toml, ServerConfig},
-    player::{Player, Token},
-    req::{self, Chat, Cmd},
-    sync::Sync,
+    game::PC,
+    player::Player,
+    req::{self, Chat},
 };
 
 use crate::game::Game;
 
-type Lock<T> = Arc<Mutex<T>>;
+type Lock<T> = Arc<RwLock<T>>;
 fn lock<T>(value: T) -> Lock<T> {
-    Arc::new(Mutex::new(value))
+    Arc::new(RwLock::new(value))
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -46,65 +41,40 @@ fn lock<T>(value: T) -> Lock<T> {
 #[derive(Clone)]
 pub struct Server {
     pub cfg: ServerConfig,
-    _player: Lock<HashMap<String, Player>>,
-    _banned_player: Lock<HashSet<String>>,
-    _banned_ip: Lock<HashSet<IpAddr>>,
-    _pswd: Lock<HashMap<String, String>>,
-    _chara: Lock<HashMap<String, Chara>>,
-    _op: Lock<HashSet<String>>,
-    _chat: Lock<VecDeque<Chat>>,
-    _game: Lock<Game>,
+    player: Lock<HashMap<String, Player>>,
+    pswd: Lock<HashMap<String, String>>,
+    pc: Lock<HashMap<String, PC>>,
+    op: Lock<HashSet<String>>,
+    chat: Lock<VecDeque<(String, Chat)>>,
+    game: Lock<Game>,
 }
 
 impl Server {
     pub fn new() -> Self {
         Self {
             cfg: ServerConfig::new(),
-            _player: lock(HashMap::new()),
-            _banned_player: lock(HashSet::new()),
-            _banned_ip: lock(HashSet::new()),
-            _pswd: lock(HashMap::new()),
-            _chara: lock(HashMap::new()),
-            _op: lock(HashSet::new()),
-            _chat: lock(VecDeque::new()),
-            _game: lock(Game::new()),
+            player: lock(HashMap::new()),
+            pswd: lock(HashMap::new()),
+            pc: lock(HashMap::new()),
+            op: lock(HashSet::new()),
+            chat: lock(VecDeque::new()),
+            game: lock(Game::new()),
         }
     }
-    pub async fn player(&self) -> MutexGuard<'_, HashMap<String, Player>> {
-        self._player.lock().await
-    }
-    pub async fn banned_player(&self) -> MutexGuard<'_, HashSet<String>> {
-        self._banned_player.lock().await
-    }
-    pub async fn banned_ip(&self) -> MutexGuard<'_, HashSet<IpAddr>> {
-        self._banned_ip.lock().await
-    }
-    pub async fn pswd(&self) -> MutexGuard<'_, HashMap<String, String>> {
-        self._pswd.lock().await
-    }
-    pub async fn chara(&self) -> MutexGuard<'_, HashMap<String, Chara>> {
-        self._chara.lock().await
-    }
-    pub async fn op(&self) -> MutexGuard<'_, HashSet<String>> {
-        self._op.lock().await
-    }
-    pub async fn chat(&self) -> MutexGuard<'_, VecDeque<Chat>> {
-        self._chat.lock().await
-    }
-    pub async fn game(&self) -> MutexGuard<'_, Game> {
-        self._game.lock().await
-    }
-    /// Verifies if a `Token` is valid.
-    pub async fn verify(&self, token: &Token) -> bool {
-        if let Some(pswd) = self.pswd().await.get(&token.id) {
-            pswd == &token.pswd
-        } else {
-            false
+    /// Reads from the header and get authentication info.
+    pub async fn auth(&self, head: &HeaderMap) -> Option<String> {
+        if let Some(token) = head.get(AUTHORIZATION) {
+            if let Ok(s) = token.to_str() {
+                if let Ok(b) = Credentials::from_header(s.to_string()) {
+                    if let Some(p) = self.pswd.read().await.get(&b.user_id) {
+                        if b.password == *p {
+                            return Some(b.user_id);
+                        }
+                    }
+                }
+            }
         }
-    }
-    /// Verifies if a `Token` is valid **and** has operator access.
-    pub async fn sudoer(&self, token: &Token) -> bool {
-        self.verify(token).await && self.op().await.contains(&token.id)
+        None
     }
     /// Load configuration from `path`.
     pub fn config(mut self, path: &str) -> Self {
@@ -128,6 +98,7 @@ impl Server {
         self
     }
     /// Consumes `self` and start the server.
+    #[tokio::main]
     pub async fn run(self) -> Result<(), std::io::Error> {
         // listening globally on the port specified
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
@@ -138,11 +109,11 @@ impl Server {
             .route("/hello", get(hello))
             .route("/chat", get(recv_chat))
             .route("/player", get(get_player))
-            .route("/chara", get(get_chara))
+            .route("/chara", get(get_pc))
             .route("/chat", post(send_chat))
             .route("/pswd", post(edit_pswd))
             .route("/player", post(edit_player))
-            .route("/chara", post(edit_chara))
+            .route("/chara", post(edit_pc))
             .route("/act", post(act))
             .route("/sync", get(sync))
             .route("/cmd", post(cmd))
@@ -160,144 +131,128 @@ async fn hello() -> &'static str {
     "Hello, World!\n"
 }
 
-async fn recv_chat(State(s): State<Server>) -> (StatusCode, Json<VecDeque<Chat>>) {
-    (StatusCode::OK, Json(s.chat().await.clone()))
+async fn recv_chat(State(s): State<Server>) -> (StatusCode, Json<VecDeque<(String, Chat)>>) {
+    (StatusCode::OK, Json(s.chat.read().await.clone()))
 }
 
 async fn get_player(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, Player>>) {
-    (StatusCode::OK, Json(s.player().await.clone()))
+    (StatusCode::OK, Json(s.player.read().await.clone()))
 }
 
-async fn get_chara(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, Chara>>) {
-    (StatusCode::OK, Json(s.chara().await.clone()))
+async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC>>) {
+    (StatusCode::OK, Json(s.pc.read().await.clone()))
 }
 
-async fn send_chat(State(s): State<Server>, Json(req): Json<req::SendChat>) -> StatusCode {
-    if !s.verify(&req.token).await {
-        StatusCode::FORBIDDEN
-    } else if req.token.id != req.chat.player {
-        StatusCode::FORBIDDEN
-    } else {
-        let mut dat = s.chat().await;
+async fn send_chat(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(req): Json<req::SendChat>,
+) -> StatusCode {
+    if let Some(name) = s.auth(&head).await {
+        let mut dat = s.chat.write().await;
         while dat.len() >= s.cfg.chat_cap {
             dat.pop_front();
         }
-        let mut content = req.chat;
-        dat.push_back(content.renew().clone());
+        let content = req.chat;
+        dat.push_back((name, content));
         StatusCode::ACCEPTED
-    }
-}
-
-async fn edit_pswd(State(s): State<Server>, Json(req): Json<req::EditPswd>) -> StatusCode {
-    if !s.verify(&req.token).await {
-        StatusCode::FORBIDDEN
-    } else if let Some(p) = s.pswd().await.get_mut(&req.token.id) {
-        *p = req.pswd;
-        StatusCode::OK
     } else {
-        StatusCode::NOT_FOUND
+        StatusCode::FORBIDDEN
     }
 }
 
-async fn edit_player(State(s): State<Server>, Json(req): Json<req::EditPlayer>) -> StatusCode {
-    let mut dat = s.player().await;
-    if let Some(player) = dat.get_mut(&req.player.id) {
-        if s.verify(&req.token).await {
-            *player = req.player.clone();
-            StatusCode::ACCEPTED
+async fn edit_pswd(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(req): Json<req::EditPswd>,
+) -> StatusCode {
+    if let Some(name) = s.auth(&head).await {
+        if let Some(p) = s.pswd.write().await.get_mut(&name) {
+            *p = req.pswd;
+            StatusCode::OK
         } else {
-            StatusCode::FORBIDDEN
+            StatusCode::NOT_FOUND
         }
     } else {
-        dat.insert(req.player.id.clone(), req.player.clone());
-        s.pswd().await.insert(req.player.id, req.token.pswd);
-        StatusCode::CREATED
+        StatusCode::FORBIDDEN
+    }
+}
+
+async fn edit_player(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(req): Json<req::EditPlayer>,
+) -> StatusCode {
+    if let Some(name) = s.auth(&head).await {
+        if name != req.name {
+            return StatusCode::FORBIDDEN;
+        }
+        let mut dat = s.player.write().await;
+        if let Some(player) = dat.get_mut(&req.name) {
+            *player = req;
+            StatusCode::OK
+        } else {
+            StatusCode::NOT_FOUND
+        }
+    } else {
+        StatusCode::FORBIDDEN
     }
 }
 
 /// Handler for `POST /chara`.
-async fn edit_chara(State(s): State<Server>, Json(req): Json<req::EditChara>) -> StatusCode {
-    let mut dat = s.chara().await;
-    if !s.verify(&req.token).await {
-        StatusCode::FORBIDDEN
-    } else if let Some(chara) = dat.get_mut(&req.dest) {
-        if chara.player != req.token.id {
-            return StatusCode::FORBIDDEN;
+async fn edit_pc(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(req): Json<req::EditChara>,
+) -> StatusCode {
+    if let Some(name) = s.auth(&head).await {
+        let mut dat = s.pc.write().await;
+        if let Some(chara) = dat.get_mut(&req.dest) {
+            if chara.player != name {
+                return StatusCode::FORBIDDEN;
+            }
+            *chara = req.new;
+            StatusCode::ACCEPTED
+        } else {
+            dat.insert(req.dest, req.new);
+            StatusCode::CREATED
         }
-        *chara = req.new;
-        StatusCode::ACCEPTED
     } else {
-        dat.insert(req.dest, req.new);
-        StatusCode::CREATED
+        StatusCode::FORBIDDEN
     }
 }
 
-async fn act(State(s): State<Server>, Json(req): Json<req::Act>) -> StatusCode {
-    if !s.verify(&req.token).await {
-        // token is invalid
-        StatusCode::FORBIDDEN
-    } else if let Some(c) = s.chara().await.get(&req.token.id) {
-        if c.player == req.token.id {
-            if !s.game().await.enrolled(&req.chara).await {
-                return StatusCode::NOT_FOUND;
-            }
-            match s.game().await.proc(req).await.await {
-                Ok(c) => c,
-                Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+async fn act(State(s): State<Server>, head: HeaderMap, Json(req): Json<req::Act>) -> StatusCode {
+    if let Some(name) = s.auth(&head).await {
+        if let Some(c) = s.pc.read().await.get(&req.chara) {
+            if c.player == name {
+                let _ = s.game.read().await;
+                todo!()
+            } else {
+                // the request has a token but not matches the character it operates on
+                StatusCode::UNAUTHORIZED
             }
         } else {
-            // the request has a token but not matches the character it operates on
-            StatusCode::UNAUTHORIZED
+            // trying to request act on a non-exist character
+            StatusCode::NOT_FOUND
         }
     } else {
-        // trying to request act on a non-exist character
-        StatusCode::NOT_FOUND
+        StatusCode::FORBIDDEN
     }
 }
 
-async fn sync(State(s): State<Server>, Json(req): Json<req::Token>) -> (StatusCode, Json<Sync>) {
-    if !s.verify(&req).await {
-        (StatusCode::FORBIDDEN, Json(Sync::new()))
-    } else {
-        let (code, data) = s.game().await.fetch(req.id);
-        (code, Json(data))
-    }
+async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
+    if let Some(_) = s.auth(&head).await {};
+    todo!()
 }
 
-macro_rules! perm_deny {
-    () => {
-        Echo {
-            value: -1,
-            output: "Permission denied.".to_string(),
-        }
-    };
-}
-
-async fn cmd(State(s): State<Server>, Json(req): Json<Cmd>) -> (StatusCode, Json<Echo>) {
-    if !s.verify(&req.token).await {
-        (StatusCode::FORBIDDEN, Json(perm_deny!()))
-    } else if req.cmd.op() && !s.sudoer(&req.token).await {
-        (StatusCode::FORBIDDEN, Json(perm_deny!()))
-    } else {
-        let p = req.token.id;
-        info!("executing command issued by player[id={}]", p);
-        let code = StatusCode::ACCEPTED;
-        let echo = match req.cmd {
-            Command::Hello => exec::hello(),
-            Command::Grant(p) => exec::grant(&s, &p).await,
-            Command::ShutDown => exec::shutdown(&s).await,
-        };
-        trace!("player[id={}]: {}", p, echo.output);
-        info!("player[id={}]'s command returned {}", p, echo.value);
-        (code, Json(echo))
-    }
+async fn cmd() -> (StatusCode, Json<Echo>) {
+    todo!()
 }
 
 /// Command executors. Note that permission will **NOT** be verified.
 pub mod exec {
     use super::Server;
-    use tokio::{process, spawn};
-    use tracing::info;
     use vitium_common::cmd::Echo;
     pub fn hello() -> Echo {
         Echo {
@@ -306,8 +261,8 @@ pub mod exec {
         }
     }
     pub async fn grant(s: &Server, player: &str) -> Echo {
-        let p = s.player().await;
-        let mut o = s.op().await;
+        let p = s.player.read().await;
+        let mut o = s.op.write().await;
         if !p.contains_key(player) {
             Echo {
                 value: 1,
@@ -326,16 +281,17 @@ pub mod exec {
             }
         }
     }
-    pub async fn shutdown(s: &Server) -> Echo {
-        info!("shutting down internal server");
-        s.game().await.shutdown().await;
-        spawn(async {
-            process::Command::new(format!("kill -s SIGINT {}", std::process::id()));
-        });
-        Echo {
-            value: 0,
-            output: "exit".to_string(),
-        }
+    pub async fn shutdown(_s: &Server) -> Echo {
+        todo!()
+        // info!("shutting down internal server");
+        // s.game().await.shutdown().await;
+        // spawn(async {
+        //     process::Command::new(format!("kill -s SIGINT {}", std::process::id()));
+        // });
+        // Echo {
+        //     value: 0,
+        //     output: "exit".to_string(),
+        // }
     }
 }
 

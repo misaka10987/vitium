@@ -1,25 +1,26 @@
-pub use crate::{act::Act, cmd::Cmd, player::Token};
-use crate::{chara::Chara, player::Player, DEBUG_DESCR};
+pub use crate::{act::Act, cmd::Cmd};
+use crate::{game::PC, player::Player};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
+#[cfg(test)]
+use crate::test::*;
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Enroll {
-    pub chara: Chara,
-    pub token: Token,
+    pub chara: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chat {
     pub msg: String,
-    pub player: String,
     pub time: SystemTime,
 }
+
 impl Chat {
-    pub fn new() -> Self {
+    pub fn new(msg: &str) -> Self {
         Self {
-            msg: DEBUG_DESCR.to_string(),
-            player: "debug-player".to_string(),
+            msg: msg.to_string(),
             time: SystemTime::now(),
         }
     }
@@ -29,63 +30,34 @@ impl Chat {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct EditPlayer {
-    pub player: Player,
-    pub token: Token,
-}
-
-impl EditPlayer {
-    pub fn new() -> Self {
-        Self {
-            player: Player::new(),
-            token: Token::new(),
-        }
-    }
-}
+pub type EditPlayer = Player;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditChara {
     pub dest: String,
-    pub new: Chara,
-    pub token: Token,
+    pub new: PC,
 }
 
-impl EditChara {
-    pub fn new() -> Self {
-        Self {
-            dest: "example-chara".to_string(),
-            new: Chara::new(),
-            token: Token::new(),
-        }
+#[cfg(test)]
+impl Example for EditChara {
+    fn examples() -> Vec<Self> {
+        todo!()
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SendChat {
     pub chat: Chat,
-    pub token: Token,
-}
-
-impl SendChat {
-    pub fn new() -> Self {
-        Self {
-            chat: Chat::new(),
-            token: Token::new(),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditPswd {
-    pub token: Token,
     pub pswd: String,
 }
 
 impl EditPswd {
     pub fn new() -> Self {
         Self {
-            token: Token::new(),
             pswd: "debug-pswd".to_string(),
         }
     }
@@ -94,7 +66,6 @@ impl EditPswd {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Exit {
     pub chara: i128,
-    pub token: Token,
 }
 
 /// All possible requests are defined here.
@@ -103,7 +74,7 @@ pub enum Req {
     /// Get current server status.
     ServerStatus,
     /// Synchronize all available data.
-    Sync(Token),
+    Sync,
     /// Receive out-game chat messages.
     RecvChat,
     /// Synchronize player list.
@@ -128,7 +99,7 @@ impl Req {
     pub fn route(&self) -> &'static str {
         match self {
             Req::ServerStatus => "GET /",
-            Req::Sync(_) => "GET /sync",
+            Req::Sync => "GET /sync",
             Req::RecvChat => "GET /chat",
             Req::GetPlayer => "GET /player",
             Req::GetChara => "GET /chara",
@@ -140,26 +111,4 @@ impl Req {
             Req::EditPswd(_) => "POST /pswd",
         }
     }
-}
-
-#[test]
-fn seejson() {
-    use crate::{chara::Chara, player::Token};
-    use serde_json::to_string as json;
-    macro_rules! see_json {
-        ($d:expr,$v:expr) => {
-            println!("{}", json(&$d).unwrap());
-            println!("{}", json(&$v).unwrap());
-        };
-        ($t:ty) => {
-            let v = <$t>::new();
-            println!("{}", json(&v).unwrap());
-        };
-    }
-    see_json!(Chara);
-    see_json!(Token);
-    see_json!(SendChat);
-    see_json!(EditPswd);
-    see_json!(EditPlayer);
-    see_json!(EditChara);
 }

@@ -1,4 +1,4 @@
-use crate::{feature::FeatureAction, player::Token, skill::SkillAction, Target, DEBUG_DESCR};
+use crate::{game::skill::SkillAction, game::Target, DEBUG_DESCR};
 use serde::{Deserialize, Serialize};
 
 /// Used for in-game chat.
@@ -28,8 +28,6 @@ pub enum Action {
     Move(u64),
     /// To wield an item with given uid.
     Wield(u64),
-    /// Activate a feature.
-    Feature(FeatureAction),
     /// Apply a skill.
     Skill(SkillAction),
     /// Launch melee attack.
@@ -56,27 +54,6 @@ pub enum Action {
     Hello,
 }
 
-impl Action {
-    pub fn examples() -> Vec<Self> {
-        vec![
-            Self::Say(Bubble::example()),
-            Self::Move(1145141919810),
-            Self::Wield(1145141919810),
-            Self::Feature(FeatureAction::example()),
-            Self::Skill(SkillAction::example()),
-            Self::Attack(Target::Chara(1145141919810)),
-            Self::Shoot(Target::Mob(1145141919810)),
-            Self::Cast(Target::NPC(1145141919810)),
-            Self::FallbackTarget(vec![Target::Chara(114514), Target::Chara(1919810)]),
-            Self::DropItem(vec![114514, 1919810]),
-            Self::PickItem(vec![114514, 1919810]),
-            Self::Relax(3600),
-            Self::Sleep(21600),
-            Self::Hello,
-        ]
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Act {
     /// Character that does the action.
@@ -85,28 +62,4 @@ pub struct Act {
     pub turn: u64,
     /// Detailed action.
     pub action: Action,
-    /// Authentication.
-    pub token: Token,
-}
-
-impl Act {
-    pub fn examples() -> Vec<Self> {
-        Action::examples()
-            .into_iter()
-            .map(|a| Act {
-                chara: "example-chara".to_string(),
-                turn: 12345,
-                action: a,
-                token: Token::new(),
-            })
-            .collect()
-    }
-}
-
-#[test]
-fn see_json() {
-    use serde_json::to_string as json;
-    for i in Act::examples() {
-        println!("{}", json(&i).unwrap())
-    }
 }
