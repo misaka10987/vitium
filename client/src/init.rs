@@ -2,7 +2,7 @@ use cursive::view::{Nameable, Resizable};
 use cursive::views::EditView;
 use cursive::Cursive;
 use cursive::CursiveRunnable;
-use reqwest::Client;
+use reqwest::{Client, Error, Response};
 pub struct Data {
     pub server_ip: String,
 }
@@ -56,19 +56,19 @@ fn show_popup_init(s: &mut Cursive, name: &str) {
     } else {
         s.pop_layer();
         s.pop_layer();
-        s.add_layer(cursive::views::Dialog::new().title("Connection Succeeded").button("Ok",|s|{s.pop_layer();}));
+        s.add_layer(
+            cursive::views::Dialog::new()
+                .title("Connection Succeeded")
+                .button("Ok", |s| {
+                    s.pop_layer();
+                }),
+        );
         s.with_user_data(|data: &mut Data| data.server_ip = name.to_string());
-        
     }
 }
 fn conect(site: &str) -> bool {
     let client = reqwest::blocking::Client::new();
     let res = client.post(site.to_string()).body("Hello World").send();
     res.is_ok()
-    
 }
 
-pub async fn send(mes:String,url:String,clt:Client) -> bool{
-    let res = clt.post(url).body(mes).send().await;
-    res.is_ok()
-}

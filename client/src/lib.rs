@@ -1,9 +1,11 @@
-use cursive::CursiveRunnable;
-use cursive::views::TextView;
+use cursive::view::Position;
+use cursive::{Cursive, CursiveRunnable};
+use cursive::views::{LayerPosition, TextView};
 pub mod init;
-
-pub struct Data {
-    pub server_ip: String,
+pub mod func;
+pub mod config;
+pub struct Data<'a> {
+    pub server_ip: &'a str,
 }
 // impl Scr{
 //     pub fn 
@@ -14,14 +16,14 @@ pub fn addtxt(obj: &mut CursiveRunnable, mes: String) {
 // pub fn setquit(obj: &mut CursiveRunnable, key: char) {
 //     obj.add_global_callback(key, |s| s.quit());
 // }
-// pub fn move_top(c: &mut Cursive, x_in: isize, y_in: isize) {
-//     let s = c.screen_mut();
-//     let l = LayerPosition::FromFront(0);
-//     let pos = s
-//         .layer_offset(LayerPosition::FromFront(0))
-//         .unwrap()
-//         .saturating_add((x_in, y_in));
-//     let p = Position::absolute(pos);
-//     s.reposition_layer(l, p);
-// }
+pub fn move_top(c: &mut Cursive, x_in: isize, y_in: isize) {
+    let s = c.screen_mut();
+    let l = LayerPosition::FromFront(0);
+    let pos = s
+        .layer_offset(LayerPosition::FromFront(0))
+        .unwrap()
+        .saturating_add((x_in, y_in));
+    let p = Position::absolute(pos);
+    s.reposition_layer(l, p);
+}
 
