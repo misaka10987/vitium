@@ -1,4 +1,5 @@
-pub use super::cha::{Char, Character, PC};
+pub use super::act::{Act, Action};
+pub use super::cha::{Cha, PC};
 pub use super::fight::DmgType;
 pub use super::item::Item;
 pub use super::level::Level;

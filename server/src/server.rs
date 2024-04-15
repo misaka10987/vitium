@@ -15,8 +15,9 @@ use tokio::{net::TcpListener, signal, sync::RwLock};
 use tower_http::trace::TraceLayer;
 use tracing::error;
 use vitium_common::{
-    cmd::Echo,
+    // cmd::Echo,
     config::{obj, toml, ServerConfig},
+    error::UnimplError,
     game::PC,
     player::Player,
     req::{self, Chat},
@@ -46,7 +47,7 @@ pub struct Server {
     pc: Lock<HashMap<String, PC>>,
     op: Lock<HashSet<String>>,
     chat: Lock<VecDeque<(String, Chat)>>,
-    game: Lock<Game>,
+    game: Arc<Game>,
 }
 
 impl Server {
@@ -58,7 +59,7 @@ impl Server {
             pc: lock(HashMap::new()),
             op: lock(HashSet::new()),
             chat: lock(VecDeque::new()),
-            game: lock(Game::new()),
+            game: Arc::new(Game::new()),
         }
     }
     /// Reads from the header and get authentication info.
@@ -224,9 +225,9 @@ async fn edit_pc(
 
 async fn act(State(s): State<Server>, head: HeaderMap, Json(req): Json<req::Act>) -> StatusCode {
     if let Some(name) = s.auth(&head).await {
-        if let Some(c) = s.pc.read().await.get(&req.chara) {
+        if let Some(c) = s.pc.read().await.get(&req.cha) {
             if c.player == name {
-                let _ = s.game.read().await;
+                let _ = s.game;
                 todo!()
             } else {
                 // the request has a token but not matches the character it operates on
@@ -246,52 +247,44 @@ async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
     todo!()
 }
 
-async fn cmd() -> (StatusCode, Json<Echo>) {
-    todo!()
+async fn cmd(State(_s): State<Server>) -> (StatusCode, Json<Result<String, String>>) {
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        Json(Err(
+            vitium_common::json(&UnimplError("cmd".to_string())).unwrap()
+        )),
+    )
 }
 
 /// Command executors. Note that permission will **NOT** be verified.
 pub mod exec {
+    use std::error::Error;
+
     use super::Server;
-    use vitium_common::cmd::Echo;
-    pub fn hello() -> Echo {
-        Echo {
-            value: 0,
-            output: "Hello, world!\n".to_string(),
-        }
+    use serde::{Deserialize, Serialize};
+    use vitium_common::{error::UnimplError, player::NoPlayerError};
+    pub fn hello() -> String {
+        "Hello, world!".to_string()
     }
-    pub async fn grant(s: &Server, player: &str) -> Echo {
+    pub async fn grant(s: &Server, player: &str) -> Result<String, String> {
         let p = s.player.read().await;
         let mut o = s.op.write().await;
         if !p.contains_key(player) {
-            Echo {
-                value: 1,
-                output: format!("player[id={}] non exist", player),
-            }
+            Err(NoPlayerError(player.to_string()).to_string())
         } else if o.contains(player) {
-            Echo {
-                value: 2,
-                output: format!("player[id={}] is already operator", player),
-            }
+            Ok(format!(
+                "{} is already operator, no modification is made",
+                player
+            ))
         } else {
             o.insert(player.to_string());
-            Echo {
-                value: 0,
-                output: format!("opped player[id={}]", player),
-            }
+            Ok(format!("opped {}", player))
         }
     }
-    pub async fn shutdown(_s: &Server) -> Echo {
-        todo!()
-        // info!("shutting down internal server");
-        // s.game().await.shutdown().await;
-        // spawn(async {
-        //     process::Command::new(format!("kill -s SIGINT {}", std::process::id()));
-        // });
-        // Echo {
-        //     value: 0,
-        //     output: "exit".to_string(),
-        // }
+    pub async fn shutdown(
+        _s: &Server,
+    ) -> Result<String, impl Error + Serialize + Deserialize<'static>> {
+        Err(UnimplError("shutdown".to_string()))
     }
 }
 

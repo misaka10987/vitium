@@ -1,4 +1,4 @@
-use super::{item, level::Level, Item};
+use super::{level::Level, Item, TypeName};
 use crate::ID;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -7,22 +7,7 @@ use std::collections::{HashMap, HashSet};
 use crate::test::*;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub enum Char {
-    Player(PC),
-    NonPlayer(Character),
-}
-
-impl AsRef<Character> for Char {
-    fn as_ref(&self) -> &Character {
-        match self {
-            Char::Player(pc) => pc.as_ref(),
-            Char::NonPlayer(npc) => &npc,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Character {
+pub struct Cha {
     pub name: String,
     pub descr: String,
     pub race: ID,
@@ -32,12 +17,12 @@ pub struct Character {
     pub mart: HashMap<ID, Level>,
     pub spell: HashMap<ID, Level>,
     pub invt: Vec<Item>,
-    pub equip: Vec<item::Armor>,
+    pub equip: Vec<Item>,
     pub money: i32,
 }
 
 #[cfg(test)]
-impl Example for Character {
+impl Example for Cha {
     fn examples() -> Vec<Self> {
         vec![Self {
             name: "example-character".to_string(),
@@ -60,12 +45,18 @@ pub struct PC {
     pub player: String,
     pub story: String,
     pub mods: HashSet<String>,
-    pub chara: Character,
+    pub cha: Cha,
 }
 
-impl AsRef<Character> for PC {
-    fn as_ref(&self) -> &Character {
-        &self.chara
+impl TypeName for PC{
+    fn typename() -> impl std::fmt::Display {
+        "PlayerCharacter"
+    }
+}
+
+impl AsRef<Cha> for PC {
+    fn as_ref(&self) -> &Cha {
+        &self.cha
     }
 }
 

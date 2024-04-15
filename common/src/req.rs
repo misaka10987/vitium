@@ -1,4 +1,4 @@
-pub use crate::{act::Act, cmd::Cmd};
+pub use crate::{cmd::Cmd, game::Act};
 use crate::{game::PC, player::Player};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;

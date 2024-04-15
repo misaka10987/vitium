@@ -1,7 +1,7 @@
-pub mod act;
 pub mod cmd;
 pub mod config;
 pub mod dice;
+pub mod error;
 pub mod game;
 pub mod id;
 pub mod module;

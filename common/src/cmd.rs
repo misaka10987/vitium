@@ -23,15 +23,6 @@ pub struct Cmd {
     pub cmd: Command,
 }
 
-/// Command echo.
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Echo {
-    /// Returning value of a command.
-    pub value: i8,
-    /// Output of a command.
-    pub output: String,
-}
-
 #[test]
 fn see_json() {
     use crate::json;
