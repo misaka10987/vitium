@@ -1,10 +1,12 @@
 use cursive::view::{Nameable, Resizable};
-use cursive::views::{EditView, TextView};
+use cursive::views::EditView;
 use cursive::Cursive;
 use cursive::CursiveRunnable;
+use reqwest::Client;
 pub struct Data {
     pub server_ip: String,
 }
+
 pub fn scr_init(obj: &mut CursiveRunnable, rd: String) {
     let a = obj.load_theme_file(rd);
     if !a.is_err() {
@@ -64,4 +66,9 @@ fn conect(site: &str) -> bool {
     let res = client.post(site.to_string()).body("Hello World").send();
     res.is_ok()
     
+}
+
+pub async fn send(mes:String,url:String,clt:Client) -> bool{
+    let res = clt.post(url).body(mes).send().await;
+    res.is_ok()
 }

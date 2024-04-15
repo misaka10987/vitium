@@ -2,11 +2,6 @@ use cursive::views::TextView;
 use cursive::CursiveRunnable;
 use vitium_client::init::{scr_init, Data};
 fn main() {
-    println!("Hello, world!");
-}
-
-#[test]
-fn test() {
     let mut mainscr = CursiveRunnable::default();
     let mainss = &mut mainscr;
     mainss.add_fullscreen_layer(TextView::new("hello, dddd\neeeee dseff"));

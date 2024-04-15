@@ -1,8 +1,9 @@
 use cursive::CursiveRunnable;
 use cursive::views::TextView;
 pub mod init;
-pub struct Scr{
-    pub id:usize,
+
+pub struct Data {
+    pub server_ip: String,
 }
 // impl Scr{
 //     pub fn 
