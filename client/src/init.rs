@@ -3,7 +3,7 @@ use cursive::views::{EditView, TextView};
 use cursive::Cursive;
 use cursive::CursiveRunnable;
 pub struct Data {
-    server_ip: String,
+    pub server_ip: String,
 }
 pub fn scr_init(obj: &mut CursiveRunnable, rd: String) {
     let a = obj.load_theme_file(rd);
@@ -31,7 +31,7 @@ pub fn scr_init(obj: &mut CursiveRunnable, rd: String) {
     );
 }
 fn show_popup_init(s: &mut Cursive, name: &str) {
-    s.add_layer(TextView::new("Connecting..."));
+    s.add_layer(cursive::views::Dialog::new().title("Connecting..."));
     if !conect(name) {
         s.pop_layer();
         s.pop_layer();
@@ -54,14 +54,14 @@ fn show_popup_init(s: &mut Cursive, name: &str) {
     } else {
         s.pop_layer();
         s.pop_layer();
-        s.add_layer(cursive::views::Dialog::new().button("Ok",|s|{s.pop_layer();}));
+        s.add_layer(cursive::views::Dialog::new().title("Connection Succeeded").button("Ok",|s|{s.pop_layer();}));
         s.with_user_data(|data: &mut Data| data.server_ip = name.to_string());
         
     }
 }
 fn conect(site: &str) -> bool {
-    // let client = reqwest::blocking::Client::new();
-    // let res = client.post(site.to_string()).body("Hello World").send();
-    // res.is_ok()
-    true
+    let client = reqwest::blocking::Client::new();
+    let res = client.post(site.to_string()).body("Hello World").send();
+    res.is_ok()
+    
 }

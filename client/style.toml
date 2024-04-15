@@ -1,6 +1,6 @@
 # Every field in a theme file is optional.
 
-shadow = false
+shadow = true
 borders = "simple" # Alternatives are "none" and "simple"
 
 # Base colors are red, green, blue,
@@ -16,28 +16,28 @@ borders = "simple" # Alternatives are "none" and "simple"
 
 	# If the value is an array, the first valid
 	# and supported color will be used.
-	background = ["#000000"]
+	background = ["black"]
 
 	# If the terminal doesn't support custom color (like the linux TTY),
 	# non-base colors will be skipped.
 	shadow     = ["blue"]
-	view       = "#111111"
+	view       = "white"
 
 	# An array with a single value has the same effect as a simple value.
-	primary   = ["white"]
+	primary   = ["black"]
 	secondary = "black"
-	tertiary  = "blue"
+	tertiary  = "black"
 
 	# Hex values can use lower or uppercase.
 	# (base color MUST be lowercase)
-	title_primary   = ["white", "yellow"]
-	title_secondary = "#ffffff"
+	title_primary   = "black"
+	title_secondary = "black"
 
 	# Lower precision values can use only 3 digits.
-	highlight          = "#ffffff"
-	highlight_inactive = "#5555FF"
+	highlight          = "black"
+	highlight_inactive = "black"
 
 [styles.highlight]
-    effects = []
-    front = "white"
+    effects = ["black"]
+    front = "black"
     back = "inherit_parent"
