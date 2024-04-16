@@ -46,7 +46,7 @@ pub struct ServerInst {
     pub cfg: ServerConfig,
     player: RwLock<HashMap<String, Player>>,
     pswd: RwLock<HashMap<String, String>>,
-    pc: RwLock<HashMap<String, PC>>,
+    pc: RwLock<HashMap<String, PC<'static>>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
     game: Game,
@@ -151,7 +151,7 @@ async fn get_player(State(s): State<Server>) -> (StatusCode, Json<HashMap<String
     (StatusCode::OK, Json(s.player.read().await.clone()))
 }
 
-async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC>>) {
+async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC<'static>>>) {
     (StatusCode::OK, Json(s.pc.read().await.clone()))
 }
 
@@ -234,7 +234,11 @@ async fn edit_pc(
     }
 }
 
-async fn act(State(s): State<Server>, head: HeaderMap, Json(req): Json<req::Act>) -> StatusCode {
+async fn act(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(req): Json<req::Act<'_>>,
+) -> StatusCode {
     if let Some(name) = s.auth(&head).await {
         if let Some(c) = s.pc.read().await.get(&req.cha) {
             if c.player == name {

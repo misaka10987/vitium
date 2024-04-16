@@ -1,13 +1,17 @@
 use super::{level::Level, Item, TypeName};
 use crate::ID;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+};
 
 #[cfg(test)]
 use crate::test::*;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Cha {
+pub struct Cha<'a> {
+    pub reg: Option<ID>,
     pub name: String,
     pub descr: String,
     pub race: ID,
@@ -16,15 +20,22 @@ pub struct Cha {
     pub skill: HashMap<ID, Level>,
     pub mart: HashMap<ID, Level>,
     pub spell: HashMap<ID, Level>,
-    pub invt: Vec<Item>,
-    pub equip: Vec<Item>,
+    pub invt: Vec<Cow<'a, Item<'a>>>,
+    pub equip: Vec<Cow<'a, Item<'a>>>,
     pub money: i32,
 }
 
+impl<'a> AsRef<Option<ID>> for Cha<'a> {
+    fn as_ref(&self) -> &Option<ID> {
+        &self.reg
+    }
+}
+
 #[cfg(test)]
-impl Example for Cha {
+impl<'a> Example for Cha<'a> {
     fn examples() -> Vec<Self> {
         vec![Self {
+            reg: None,
             name: "example-character".to_string(),
             descr: DEBUG_DESCR.to_string(),
             race: ID::example(),
@@ -41,21 +52,21 @@ impl Example for Cha {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct PC {
+pub struct PC<'a> {
     pub player: String,
     pub story: String,
     pub mods: HashSet<String>,
-    pub cha: Cha,
+    pub cha: Cha<'a>,
 }
 
-impl TypeName for PC{
+impl<'a> TypeName for PC<'a> {
     fn typename() -> impl std::fmt::Display {
         "PlayerCharacter"
     }
 }
 
-impl AsRef<Cha> for PC {
-    fn as_ref(&self) -> &Cha {
+impl<'a> AsRef<Cha<'a>> for PC<'a> {
+    fn as_ref(&self) -> &Cha<'a> {
         &self.cha
     }
 }

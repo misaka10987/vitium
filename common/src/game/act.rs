@@ -1,5 +1,7 @@
-use crate::DEBUG_DESCR;
+use crate::{DEBUG_DESCR, ID, UID};
 use serde::{Deserialize, Serialize};
+
+use super::{Item, Obj, Target};
 
 /// Used for in-game chat.
 #[derive(Clone, Serialize, Deserialize)]
@@ -20,19 +22,29 @@ impl Bubble {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub enum Action {
-    Sync,
-    RT,
+pub enum Action<'a> {
+    Sync(SyncAction<'a>),
+    Unsync(UnsyncAction<'a>),
 }
 
-pub enum RTAction {
+#[derive(Clone, Serialize, Deserialize)]
+pub enum SyncAction<'a> {
+    Atk(Obj<'a>),
+    Shoot(Obj<'a>),
+    Cast(ID, Target<'a>),
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub enum UnsyncAction<'a> {
     Move((f32, f32)),
     Travel(usize),
     Speak(Bubble),
+    Consume(UID<Item<'a>>),
+    Relax(usize),
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Act {
+pub struct Act<'a> {
     pub cha: String,
-    pub action: Action,
+    pub action: Action<'a>,
 }

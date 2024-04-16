@@ -15,6 +15,7 @@ pub mod skill;
 pub mod spell;
 pub mod terra;
 pub mod vehicle;
+pub mod world;
 
 use serde::{Deserialize, Serialize};
 
@@ -25,17 +26,17 @@ pub use self::prelude::*;
 use std::{collections::HashSet, fmt::Display};
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Obj {
-    Item(UID<Item>),
-    Char(UID<Cha>),
-    PC(UID<PC>),
-    Scena(UID<ScenaInst>),
+pub enum Obj<'a> {
+    Item(UID<Item<'a>>),
+    Char(UID<Cha<'a>>),
+    PC(UID<PC<'a>>),
+    Scena(UID<ScenaInst<'a>>),
     Vehicle(UID<Vehicle>),
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Target {
-    Entity(Obj),
+pub enum Target<'a> {
+    Entity(Obj<'a>),
     Pos(i16, i16),
 }
 

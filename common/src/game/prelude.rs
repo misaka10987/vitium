@@ -4,6 +4,7 @@ pub use super::fight::DmgType;
 pub use super::item::Item;
 pub use super::level::Level;
 pub use super::prof::Prof;
-pub use super::scena::ScenaInst;
+pub use super::reg::{Ox, Reg};
+pub use super::scena::{Scena, ScenaInst};
 pub use super::skill::Skill;
 pub use super::vehicle::Vehicle;
