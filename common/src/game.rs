@@ -29,7 +29,7 @@ pub enum Obj {
     Item(UID<Item>),
     Char(UID<Cha>),
     PC(UID<PC>),
-    Scena(UID<Scena>),
+    Scena(UID<ScenaInst>),
     Vehicle(UID<Vehicle>),
 }
 

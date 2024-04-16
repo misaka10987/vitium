@@ -5,18 +5,26 @@ use axum::{
     Json, Router,
 };
 use http_auth_basic::Credentials;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
-    fs,
+    error::Error,
+    ops::{Deref, DerefMut},
     path::Path,
     sync::Arc,
 };
-use tokio::{net::TcpListener, signal, sync::RwLock};
+use tokio::{
+    fs,
+    io::{self, AsyncWriteExt},
+    net::TcpListener,
+    signal,
+    sync::RwLock,
+};
 use tower_http::trace::TraceLayer;
-use tracing::error;
+use tracing::{error, warn};
 use vitium_common::{
     // cmd::Echo,
-    config::{obj, toml, ServerConfig},
+    cmd::Echo,
     error::UnimplError,
     game::PC,
     player::Player,
@@ -24,11 +32,6 @@ use vitium_common::{
 };
 
 use crate::game::Game;
-
-type Lock<T> = Arc<RwLock<T>>;
-fn lock<T>(value: T) -> Lock<T> {
-    Arc::new(RwLock::new(value))
-}
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
 /// ```
@@ -39,28 +42,58 @@ fn lock<T>(value: T) -> Lock<T> {
 ///     .await
 ///     .expect("internal server error");
 /// ```
-#[derive(Clone)]
-pub struct Server {
+pub struct ServerInst {
     pub cfg: ServerConfig,
-    player: Lock<HashMap<String, Player>>,
-    pswd: Lock<HashMap<String, String>>,
-    pc: Lock<HashMap<String, PC>>,
-    op: Lock<HashSet<String>>,
-    chat: Lock<VecDeque<(String, Chat)>>,
-    game: Arc<Game>,
+    player: RwLock<HashMap<String, Player>>,
+    pswd: RwLock<HashMap<String, String>>,
+    pc: RwLock<HashMap<String, PC>>,
+    op: RwLock<HashSet<String>>,
+    chat: RwLock<VecDeque<(String, Chat)>>,
+    game: Game,
+}
+
+#[derive(Clone)]
+pub struct Server(pub Arc<ServerInst>);
+
+impl Deref for Server {
+    type Target = Arc<ServerInst>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Server {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Default for Server {
+    fn default() -> Self {
+        Self(Arc::new(ServerInst {
+            cfg: ServerConfig::default(),
+            player: RwLock::new(HashMap::new()),
+            pswd: RwLock::new(HashMap::new()),
+            pc: RwLock::new(HashMap::new()),
+            op: RwLock::new(HashSet::new()),
+            chat: RwLock::new(VecDeque::new()),
+            game: Game::new(),
+        }))
+    }
 }
 
 impl Server {
-    pub fn new() -> Self {
-        Self {
-            cfg: ServerConfig::new(),
-            player: lock(HashMap::new()),
-            pswd: lock(HashMap::new()),
-            pc: lock(HashMap::new()),
-            op: lock(HashSet::new()),
-            chat: lock(VecDeque::new()),
-            game: Arc::new(Game::new()),
-        }
+    pub fn with_cfg(cfg: ServerConfig) -> Self {
+        Self(Arc::new(ServerInst {
+            cfg,
+            player: RwLock::new(HashMap::new()),
+            pswd: RwLock::new(HashMap::new()),
+            pc: RwLock::new(HashMap::new()),
+            op: RwLock::new(HashSet::new()),
+            chat: RwLock::new(VecDeque::new()),
+            game: Game::new(),
+        }))
     }
     /// Reads from the header and get authentication info.
     pub async fn auth(&self, head: &HeaderMap) -> Option<String> {
@@ -77,29 +110,7 @@ impl Server {
         }
         None
     }
-    /// Load configuration from `path`.
-    pub fn config(mut self, path: &str) -> Self {
-        if !Path::new(path).exists() {
-            match fs::File::create(path) {
-                Ok(_) => {
-                    if let Err(e) = fs::write(path, toml(&self.cfg)) {
-                        error!("failed to generate configuration: {}", e);
-                    }
-                }
-                Err(_) => {
-                    error!("file {} non exist", path);
-                }
-            }
-            self.cfg.clone_from(&ServerConfig::new());
-        } else {
-            self.cfg.clone_from(&obj::<ServerConfig>(
-                &fs::read_to_string(path).expect(&format!("{} io error", path)),
-            ));
-        }
-        self
-    }
     /// Consumes `self` and start the server.
-    #[tokio::main]
     pub async fn run(self) -> Result<(), std::io::Error> {
         // listening globally on the port specified
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
@@ -247,12 +258,13 @@ async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
     todo!()
 }
 
-async fn cmd(State(_s): State<Server>) -> (StatusCode, Json<Result<String, String>>) {
+async fn cmd(State(_s): State<Server>) -> (StatusCode, Json<Echo>) {
     (
         StatusCode::NOT_IMPLEMENTED,
-        Json(Err(
-            vitium_common::json(&UnimplError("cmd".to_string())).unwrap()
-        )),
+        Json(Echo(Err(vitium_common::json(&UnimplError(
+            "cmd".to_string(),
+        ))
+        .unwrap()))),
     )
 }
 
@@ -306,5 +318,55 @@ async fn sig_shut() {
     tokio::select! {
         _ = ctrl_c => {},
         _ = terminate => {},
+    }
+}
+
+/// Server configuration.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ServerConfig {
+    pub port: u16,
+    pub chat_cap: usize,
+}
+
+impl Default for ServerConfig {
+    fn default() -> Self {
+        Self {
+            port: 10987,
+            chat_cap: 255,
+        }
+    }
+}
+
+impl ServerConfig {
+    pub async fn load(path: &Path) -> Result<Self, Box<dyn Error>> {
+        if !path.exists() {
+            let err = io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("{} not found", path.display()),
+            );
+            let f = fs::File::create(path);
+            let cfg = Self::default();
+            f.await?
+                .write(toml::to_string(&cfg).unwrap().as_bytes())
+                .await?;
+            Err(Box::new(err))
+        } else {
+            let s = fs::read_to_string(path).await?;
+            Ok(toml::from_str::<ServerConfig>(&s)?)
+        }
+    }
+    pub async fn try_load(path: &Path) -> Self {
+        match Self::load(path).await {
+            Ok(cfg) => cfg,
+            Err(e) => {
+                error!(
+                    "failed to load server config at \"{}\": \"{}\"",
+                    path.display(),
+                    e
+                );
+                warn!("using default config instead");
+                Self::default()
+            }
+        }
     }
 }

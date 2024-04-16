@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::{collections::BTreeMap, ops::Index};
 
 use serde::{Deserialize, Serialize};
 
@@ -25,10 +25,10 @@ impl Index<(i8, i8)> for Chunk {
 
 /// Instance of scene.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Scena {
+pub struct ScenaInst {
     /// Displayed name.
     pub name: String,
     /// Description showed when a character enters.
     pub descr: String,
-    pub chunk: Vec<Chunk>,
+    pub chunk: BTreeMap<(i16, i16), Chunk>,
 }
