@@ -5,7 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::{tab::Tab, ID};
+use crate::{delta::Delta, tab::Tab, ID};
 
 use super::{Cha, Item, PC};
 
@@ -39,6 +39,35 @@ pub struct ScenaInst<'a> {
     pub pc: HashMap<String, PC<'a>>,
     pub npc: Tab<'a, Cha<'a>>,
     pub item: Tab<'a, Item<'a>>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct PackScena<'a> {
+    pub item: Vec<<Tab<'a, Item<'a>> as Delta>::Pack>,
+}
+
+impl<'a> Delta for Scena<'a> {
+    type Pack = PackScena<'a>;
+
+    fn calc(&mut self) -> impl Iterator<Item = Self::Pack> {
+        vec![Self::Pack {
+            item: self.item.calc().collect(),
+        }]
+        .into_iter()
+    }
+
+    fn diff(&self) -> impl Iterator<Item = Self::Pack> {
+        vec![Self::Pack {
+            item: self.item.diff().collect(),
+        }]
+        .into_iter()
+    }
+
+    fn apply(&mut self, delta: impl Iterator<Item = Self::Pack>) {
+        for i in delta {
+            self.item.apply(i.item.into_iter());
+        }
+    }
 }
 
 pub struct Scena<'a> {

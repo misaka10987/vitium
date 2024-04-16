@@ -74,7 +74,7 @@ pub enum Req<'a> {
     /// Get current server status.
     ServerStatus,
     /// Synchronize all available data.
-    Sync,
+    Sync(String),
     /// Receive out-game chat messages.
     RecvChat,
     /// Synchronize player list.
@@ -99,7 +99,7 @@ impl<'a> Req<'a> {
     pub fn route(&self) -> &'static str {
         match self {
             Req::ServerStatus => "GET /",
-            Req::Sync => "GET /sync",
+            Req::Sync(_) => "GET /sync",
             Req::RecvChat => "GET /chat",
             Req::GetPlayer => "GET /player",
             Req::GetChara => "GET /chara",

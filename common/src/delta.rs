@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 
 pub trait Delta {
     type Pack: Serialize + Deserialize<'static>;
-    fn calc(&mut self) -> &Self::Pack;
-    fn diff(&self) -> &Self::Pack;
-    fn apply(&mut self, delta: Self::Pack);
+    fn calc(&mut self) -> impl Iterator<Item = Self::Pack>;
+    fn diff(&self) -> impl Iterator<Item = Self::Pack>;
+    fn apply(&mut self, delta: impl Iterator<Item = Self::Pack>);
 }
 
 #[derive(Clone, Serialize, Deserialize)]

@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::HashMap};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    delta::{Delta, DeltaList, PackDeltaList},
+    delta::{Delta, DeltaList},
     game::{Ox, Reg},
     ID, UID,
 };
@@ -21,17 +21,17 @@ impl<'a, T> Delta for Tab<'a, T>
 where
     T: Clone + AsRef<Option<ID>> + Serialize + Deserialize<'static>,
 {
-    type Pack = PackDeltaList<UID<T>, Ox<T>>;
+    type Pack = (UID<T>, Ox<T>);
 
-    fn calc(&mut self) -> &Self::Pack {
-        &self.delta.data
+    fn calc(&mut self) -> impl Iterator<Item = Self::Pack> {
+        self.delta.data.iter().cloned()
     }
 
-    fn diff(&self) -> &Self::Pack {
-        &self.delta.data
+    fn diff(&self) -> impl Iterator<Item = Self::Pack> {
+        self.delta.data.iter().cloned()
     }
 
-    fn apply(&mut self, delta: Self::Pack) {
+    fn apply(&mut self, delta: impl Iterator<Item = Self::Pack>) {
         for (k, v) in delta {
             if let Some(p) = self.reg.inst(v) {
                 self.tab.insert(k, p);

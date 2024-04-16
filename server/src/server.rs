@@ -33,15 +33,6 @@ use vitium_common::{
 
 use crate::game::Game;
 
-/// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
-/// ```
-/// use crate:server:Server;
-/// Server::new()
-///     .config("./config.toml")
-///     .run()
-///     .await
-///     .expect("internal server error");
-/// ```
 pub struct ServerInst {
     pub cfg: ServerConfig,
     player: RwLock<HashMap<String, Player>>,
@@ -49,11 +40,19 @@ pub struct ServerInst {
     pc: RwLock<HashMap<String, PC<'static>>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
-    game: Game,
+    game: HashMap<String, Game>,
 }
 
+/// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
+/// ```
+/// use crate::server::Server;
+/// Server::default()
+///     .run()
+///     .await
+///     .expect("internal server error");
+/// ```
 #[derive(Clone)]
-pub struct Server(pub Arc<ServerInst>);
+pub struct Server(Arc<ServerInst>);
 
 impl Deref for Server {
     type Target = Arc<ServerInst>;
@@ -78,7 +77,7 @@ impl Default for Server {
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat: RwLock::new(VecDeque::new()),
-            game: Game::new(),
+            game: HashMap::new(),
         }))
     }
 }
@@ -92,7 +91,7 @@ impl Server {
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat: RwLock::new(VecDeque::new()),
-            game: Game::new(),
+            game: HashMap::new(),
         }))
     }
     /// Reads from the header and get authentication info.
