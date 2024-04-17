@@ -15,7 +15,7 @@ pub struct Skill {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct SkillAction {
-    pub obj: Obj,
+pub struct SkillAction<'a> {
+    pub obj: Obj<'a>,
     pub skill: String,
 }

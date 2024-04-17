@@ -3,12 +3,15 @@ use super::DmgType;
 use crate::test::*;
 use crate::{dice::Dice, ID};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+};
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum ItemSpec {
+pub enum ItemSpec<'a> {
     Generic,
-    Container(Box<Container>),
+    Container(Box<Container<'a>>),
     Melee(Box<Melee>),
     Ranged(Box<Ranged>),
     Food(Box<Food>),
@@ -17,11 +20,18 @@ pub enum ItemSpec {
 }
 
 #[cfg(test)]
-impl Example for ItemSpec {
+impl<'a> Example for ItemSpec<'a> {
     fn examples() -> Vec<Self> {
         vec![
             Self::Generic,
-            Self::Container(Box::new(Container::new())),
+            Self::Container(Box::new(Container {
+                time_cost: 114,
+                length: 514,
+                volume: 114,
+                weight: 514,
+                waterproof: false,
+                inside: vec![],
+            })),
             Self::Melee(Box::new(Melee::example())),
             Self::Ranged(Box::new(Ranged::example())),
             Self::Food(Box::new(Food::example())),
@@ -30,7 +40,7 @@ impl Example for ItemSpec {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Container {
+pub struct Container<'a> {
     /// Time to store an item.
     pub time_cost: i32,
     /// In milimetres.
@@ -41,20 +51,7 @@ pub struct Container {
     pub weight: i32,
     /// If the container is waterproof.
     pub waterproof: bool,
-    pub inside: Vec<Item>,
-}
-
-impl Container {
-    pub fn new() -> Self {
-        Self {
-            time_cost: 114514,
-            length: 114514,
-            volume: 114514,
-            weight: 114514,
-            inside: vec![],
-            waterproof: true,
-        }
-    }
+    pub inside: Vec<Cow<'a, Item<'a>>>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -211,9 +208,9 @@ impl OtherItem {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Item {
+pub struct Item<'a> {
     /// If this `Item` is a registry then its id will be here.
-    pub origin: Option<ID>,
+    pub reg: Option<ID>,
     pub name: String,
     pub descr: String,
     /// In milimetres.
@@ -228,16 +225,22 @@ pub struct Item {
     pub price: i32,
     pub ext_info: Vec<String>,
     /// Detailed class, like weapon and armor.
-    pub spec: ItemSpec,
+    pub spec: ItemSpec<'a>,
+}
+
+impl<'a> AsRef<Option<ID>> for Item<'a> {
+    fn as_ref(&self) -> &Option<ID> {
+        &self.reg
+    }
 }
 
 #[cfg(test)]
-impl Example for Item {
+impl Example for Item<'static> {
     fn examples() -> Vec<Self> {
         ItemSpec::examples()
             .into_iter()
             .map(|s| Self {
-                origin: None,
+                reg: None,
                 name: "Example Item Instance".to_string(),
                 descr: DEBUG_DESCR.to_string(),
                 length: 114,

@@ -1,8 +1,10 @@
-use std::process::exit;
+use std::{error::Error, path::Path};
 
 use clap::Parser;
 use server::Server;
-use tracing::info;
+use tracing::{info, Level};
+
+use crate::server::ServerConfig;
 
 /// Dice implementation using `ndm`.
 pub mod dice;
@@ -13,7 +15,6 @@ pub mod input;
 pub mod script;
 /// New server.
 pub mod server;
-pub mod table;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -21,17 +22,14 @@ struct Args {
     pub config: Option<String>,
 }
 
-fn main() {
-    // initialize logger
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::TRACE)
+        .with_max_level(Level::TRACE)
         .init();
     let arg = Args::parse();
-    info!("Running with {:?}", arg);
-    // run the server
-    Server::new()
-        .config("./config.toml")
-        .run()
-        .expect("internal server error");
-    exit(0)
+    info!("running with {:?}", arg);
+    let cfg = ServerConfig::try_load(Path::new("./config.toml")).await;
+    Server::with_cfg(cfg).run().await?;
+    Ok(())
 }

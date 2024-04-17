@@ -1,11 +1,14 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
 
-use crate::UID;
-
-pub type Delta<T> = BTreeMap<UID<T>, Option<T>>;
+use crate::{delta::Delta, game::Scena};
 
 /// All possible responses are defined here.
 #[derive(Serialize, Deserialize)]
-pub enum Res {}
+pub enum Res<'a> {
+    Sync(Sync<'a>),
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Sync<'a> {
+    pub dscena: Vec<<Scena<'a> as Delta>::Pack>,
+}
