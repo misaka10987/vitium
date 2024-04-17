@@ -1,14 +1,15 @@
 use cursive::view::Position;
-use cursive::{Cursive, CursiveRunnable};
 use cursive::views::{LayerPosition, TextView};
-pub mod init;
-pub mod func;
+use cursive::{Cursive, CursiveRunnable};
 pub mod config;
+pub mod func;
+pub mod init;
+pub mod map;
 pub struct Data<'a> {
     pub server_ip: &'a str,
 }
 // impl Scr{
-//     pub fn 
+//     pub fn
 // }
 pub fn addtxt(obj: &mut CursiveRunnable, mes: String) {
     obj.add_layer(TextView::new(mes));
@@ -26,4 +27,3 @@ pub fn move_top(c: &mut Cursive, x_in: isize, y_in: isize) {
     let p = Position::absolute(pos);
     s.reposition_layer(l, p);
 }
-

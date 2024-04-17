@@ -1,4 +1,5 @@
 use cursive::CursiveRunnable;
+use futures::executor::block_on;
 use reqwest::Client;
 use serde::Deserialize;
 use std::{char, fs::File, io::Read, path::Path};
@@ -13,6 +14,7 @@ pub struct KeySet {
     right: u32,
     inventory: u32,
     console: u32,
+    close: u32,
 }
 pub fn config(obj: &mut CursiveRunnable) {
     obj.add_layer(cursive::views::Dialog::new());
@@ -43,11 +45,21 @@ pub fn initctrl(obj: &mut CursiveRunnable) {
                                 move_top(s, 1, 0)
                             });
                             obj.add_global_callback(char::from_u32_unchecked(k.inventory), |s| {
-                                invt(s, &mut Client::new(), "idk".to_string());
+                                block_on(invt(s, &mut Client::new(), "idk".to_string()));
                             });
                             obj.add_global_callback(char::from_u32_unchecked(k.console), |s| {
                                 s.toggle_debug_console()
                             });
+                            obj.add_global_callback(char::from_u32_unchecked(k.close), |s| {
+                                s.pop_layer();
+                            });
+                            obj.add_layer(
+                                cursive::views::Dialog::new()
+                                    .title("Keyboard Setting Accepted")
+                                    .button("Ok", |s| {
+                                        s.pop_layer();
+                                    }),
+                            );
                         },
                         Err(_) => initctrl_init(obj),
                     }
@@ -63,7 +75,10 @@ pub fn initctrl_init(obj: &mut CursiveRunnable) {
     obj.add_global_callback('s', |s| move_top(s, 0, 1));
     obj.add_global_callback('d', |s| move_top(s, 1, 0));
     obj.add_global_callback('f', |s| {
-        invt(s, &mut Client::new(), "idk".to_string());
+        block_on(invt(s, &mut Client::new(), "idk".to_string()));
     });
     obj.add_global_callback('~', |s| s.toggle_debug_console());
+    obj.add_global_callback('z', |s| {
+        s.pop_layer();
+    });
 }

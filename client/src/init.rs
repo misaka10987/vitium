@@ -2,7 +2,7 @@ use cursive::view::{Nameable, Resizable};
 use cursive::views::EditView;
 use cursive::Cursive;
 use cursive::CursiveRunnable;
-use reqwest::{Client, Error, Response};
+
 pub struct Data {
     pub server_ip: String,
 }
@@ -71,4 +71,3 @@ fn conect(site: &str) -> bool {
     let res = client.post(site.to_string()).body("Hello World").send();
     res.is_ok()
 }
-
