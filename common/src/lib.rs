@@ -1,7 +1,7 @@
-pub mod act;
 pub mod cmd;
-pub mod config;
+pub mod delta;
 pub mod dice;
+pub mod error;
 pub mod game;
 pub mod id;
 pub mod module;
@@ -10,6 +10,7 @@ pub mod prelude;
 pub mod record;
 pub mod req;
 pub mod res;
+pub mod tab;
 pub mod test;
 pub mod uid;
 pub mod util;

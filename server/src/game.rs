@@ -1,3 +1,7 @@
+use std::{collections::HashSet, path::PathBuf};
+
+use vitium_common::game::GameStat;
+
 pub mod reg;
 
 // use axum::http::StatusCode;
@@ -12,12 +16,25 @@ pub mod reg;
 
 /// Internal game server.
 pub struct Game {
-    pub on: bool,
+    /// Directory that hosts the game.
+    pub dir: PathBuf,
+    /// Current game status.
+    pub stat: GameStat,
 }
 
 impl Game {
-    /// Creates new instance without config.
     pub fn new() -> Self {
-        Self { on: false }
+        Self {
+            dir: PathBuf::new(),
+            stat: GameStat {
+                on: false,
+                chara: HashSet::new(),
+                done: false,
+                term: false,
+                turn: 0,
+                host: String::new(),
+                modlist: HashSet::new(),
+            },
+        }
     }
 }

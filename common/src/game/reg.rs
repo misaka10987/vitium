@@ -4,6 +4,8 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
+use serde::{Deserialize, Serialize};
+
 use crate::ID;
 
 pub struct Reg<T: AsRef<Option<ID>>>(HashMap<ID, T>);
@@ -51,6 +53,9 @@ where
     }
 }
 
+pub trait Registered: AsRef<Option<ID>> {}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Ox<T> {
     Reg(ID),
     Inst(Box<T>),

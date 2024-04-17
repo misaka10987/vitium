@@ -1,4 +1,4 @@
-pub use crate::{act::Act, cmd::Cmd};
+pub use crate::{cmd::Cmd, game::Act};
 use crate::{game::PC, player::Player};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -35,7 +35,7 @@ pub type EditPlayer = Player;
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditChara {
     pub dest: String,
-    pub new: PC,
+    pub new: PC<'static>,
 }
 
 #[cfg(test)]
@@ -70,11 +70,11 @@ pub struct Exit {
 
 /// All possible requests are defined here.
 #[derive(Serialize, Deserialize)]
-pub enum Req {
+pub enum Req<'a> {
     /// Get current server status.
     ServerStatus,
     /// Synchronize all available data.
-    Sync,
+    Sync(String),
     /// Receive out-game chat messages.
     RecvChat,
     /// Synchronize player list.
@@ -90,16 +90,16 @@ pub enum Req {
     /// Change password.
     EditPswd(EditPswd),
     /// Submit in-game action.
-    Act(Act),
+    Act(Act<'a>),
     /// Issue server command.
     Cmd(Cmd),
 }
 
-impl Req {
+impl<'a> Req<'a> {
     pub fn route(&self) -> &'static str {
         match self {
             Req::ServerStatus => "GET /",
-            Req::Sync => "GET /sync",
+            Req::Sync(_) => "GET /sync",
             Req::RecvChat => "GET /chat",
             Req::GetPlayer => "GET /player",
             Req::GetChara => "GET /chara",
