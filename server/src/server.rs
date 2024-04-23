@@ -264,10 +264,7 @@ async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
 async fn cmd(State(_s): State<Server>) -> (StatusCode, Json<Echo>) {
     (
         StatusCode::NOT_IMPLEMENTED,
-        Json(Echo(Err(vitium_common::json(&UnimplError(
-            "cmd".to_string(),
-        ))
-        .unwrap()))),
+        Json(Err(UnimplError("/api/cmd".to_string()).to_string())),
     )
 }
 

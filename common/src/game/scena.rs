@@ -1,6 +1,6 @@
 use std::{
     collections::{BTreeMap, HashMap},
-    ops::{Deref, DerefMut, Index},
+    ops::Index,
 };
 
 use serde::{Deserialize, Serialize};
@@ -9,12 +9,15 @@ use crate::{delta::Delta, tab::Tab, ID};
 
 use super::{Cha, Item, PC};
 
-#[derive(Serialize, Deserialize, Clone)]
+/// A 1m*1m block with vertical height of 3m.
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Block {
+    /// Terrain in this block.
     pub terra: ID,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+/// A 16*16-blocked chunk, used for lazy loading of the map.
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Chunk {
     pub block: Vec<Block>,
 }
@@ -28,16 +31,19 @@ impl Index<(i8, i8)> for Chunk {
     }
 }
 
-/// Instance of scene.
-pub struct ScenaInst<'a> {
-    pub reg: &'a i8,
+/// Instance of scenario.
+pub struct Scena<'a> {
     /// Displayed name.
     pub name: String,
     /// Description showed when a character enters.
     pub descr: String,
+    /// Loaded chunks.
     pub chunk: BTreeMap<(i16, i16), Chunk>,
+    /// Player characters.
     pub pc: HashMap<String, PC>,
+    /// Non-player characters.
     pub npc: Tab<'a, Cha>,
+    /// Items.
     pub item: Tab<'a, Item>,
 }
 
@@ -67,23 +73,5 @@ impl<'a> Delta for Scena<'a> {
         for i in delta {
             self.item.apply(i.item.into_iter());
         }
-    }
-}
-
-pub struct Scena<'a> {
-    pub inst: ScenaInst<'a>,
-}
-
-impl<'a> Deref for Scena<'a> {
-    type Target = ScenaInst<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inst
-    }
-}
-
-impl<'a> DerefMut for Scena<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inst
     }
 }
