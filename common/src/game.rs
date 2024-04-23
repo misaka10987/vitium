@@ -27,9 +27,9 @@ use std::{collections::HashSet, fmt::Display};
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Obj<'a> {
-    Item(UID<Item<'a>>),
-    Char(UID<Cha<'a>>),
-    PC(UID<PC<'a>>),
+    Item(UID<Item>),
+    Char(UID<Cha>),
+    PC(UID<PC>),
     Scena(UID<ScenaInst<'a>>),
     Vehicle(UID<Vehicle>),
 }

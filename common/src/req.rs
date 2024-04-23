@@ -35,7 +35,7 @@ pub type EditPlayer = Player;
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditChara {
     pub dest: String,
-    pub new: PC<'static>,
+    pub new: PC,
 }
 
 #[cfg(test)]

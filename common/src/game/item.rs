@@ -1,60 +1,60 @@
 use super::DmgType;
-use crate::{dice::Dice, ID};
+use crate::{dice::Dice, ID, UID};
 use serde::{Deserialize, Serialize};
 use std::{
-    borrow::Cow,
     collections::{HashMap, HashSet},
-    ops::{Deref, DerefMut},
+    ops::Deref,
 };
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum Item<'a> {
-    Container(Cow<'a, Container<'a>>),
-    Melee(Cow<'a, Melee>),
-    Ranged(Cow<'a, Ranged>),
-    Armor(Cow<'a, Armor>),
-    Food(Cow<'a, Food>),
-    OtherItem(Cow<'a, OtherItem>),
+pub enum Item {
+    Basic(BaseItem),
+    Container(Container),
+    Melee(Melee),
+    Ranged(Ranged),
+    Armor(Armor),
+    Food(Food),
+    Other(OtherItem),
 }
 
-impl<'a> Deref for Item<'a> {
+impl AsRef<BaseItem> for Item {
+    fn as_ref(&self) -> &BaseItem {
+        &self.deref()
+    }
+}
+
+impl Deref for Item {
     type Target = BaseItem;
 
     fn deref(&self) -> &Self::Target {
         match self {
+            Item::Basic(i) => i,
             Item::Container(i) => i,
             Item::Melee(i) => i,
             Item::Ranged(i) => i,
             Item::Armor(i) => i,
             Item::Food(i) => i,
-            Item::OtherItem(i) => i,
+            Item::Other(i) => i,
         }
     }
 }
 
-impl<'a> DerefMut for Item<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        match self {
-            Item::Container(i) => i.to_mut(),
-            Item::Melee(i) => i.to_mut(),
-            Item::Ranged(i) => i.to_mut(),
-            Item::Armor(i) => i.to_mut(),
-            Item::Food(i) => i.to_mut(),
-            Item::OtherItem(i) => i.to_mut(),
-        }
-    }
-}
-
-impl<'a> AsRef<Option<ID>> for Item<'a> {
+impl AsRef<Option<ID>> for Item {
     fn as_ref(&self) -> &Option<ID> {
         self.deref().as_ref()
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+/// Basic information of an item is stored here.
+///
+/// # NOTA BENE
+///
+/// Invoking `.clone()` on this struct does **NOT** produce another instance with completely the same fields.
+/// Instead its `.reg` will be replaced by `None`.
+/// This is to make `Cow`s happy when implementing registeries.
+#[derive(Serialize, Deserialize)]
 pub struct BaseItem {
-    /// If this `Item` is a registry then its id will be here.
-    pub reg: Option<ID>,
+    reg: Option<ID>,
     pub name: String,
     pub descr: String,
     /// In milimetres.
@@ -67,7 +67,27 @@ pub struct BaseItem {
     pub opaque: bool,
     /// In the smallest currency unit, like 1 USD cent.
     pub price: i32,
+    /// Extended information displayed.
     pub ext_info: Vec<String>,
+    /// Flags.
+    pub flag: HashSet<ID>,
+}
+
+impl Clone for BaseItem {
+    fn clone(&self) -> Self {
+        Self {
+            reg: None,
+            name: self.name.clone(),
+            descr: self.descr.clone(),
+            length: self.length.clone(),
+            volume: self.volume.clone(),
+            weight: self.weight.clone(),
+            opaque: self.opaque.clone(),
+            price: self.price.clone(),
+            ext_info: self.ext_info.clone(),
+            flag: self.flag.clone(),
+        }
+    }
 }
 
 impl AsRef<Option<ID>> for BaseItem {
@@ -76,8 +96,52 @@ impl AsRef<Option<ID>> for BaseItem {
     }
 }
 
+impl AsRef<BaseItem> for BaseItem {
+    fn as_ref(&self) -> &BaseItem {
+        self
+    }
+}
+
+impl BaseItem {
+    /// If this `Item` is a registry then its id will be here.
+    pub fn reg(&self) -> &Option<ID> {
+        &self.reg
+    }
+    /// Unsafely change the registry id of this item.
+    pub unsafe fn mut_reg(&mut self) -> &mut Option<ID> {
+        &mut self.reg
+    }
+}
+
+macro_rules! impl_item {
+    ($t:ty) => {
+        impl_item!($t, base);
+    };
+    ($t:ty,$f:ident) => {
+        impl std::ops::Deref for $t {
+            type Target = $crate::game::item::BaseItem;
+
+            fn deref(&self) -> &Self::Target {
+                &self.$f
+            }
+        }
+
+        impl std::ops::DerefMut for $t {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.$f
+            }
+        }
+
+        impl std::convert::AsRef<$crate::game::item::BaseItem> for $t {
+            fn as_ref(&self) -> &$crate::game::item::BaseItem {
+                self.deref().as_ref()
+            }
+        }
+    };
+}
+
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Container<'a> {
+pub struct Container {
     pub base: BaseItem,
     /// Time to store an item.
     pub time_cost: i32,
@@ -89,21 +153,7 @@ pub struct Container<'a> {
     pub weight: i32,
     /// If the container is waterproof.
     pub waterproof: bool,
-    pub inside: Vec<Item<'a>>,
-}
-
-impl<'a> Deref for Container<'a> {
-    type Target = BaseItem;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl<'a> DerefMut for Container<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
+    pub inside: Vec<UID<Item>>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -115,20 +165,6 @@ pub struct Melee {
     pub one_hand: bool,
     pub skill: HashSet<ID>,
     pub mart: HashSet<ID>,
-}
-
-impl Deref for Melee {
-    type Target = BaseItem;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl DerefMut for Melee {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -145,40 +181,12 @@ pub struct Ranged {
     pub per_turn: u8,
 }
 
-impl Deref for Ranged {
-    type Target = BaseItem;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl DerefMut for Ranged {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Food {
     pub base: BaseItem,
     pub taste: i8,
     pub energy: i32,
     pub purified: bool,
-}
-
-impl Deref for Food {
-    type Target = BaseItem;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl DerefMut for Food {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
 }
 
 /// Instance of armor.
@@ -192,23 +200,9 @@ pub struct Armor {
     pub layer: Vec<ArmorLayer>,
 }
 
-impl Deref for Armor {
-    type Target = BaseItem;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl DerefMut for Armor {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ArmorLayer {
-    pub material: ID,
+    pub mat: ID,
     pub cover: HashSet<ID>,
     pub rate: u16,
     pub thickness: u16,
@@ -230,19 +224,12 @@ pub struct OtherItem {
     pub base: BaseItem,
 }
 
-impl Deref for OtherItem {
-    type Target = BaseItem;
-
-    fn deref(&self) -> &Self::Target {
-        &self.base
-    }
-}
-
-impl DerefMut for OtherItem {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.base
-    }
-}
+impl_item!(Container);
+impl_item!(Melee);
+impl_item!(Ranged);
+impl_item!(Armor);
+impl_item!(Food);
+impl_item!(OtherItem);
 
 #[cfg(test)]
 use crate::test::*;
@@ -313,7 +300,7 @@ impl Example for ArmorLayer {
         let mut cover = HashSet::new();
         cover.extend(ID::examples());
         vec![Self {
-            material: ID::example(),
+            mat: ID::example(),
             cover,
             rate: 95,
             thickness: 3000,
@@ -349,6 +336,7 @@ impl Example for BaseItem {
             opaque: true,
             price: 514,
             ext_info: vec![],
+            flag: HashSet::new(),
         }]
     }
 }

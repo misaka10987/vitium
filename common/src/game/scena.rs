@@ -36,14 +36,14 @@ pub struct ScenaInst<'a> {
     /// Description showed when a character enters.
     pub descr: String,
     pub chunk: BTreeMap<(i16, i16), Chunk>,
-    pub pc: HashMap<String, PC<'a>>,
-    pub npc: Tab<'a, Cha<'a>>,
-    pub item: Tab<'a, Item<'a>>,
+    pub pc: HashMap<String, PC>,
+    pub npc: Tab<'a, Cha>,
+    pub item: Tab<'a, Item>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PackScena<'a> {
-    pub item: Vec<<Tab<'a, Item<'a>> as Delta>::Pack>,
+    pub item: Vec<<Tab<'a, Item> as Delta>::Pack>,
 }
 
 impl<'a> Delta for Scena<'a> {

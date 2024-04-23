@@ -37,7 +37,7 @@ pub struct ServerInst {
     pub cfg: ServerConfig,
     player: RwLock<HashMap<String, Player>>,
     pswd: RwLock<HashMap<String, String>>,
-    pc: RwLock<HashMap<String, PC<'static>>>,
+    pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
     game: HashMap<String, Game>,
@@ -150,7 +150,7 @@ async fn get_player(State(s): State<Server>) -> (StatusCode, Json<HashMap<String
     (StatusCode::OK, Json(s.player.read().await.clone()))
 }
 
-async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC<'static>>>) {
+async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC>>) {
     (StatusCode::OK, Json(s.pc.read().await.clone()))
 }
 

@@ -24,7 +24,7 @@ impl Bubble {
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Action<'a> {
     Sync(SyncAction<'a>),
-    Unsync(UnsyncAction<'a>),
+    Unsync(UnsyncAction),
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -35,11 +35,11 @@ pub enum SyncAction<'a> {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum UnsyncAction<'a> {
+pub enum UnsyncAction {
     Move((f32, f32)),
     Travel(usize),
     Speak(Bubble),
-    Consume(UID<Item<'a>>),
+    Consume(UID<Item>),
     Relax(usize),
 }
 
