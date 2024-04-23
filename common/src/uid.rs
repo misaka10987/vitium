@@ -2,13 +2,20 @@ use std::{
     fmt::{Debug, Display},
     hash::Hash,
     marker::PhantomData,
+    ops::{Deref, DerefMut},
 };
 
 use serde::{de::Visitor, Deserialize, Serialize};
 
 use crate::game::TypeName;
 
+/// A pointer-wide unique id for a specified type `T`.
+///
+/// This type is serialized into an unsigned 64bit integer using `serde`,
+/// thus, on 32bit platforms, it is sliced during serialization,
+/// with only the lower 32 bits reserved.
 pub struct UID<T> {
+    /// The UID.
     pub value: usize,
     _t: PhantomData<T>,
 }
@@ -19,6 +26,20 @@ impl<T> UID<T> {
             value,
             _t: PhantomData,
         }
+    }
+}
+
+impl<T> Deref for UID<T> {
+    type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<T> DerefMut for UID<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.value
     }
 }
 
@@ -98,7 +119,7 @@ impl<'de, T> Visitor<'de> for UIDVisitor<T> {
     where
         E: serde::de::Error,
     {
-        Ok(UID::new(v.try_into().unwrap()))
+        Ok(UID::new(v as usize))
     }
 }
 

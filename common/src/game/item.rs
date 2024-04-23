@@ -6,6 +6,7 @@ use std::{
     ops::Deref,
 };
 
+/// Unboxed item, can be used for either registry or instance (`Cow<'a,Item>`/`Ox<Item>`).
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Item {
     Basic(BaseItem),
@@ -140,6 +141,7 @@ macro_rules! impl_item {
     };
 }
 
+/// Containers.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Container {
     pub base: BaseItem,
@@ -156,36 +158,52 @@ pub struct Container {
     pub inside: Vec<UID<Item>>,
 }
 
+/// Melee weapons.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Melee {
     pub base: BaseItem,
+    /// Damage dice.
     pub atk: HashMap<DmgType, Dice>,
     /// In milimetres.
     pub rng: i32,
+    /// Whether this weapon is one-handed.
     pub one_hand: bool,
+    /// Skills that give bonus to fighting with this weapon.
     pub skill: HashSet<ID>,
+    /// Martial arts that can be performed with this weapon.
     pub mart: HashSet<ID>,
 }
 
+/// Ranged weapons.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Ranged {
     pub base: BaseItem,
     pub atk: HashMap<DmgType, Dice>,
     /// In metres.
     pub rng: f32,
+    /// The minute-of-angle accuracy.
     pub moa: f32,
+    /// Moving speed of the bullet.
     pub speed: f32,
+    /// Items that can be used to charge this weapon.
     pub charge: HashSet<ID>,
+    /// How many charges can be stored.
     pub load: i16,
+    /// Charges used per shot.
     pub one_shot: u8,
-    pub per_turn: u8,
+    /// Shots able to perform in a turn.
+    pub freq: f32,
 }
 
+/// Edible item.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Food {
     pub base: BaseItem,
+    /// Whether the food tasts good, in [-100,100].
     pub taste: i8,
+    /// How much energy the food can provide, in Joules.
     pub energy: i32,
+    /// Whether the food has been processed and purified.
     pub purified: bool,
 }
 
@@ -197,15 +215,21 @@ pub struct Armor {
     pub def: Dice,
     /// Species able to wear this armor.
     pub species: Species,
+    /// Layers of the armor.
     pub layer: Vec<ArmorLayer>,
 }
 
+/// Defines a layer of armor.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ArmorLayer {
+    /// Material of this layer.
     pub mat: ID,
+    /// Covering body parts.
     pub cover: HashSet<ID>,
-    pub rate: u16,
-    pub thickness: u16,
+    /// Covered rate.
+    pub rate: f32,
+    /// Thickness of material, in milimetres.
+    pub thickness: i16,
 }
 
 /// Defines species for deciding if an armor is able to wear.
@@ -219,6 +243,9 @@ pub enum Species {
     Else(String),
 }
 
+/// Other items generated during the game.
+///
+/// Theoratically this should **NEVER** be registered.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct OtherItem {
     pub base: BaseItem,
@@ -311,7 +338,7 @@ mod test {
                 charge,
                 load: 114,
                 one_shot: 2,
-                per_turn: 2,
+                freq: 2.0,
             }]
         }
     }
@@ -340,7 +367,7 @@ mod test {
             vec![Self {
                 mat: ID::example(),
                 cover,
-                rate: 95,
+                rate: 0.95,
                 thickness: 3000,
             }]
         }
