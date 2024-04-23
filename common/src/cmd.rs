@@ -41,12 +41,3 @@ impl Command {
 pub struct Cmd {
     pub cmd: Command,
 }
-
-#[test]
-fn see_json() {
-    use crate::json;
-    let c = Cmd {
-        cmd: Command::Hello,
-    };
-    println!("{}", json(&c).unwrap());
-}

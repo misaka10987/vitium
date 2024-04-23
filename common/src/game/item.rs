@@ -232,111 +232,156 @@ impl_item!(Food);
 impl_item!(OtherItem);
 
 #[cfg(test)]
-use crate::test::*;
+mod test {
+    use std::collections::{HashMap, HashSet};
 
-#[cfg(test)]
-impl Example for Melee {
-    fn examples() -> Vec<Self> {
-        let mut atk = HashMap::new();
-        atk.insert(DmgType::System, "11d45+14".to_string());
-        let mut skill = HashSet::new();
-        skill.extend(ID::examples());
-        let mut mart = HashSet::new();
-        mart.extend(ID::examples());
-        vec![Self {
-            base: BaseItem::example(),
-            atk,
-            rng: 514,
-            one_hand: true,
-            skill,
-            mart,
-        }]
+    use crate::{
+        game::{item::OtherItem, DmgType},
+        json,
+        test::*,
+        ID, UID,
+    };
+
+    use super::{Armor, ArmorLayer, BaseItem, Container, Food, Item, Melee, Ranged, Species};
+
+    #[test]
+    fn view_json() {
+        println!("{}", json(&Item::examples()).unwrap());
     }
-}
 
-#[cfg(test)]
-impl Example for Ranged {
-    fn examples() -> Vec<Self> {
-        let mut atk = HashMap::new();
-        atk.insert(DmgType::System, "11d45+14".to_string());
-        let mut charge = HashSet::new();
-        charge.extend(ID::examples());
-        vec![Self {
-            base: BaseItem::example(),
-            atk,
-            rng: 114.514,
-            moa: 1.14514,
-            speed: 114.514,
-            charge,
-            load: 114,
-            one_shot: 2,
-            per_turn: 2,
-        }]
+    impl Example for Item {
+        fn examples() -> Vec<Self> {
+            vec![
+                Item::Basic(BaseItem::example()),
+                Item::Container(Container::example()),
+                Item::Melee(Melee::example()),
+                Item::Ranged(Ranged::example()),
+                Item::Armor(Armor::example()),
+                Item::Food(Food::example()),
+                Item::Other(OtherItem::example()),
+            ]
+        }
     }
-}
 
-#[cfg(test)]
-impl Example for Food {
-    fn examples() -> Vec<Self> {
-        vec![Self {
-            base: BaseItem::example(),
-            taste: 50,
-            energy: 1000,
-            purified: true,
-        }]
-    }
-}
-
-#[cfg(test)]
-impl Example for Species {
-    fn examples() -> Vec<Self> {
-        vec![Self::Human, Self::NonHuman, Self::Else("cat".to_string())]
-    }
-}
-
-#[cfg(test)]
-impl Example for ArmorLayer {
-    fn examples() -> Vec<Self> {
-        let mut cover = HashSet::new();
-        cover.extend(ID::examples());
-        vec![Self {
-            mat: ID::example(),
-            cover,
-            rate: 95,
-            thickness: 3000,
-        }]
-    }
-}
-
-#[cfg(test)]
-impl Example for Armor {
-    fn examples() -> Vec<Self> {
-        Species::examples()
-            .into_iter()
-            .map(|s| Self {
+    impl Example for Container {
+        fn examples() -> Vec<Self> {
+            vec![Self {
                 base: BaseItem::example(),
-                def: "11d45+14".to_string(),
-                species: s,
-                layer: ArmorLayer::examples(),
-            })
-            .collect()
+                time_cost: 1000,
+                length: 114,
+                volume: 514,
+                weight: 1919,
+                waterproof: false,
+                inside: vec![UID::new(114), UID::new(514)],
+            }]
+        }
     }
-}
 
-#[cfg(test)]
-impl Example for BaseItem {
-    fn examples() -> Vec<Self> {
-        vec![Self {
-            reg: None,
-            name: "example item".to_string(),
-            descr: DEBUG_DESCR.to_string(),
-            length: 114,
-            volume: 514,
-            weight: 114,
-            opaque: true,
-            price: 514,
-            ext_info: vec![],
-            flag: HashSet::new(),
-        }]
+    impl Example for Melee {
+        fn examples() -> Vec<Self> {
+            let mut atk = HashMap::new();
+            atk.insert(DmgType::System, "11d45+14".to_string());
+            let mut skill = HashSet::new();
+            skill.extend(ID::examples());
+            let mut mart = HashSet::new();
+            mart.extend(ID::examples());
+            vec![Self {
+                base: BaseItem::example(),
+                atk,
+                rng: 514,
+                one_hand: true,
+                skill,
+                mart,
+            }]
+        }
+    }
+
+    impl Example for Ranged {
+        fn examples() -> Vec<Self> {
+            let mut atk = HashMap::new();
+            atk.insert(DmgType::System, "11d45+14".to_string());
+            let mut charge = HashSet::new();
+            charge.extend(ID::examples());
+            vec![Self {
+                base: BaseItem::example(),
+                atk,
+                rng: 114.514,
+                moa: 1.14514,
+                speed: 114.514,
+                charge,
+                load: 114,
+                one_shot: 2,
+                per_turn: 2,
+            }]
+        }
+    }
+
+    impl Example for Food {
+        fn examples() -> Vec<Self> {
+            vec![Self {
+                base: BaseItem::example(),
+                taste: 50,
+                energy: 1000,
+                purified: true,
+            }]
+        }
+    }
+
+    impl Example for Species {
+        fn examples() -> Vec<Self> {
+            vec![Self::Human, Self::NonHuman, Self::Else("cat".to_string())]
+        }
+    }
+
+    impl Example for ArmorLayer {
+        fn examples() -> Vec<Self> {
+            let mut cover = HashSet::new();
+            cover.extend(ID::examples());
+            vec![Self {
+                mat: ID::example(),
+                cover,
+                rate: 95,
+                thickness: 3000,
+            }]
+        }
+    }
+
+    impl Example for Armor {
+        fn examples() -> Vec<Self> {
+            Species::examples()
+                .into_iter()
+                .map(|s| Self {
+                    base: BaseItem::example(),
+                    def: "11d45+14".to_string(),
+                    species: s,
+                    layer: ArmorLayer::examples(),
+                })
+                .collect()
+        }
+    }
+
+    impl Example for BaseItem {
+        fn examples() -> Vec<Self> {
+            vec![Self {
+                reg: None,
+                name: "example item".to_string(),
+                descr: DEBUG_DESCR.to_string(),
+                length: 114,
+                volume: 514,
+                weight: 114,
+                opaque: true,
+                price: 514,
+                ext_info: vec![],
+                flag: HashSet::new(),
+            }]
+        }
+    }
+
+    impl Example for OtherItem {
+        fn examples() -> Vec<Self> {
+            vec![Self {
+                base: BaseItem::example(),
+            }]
+        }
     }
 }

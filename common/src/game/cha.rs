@@ -6,10 +6,7 @@ use std::{
     ops::Deref,
 };
 
-#[cfg(test)]
-use crate::test::*;
-
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Cha {
     pub reg: Option<ID>,
     pub name: String,
@@ -31,27 +28,7 @@ impl AsRef<Option<ID>> for Cha {
     }
 }
 
-#[cfg(test)]
-impl Example for Cha {
-    fn examples() -> Vec<Self> {
-        vec![Self {
-            reg: None,
-            name: "example-character".to_string(),
-            descr: DEBUG_DESCR.to_string(),
-            race: ID::example(),
-            prof: ID::example(),
-            attr: HashMap::new(),
-            skill: HashMap::new(),
-            mart: HashMap::new(),
-            spell: HashMap::new(),
-            invt: vec![],
-            equip: vec![],
-            money: 114514,
-        }]
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct PC {
     pub player: String,
     pub story: String,
@@ -81,6 +58,34 @@ impl AsRef<Cha> for PC {
 
 #[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Pos {
-    pub scena: u64,
+    pub scena: usize,
     pub coord: (f32, f32),
+}
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+
+    use crate::{test::*, ID};
+
+    use super::Cha;
+
+    impl Example for Cha {
+        fn examples() -> Vec<Self> {
+            vec![Self {
+                reg: None,
+                name: "Example Character".to_string(),
+                descr: DEBUG_DESCR.to_string(),
+                race: ID::example(),
+                prof: ID::example(),
+                attr: HashMap::new(),
+                skill: HashMap::new(),
+                mart: HashMap::new(),
+                spell: HashMap::new(),
+                invt: vec![],
+                equip: vec![],
+                money: 114514,
+            }]
+        }
+    }
 }

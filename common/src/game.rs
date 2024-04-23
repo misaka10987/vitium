@@ -15,7 +15,6 @@ pub mod skill;
 pub mod spell;
 pub mod terra;
 pub mod vehicle;
-pub mod world;
 
 use serde::{Deserialize, Serialize};
 
