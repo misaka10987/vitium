@@ -1,7 +1,7 @@
 use crate::{DEBUG_DESCR, ID, UID};
 use serde::{Deserialize, Serialize};
 
-use super::{Item, Obj, Target};
+use super::{item::Item, Obj, Target};
 
 /// Used for in-game chat.
 #[derive(Clone, Serialize, Deserialize)]
