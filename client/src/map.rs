@@ -6,7 +6,10 @@ struct Dot{
     y:u32,
     typ:f32
 }
-fn draw(v:Vec<Terra>) -> String{
+fn draw(obj:&mut CursiveRunnable,v:Vec<Terra>) -> String{
+    let width = obj.screen_size().x;
+    let length = obj.screen_size().y;
+
     String::new()
 }
 pub fn refresh_scr(obj:&mut CursiveRunnable,scr:String){

@@ -1,0 +1,4 @@
+quit = 'q'
+inventory = 'i'
+console = '`'
+close = 'z'

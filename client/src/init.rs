@@ -1,7 +1,5 @@
 use cursive::view::{Nameable, Resizable};
-use cursive::views::EditView;
-use cursive::Cursive;
-use cursive::CursiveRunnable;
+use cursive::{views::EditView, Cursive, CursiveRunnable};
 
 pub struct Data {
     pub server_ip: String,
@@ -34,7 +32,7 @@ pub fn scr_init(obj: &mut CursiveRunnable, rd: String) {
 }
 fn show_popup_init(s: &mut Cursive, name: &str) {
     s.add_layer(cursive::views::Dialog::new().title("Connecting..."));
-    if !conect(name) {
+    if !conect(s,name) {
         s.pop_layer();
         s.pop_layer();
         s.add_layer(
@@ -66,8 +64,10 @@ fn show_popup_init(s: &mut Cursive, name: &str) {
         s.with_user_data(|data: &mut Data| data.server_ip = name.to_string());
     }
 }
-fn conect(site: &str) -> bool {
+fn conect(s:&mut Cursive,site: &str) -> bool {
+    s.add_layer(cursive::views::Dialog::new().content(cursive::views::TextView::new("Connecting")));
     let client = reqwest::blocking::Client::new();
-    let res = client.post(site.to_string()).body("Hello World").send();
+    let res = client.get(format!("http://{}",site.to_string())).body("Hello World").send();
+    s.pop_layer();
     res.is_ok()
 }

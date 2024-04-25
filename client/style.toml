@@ -16,7 +16,7 @@ borders = "simple" # Alternatives are "none" and "simple"
 
 	# If the value is an array, the first valid
 	# and supported color will be used.
-	background = ["black"]
+	background = ["white"]
 
 	# If the terminal doesn't support custom color (like the linux TTY),
 	# non-base colors will be skipped.
