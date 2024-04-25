@@ -44,6 +44,7 @@ pub trait TypeName {
 }
 
 /// Refers to the current game status.
+#[derive(Clone, Serialize, Deserialize)]
 pub struct GameStat {
     /// Whether the game is ongoing now.
     pub on: bool,

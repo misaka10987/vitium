@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    ops::Index,
-};
+use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Serialize};
 
@@ -19,16 +16,8 @@ pub struct Block {
 /// A 16*16-blocked chunk, used for lazy loading of the map.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Chunk {
-    pub block: Vec<Block>,
-}
-
-impl Index<(i8, i8)> for Chunk {
-    type Output = Block;
-
-    fn index(&self, index: (i8, i8)) -> &Self::Output {
-        let (x, y) = index;
-        &self.block[((x % 16) * 16 + y % 16) as usize]
-    }
+    /// The blocks. Note that x and y coord is represented as `.block[x][y]`.
+    pub block: Box<[[Block; 16]; 16]>,
 }
 
 /// Instance of scenario.

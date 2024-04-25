@@ -3,6 +3,7 @@ use std::{collections::HashSet, path::PathBuf};
 use vitium_common::game::GameStat;
 
 pub mod reg;
+pub mod slave;
 
 // use axum::http::StatusCode;
 // use tokio::sync::oneshot::Sender;
