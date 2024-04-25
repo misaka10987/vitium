@@ -34,7 +34,7 @@ pub struct ServerInst {
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
-    game: HashMap<String, Game>,
+    game: RwLock<HashMap<String, Game>>,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -77,7 +77,7 @@ impl Server {
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat: RwLock::new(VecDeque::new()),
-            game: HashMap::new(),
+            game: RwLock::new(HashMap::new()),
         }))
     }
     /// Reads from the header and get authentication info.
@@ -104,7 +104,8 @@ impl Server {
         // initialize router
         let app = Router::new()
             .route("/hello", get(handler::hello))
-            .route("/game", get(handler::get_game))
+            .route("/game", get(handler::list_game))
+            .route("/game/:name", get(handler::get_game))
             .route("/chat", get(handler::recv_chat))
             .route("/player", get(handler::get_player))
             .route("/chara", get(handler::get_pc))
