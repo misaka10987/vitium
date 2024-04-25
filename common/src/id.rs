@@ -4,15 +4,34 @@ use std::fmt::{write, Display};
 #[cfg(test)]
 use crate::test::*;
 
+/// String identifier for a class of entity, usually used in registeries.
+///
+/// # Formats
+///
+/// A valid `ID` should contain one and only one char `:` that seperates it into two strings,
+/// with the former stands for module name and latter stands for id, e.g. `example-module:example-id`.
+///
+/// Despite the fact that case-sensitive characters,
+/// some special characters and Unicode *is* supported,
+/// it is strongly suggestted **NOT** using such characters.
+///
+/// The ASCII characters `a`-`z`, `0`-`9` and `-._+` are recommandded.
+///
+/// # Special rules
+///
+/// An `ID` with an empty module name (like `:builtin-id`) is for the vitium-builtin objects.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct ID {
-    pub module: String,
+    /// The local identifier, should be unique inside the module,
+    /// even if the type is different.
     pub id: String,
+    /// Module name.
+    pub module: String,
 }
 
 impl Display for ID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write(f, format_args!("{}:{}", self.module, self.id))
+        write(f, format_args!("{}:{}", self.id, self.module))
     }
 }
 
@@ -21,7 +40,7 @@ impl Serialize for ID {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&format!("{}:{}", self.module, self.id))
+        serializer.serialize_str(&format!("{}:{}", self.id, self.module))
     }
 }
 
@@ -43,7 +62,7 @@ impl<'de> Visitor<'de> for IDVisitor {
     {
         let s: Vec<&str> = v.split(':').collect();
         if s.len() != 2 {
-            return Err(E::missing_field("id"));
+            return Err(E::missing_field("`id` or `module`"));
         }
         Ok(ID::new(s[0], s[1]))
     }
@@ -59,17 +78,20 @@ impl<'de> Deserialize<'de> for ID {
 }
 
 impl ID {
-    pub fn new(module: &str, id: &str) -> Self {
+    pub fn new(id: &str, module: &str) -> Self {
         Self {
             module: module.to_string(),
             id: id.to_string(),
         }
+    }
+    pub fn builtin(id: &str) -> Self {
+        Self::new(id, "")
     }
 }
 
 #[cfg(test)]
 impl Example for ID {
     fn examples() -> Vec<Self> {
-        vec![ID::new("example-module", "example-id")]
+        vec![ID::new("example-id", "example-module")]
     }
 }

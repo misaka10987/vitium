@@ -2,14 +2,20 @@ use std::{
     fmt::{Debug, Display},
     hash::Hash,
     marker::PhantomData,
+    ops::{Deref, DerefMut},
 };
 
-use serde::{Deserialize, Serialize};
+use serde::{de::Visitor, Deserialize, Serialize};
 
 use crate::game::TypeName;
 
-#[derive(Serialize, Deserialize)]
+/// A pointer-wide unique id for a specified type `T`.
+///
+/// This type is serialized into an unsigned 64bit integer using `serde`,
+/// thus, on 32bit platforms, it is sliced during serialization,
+/// with only the lower 32 bits reserved.
 pub struct UID<T> {
+    /// The UID.
     pub value: usize,
     _t: PhantomData<T>,
 }
@@ -20,6 +26,20 @@ impl<T> UID<T> {
             value,
             _t: PhantomData,
         }
+    }
+}
+
+impl<T> Deref for UID<T> {
+    type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<T> DerefMut for UID<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.value
     }
 }
 
@@ -72,5 +92,55 @@ impl<T> Debug for UID<T> {
             .field("value", &self.value)
             .field("_t", &self._t)
             .finish()
+    }
+}
+
+impl<T> Serialize for UID<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u64(self.value as u64)
+    }
+}
+
+struct UIDVisitor<T> {
+    _t: PhantomData<T>,
+}
+
+impl<'de, T> Visitor<'de> for UIDVisitor<T> {
+    type Value = UID<T>;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(formatter, "an unsigned pointer-wide (64bit) integer")
+    }
+
+    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(UID::new(v as usize))
+    }
+}
+
+impl<'de, T> Deserialize<'de> for UID<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_u64(UIDVisitor::<T> { _t: PhantomData })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{json, obj, UID};
+
+    #[test]
+    fn serde() {
+        let x = UID::<()>::new(114514);
+        let y = json(&x).unwrap();
+        let y = obj(&y).unwrap();
+        assert_eq!(x, y);
     }
 }

@@ -15,7 +15,6 @@ pub mod skill;
 pub mod spell;
 pub mod terra;
 pub mod vehicle;
-pub mod world;
 
 use serde::{Deserialize, Serialize};
 
@@ -27,10 +26,10 @@ use std::{collections::HashSet, fmt::Display};
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Obj<'a> {
-    Item(UID<Item<'a>>),
-    Char(UID<Cha<'a>>),
-    PC(UID<PC<'a>>),
-    Scena(UID<ScenaInst<'a>>),
+    Item(UID<Item>),
+    Char(UID<Cha>),
+    PC(UID<PC>),
+    Scena(UID<Scena<'a>>),
     Vehicle(UID<Vehicle>),
 }
 
@@ -45,6 +44,7 @@ pub trait TypeName {
 }
 
 /// Refers to the current game status.
+#[derive(Clone, Serialize, Deserialize)]
 pub struct GameStat {
     /// Whether the game is ongoing now.
     pub on: bool,

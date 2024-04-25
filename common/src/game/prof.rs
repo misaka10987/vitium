@@ -17,5 +17,5 @@ pub struct Prof {
     /// Spells automatically learnt.
     pub spell: HashSet<ID>,
     /// Initial items given by this profession.
-    pub item: Vec<Item<'static>>,
+    pub item: Vec<Item>,
 }

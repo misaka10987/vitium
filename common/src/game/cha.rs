@@ -1,16 +1,13 @@
-use super::{level::Level, Item, TypeName};
+use super::{item::Armor, level::Level, Item, Ox, TypeName};
 use crate::ID;
 use serde::{Deserialize, Serialize};
 use std::{
-    borrow::Cow,
     collections::{HashMap, HashSet},
+    ops::Deref,
 };
 
-#[cfg(test)]
-use crate::test::*;
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Cha<'a> {
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Cha {
     pub reg: Option<ID>,
     pub name: String,
     pub descr: String,
@@ -20,59 +17,75 @@ pub struct Cha<'a> {
     pub skill: HashMap<ID, Level>,
     pub mart: HashMap<ID, Level>,
     pub spell: HashMap<ID, Level>,
-    pub invt: Vec<Cow<'a, Item<'a>>>,
-    pub equip: Vec<Cow<'a, Item<'a>>>,
+    pub invt: Vec<Ox<Item>>,
+    pub equip: Vec<Ox<Armor>>,
     pub money: i32,
 }
 
-impl<'a> AsRef<Option<ID>> for Cha<'a> {
+impl AsRef<Option<ID>> for Cha {
     fn as_ref(&self) -> &Option<ID> {
         &self.reg
     }
 }
 
-#[cfg(test)]
-impl<'a> Example for Cha<'a> {
-    fn examples() -> Vec<Self> {
-        vec![Self {
-            reg: None,
-            name: "example-character".to_string(),
-            descr: DEBUG_DESCR.to_string(),
-            race: ID::example(),
-            prof: ID::example(),
-            attr: HashMap::new(),
-            skill: HashMap::new(),
-            mart: HashMap::new(),
-            spell: HashMap::new(),
-            invt: vec![],
-            equip: vec![],
-            money: 114514,
-        }]
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct PC<'a> {
+#[derive(Clone, Serialize, Deserialize)]
+pub struct PC {
     pub player: String,
     pub story: String,
     pub mods: HashSet<String>,
-    pub cha: Cha<'a>,
+    pub cha: Cha,
 }
 
-impl<'a> TypeName for PC<'a> {
+impl TypeName for PC {
     fn typename() -> impl std::fmt::Display {
         "PlayerCharacter"
     }
 }
 
-impl<'a> AsRef<Cha<'a>> for PC<'a> {
-    fn as_ref(&self) -> &Cha<'a> {
+impl Deref for PC {
+    type Target = Cha;
+
+    fn deref(&self) -> &Self::Target {
         &self.cha
+    }
+}
+
+impl AsRef<Cha> for PC {
+    fn as_ref(&self) -> &Cha {
+        self.deref()
     }
 }
 
 #[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Pos {
-    pub scena: u64,
+    pub scena: usize,
     pub coord: (f32, f32),
+}
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+
+    use crate::{test::*, ID};
+
+    use super::Cha;
+
+    impl Example for Cha {
+        fn examples() -> Vec<Self> {
+            vec![Self {
+                reg: None,
+                name: "Example Character".to_string(),
+                descr: DEBUG_DESCR.to_string(),
+                race: ID::example(),
+                prof: ID::example(),
+                attr: HashMap::new(),
+                skill: HashMap::new(),
+                mart: HashMap::new(),
+                spell: HashMap::new(),
+                invt: vec![],
+                equip: vec![],
+                money: 114514,
+            }]
+        }
+    }
 }
