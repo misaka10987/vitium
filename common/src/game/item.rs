@@ -1,5 +1,5 @@
 use super::DmgType;
-use crate::{dice::Dice, ID, UID};
+use crate::{dice::Dice, impl_reg, ID, UID};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -91,11 +91,7 @@ impl Clone for BaseItem {
     }
 }
 
-impl AsRef<Option<ID>> for BaseItem {
-    fn as_ref(&self) -> &Option<ID> {
-        &self.reg
-    }
-}
+impl_reg!(BaseItem);
 
 impl AsRef<BaseItem> for BaseItem {
     fn as_ref(&self) -> &BaseItem {

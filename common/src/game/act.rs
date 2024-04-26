@@ -22,16 +22,17 @@ impl Bubble {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub enum Action<'a> {
-    Sync(SyncAction<'a>),
+pub enum Action {
+    Sync(SyncAction),
     Unsync(UnsyncAction),
+    BegSync(bool),
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum SyncAction<'a> {
-    Atk(Obj<'a>),
-    Shoot(Obj<'a>),
-    Cast(ID, Target<'a>),
+pub enum SyncAction {
+    Atk(Obj),
+    Shoot(Obj),
+    Cast(ID, Target),
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -44,7 +45,7 @@ pub enum UnsyncAction {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Act<'a> {
+pub struct Act {
     pub cha: String,
-    pub action: Action<'a>,
+    pub action: Action,
 }

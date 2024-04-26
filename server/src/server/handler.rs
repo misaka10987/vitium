@@ -1,5 +1,5 @@
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::{HeaderMap, StatusCode},
     response::Redirect,
     Json,
@@ -38,13 +38,12 @@ pub async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String
     (StatusCode::OK, Json(s.pc.read().await.clone()))
 }
 
-pub async fn get_game(State(s): State<Server>) -> Json<HashMap<String, GameStat>> {
-    Json(
-        s.game
-            .iter()
-            .map(|(k, v)| (k.clone(), v.stat.clone()))
-            .collect(),
-    )
+pub async fn list_game(State(s): State<Server>) -> Json<Vec<String>> {
+    Json(s.game.read().await.keys().cloned().collect())
+}
+
+pub async fn get_game(State(s): State<Server>, Path(name): Path<String>) -> Json<Option<GameStat>> {
+    Json(s.game.read().await.get(&name).map(|g| g.stat.clone()))
 }
 
 pub async fn send_chat(
@@ -129,7 +128,7 @@ pub async fn edit_pc(
 pub async fn act(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::Act<'_>>,
+    Json(req): Json<req::Act>,
 ) -> StatusCode {
     if let Some(name) = s.auth(&head).await {
         if let Some(c) = s.pc.read().await.get(&req.cha) {
@@ -154,9 +153,21 @@ pub async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
     todo!()
 }
 
-pub async fn cmd(State(_s): State<Server>) -> (StatusCode, Json<Echo>) {
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(Err(UnimplError("/api/cmd".to_string()).to_string())),
-    )
+pub async fn cmd(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(req): Json<req::Cmd>,
+) -> (StatusCode, Json<Option<Echo>>) {
+    if let Some(name) = s.auth(&head).await {
+        if let Some(g) = s.game.read().await.get(&req.game) {
+            if g.stat.host == name {
+                let err = UnimplError("command".to_owned());
+                return (
+                    StatusCode::NOT_IMPLEMENTED,
+                    Json(Some(Err(err.to_string()))),
+                );
+            }
+        }
+    }
+    (StatusCode::FORBIDDEN, Json(None))
 }

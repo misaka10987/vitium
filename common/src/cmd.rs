@@ -23,4 +23,5 @@ impl Command {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Cmd {
     pub cmd: Command,
+    pub game: String,
 }

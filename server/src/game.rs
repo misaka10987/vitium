@@ -1,6 +1,14 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+    sync::Arc,
+};
 
+use axum::http::header::CONNECTION;
 use vitium_common::game::GameStat;
+
+use self::{reg::GameReg, slave::Slave};
 
 pub mod reg;
 pub mod slave;
@@ -21,6 +29,8 @@ pub struct Game {
     pub dir: PathBuf,
     /// Current game status.
     pub stat: GameStat,
+    reg: GameReg,
+    slave: HashMap<usize, Slave>,
 }
 
 impl Game {
@@ -36,6 +46,15 @@ impl Game {
                 host: String::new(),
                 modlist: HashSet::new(),
             },
+            reg: todo!(),
+            slave: HashMap::new(),
         }
     }
 }
+
+// fn f(x: &'static String) {}
+
+// fn g(){
+//     let y=Arc::new(String::new());
+//     f(&y);
+// }

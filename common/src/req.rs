@@ -70,7 +70,7 @@ pub struct Exit {
 
 /// All possible requests are defined here.
 #[derive(Serialize, Deserialize)]
-pub enum Req<'a> {
+pub enum Req {
     /// Get current server status.
     ServerStatus,
     /// Synchronize all available data.
@@ -90,12 +90,12 @@ pub enum Req<'a> {
     /// Change password.
     EditPswd(EditPswd),
     /// Submit in-game action.
-    Act(Act<'a>),
+    Act(Act),
     /// Issue server command.
     Cmd(Cmd),
 }
 
-impl<'a> Req<'a> {
+impl Req {
     pub fn route(&self) -> &'static str {
         match self {
             Req::ServerStatus => "GET /",

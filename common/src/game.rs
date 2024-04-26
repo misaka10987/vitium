@@ -25,17 +25,17 @@ pub use self::prelude::*;
 use std::{collections::HashSet, fmt::Display};
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Obj<'a> {
+pub enum Obj {
     Item(UID<Item>),
     Char(UID<Cha>),
     PC(UID<PC>),
-    Scena(UID<Scena<'a>>),
+    Scena(usize),
     Vehicle(UID<Vehicle>),
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Target<'a> {
-    Entity(Obj<'a>),
+pub enum Target {
+    Entity(Obj),
     Pos(i16, i16),
 }
 

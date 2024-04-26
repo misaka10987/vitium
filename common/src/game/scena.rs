@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{delta::Delta, tab::Tab, ID};
+use crate::{tab::Tab, ID};
 
 use super::{Cha, Item, PC};
 
@@ -21,7 +21,7 @@ pub struct Chunk {
 }
 
 /// Instance of scenario.
-pub struct Scena<'a> {
+pub struct Scena {
     /// Displayed name.
     pub name: String,
     /// Description showed when a character enters.
@@ -31,36 +31,7 @@ pub struct Scena<'a> {
     /// Player characters.
     pub pc: HashMap<String, PC>,
     /// Non-player characters.
-    pub npc: Tab<'a, Cha>,
+    pub npc: Tab<Cha>,
     /// Items.
-    pub item: Tab<'a, Item>,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct PackScena<'a> {
-    pub item: Vec<<Tab<'a, Item> as Delta>::Pack>,
-}
-
-impl<'a> Delta for Scena<'a> {
-    type Pack = PackScena<'a>;
-
-    fn calc(&mut self) -> impl Iterator<Item = Self::Pack> {
-        vec![Self::Pack {
-            item: self.item.calc().collect(),
-        }]
-        .into_iter()
-    }
-
-    fn diff(&self) -> impl Iterator<Item = Self::Pack> {
-        vec![Self::Pack {
-            item: self.item.diff().collect(),
-        }]
-        .into_iter()
-    }
-
-    fn apply(&mut self, delta: impl Iterator<Item = Self::Pack>) {
-        for i in delta {
-            self.item.apply(i.item.into_iter());
-        }
-    }
+    pub item: Tab<Item>,
 }
