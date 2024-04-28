@@ -4,8 +4,6 @@ use std::{
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
-
-use bevy_ecs::storage::SparseSetIndex;
 use serde::{de::Visitor, Deserialize, Serialize};
 
 use crate::game::TypeName;
@@ -130,16 +128,6 @@ impl<'de, T> Deserialize<'de> for UID<T> {
         D: serde::Deserializer<'de>,
     {
         deserializer.deserialize_u64(UIDVisitor::<T> { _t: PhantomData })
-    }
-}
-
-impl<T> SparseSetIndex for UID<T> {
-    fn sparse_set_index(&self) -> usize {
-        self.value
-    }
-
-    fn get_sparse_set_index(value: usize) -> Self {
-        Self::new(value)
     }
 }
 

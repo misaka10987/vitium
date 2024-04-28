@@ -1,5 +1,5 @@
 use super::DmgType;
-use crate::{dice::Dice, impl_reg, ID, UID};
+use crate::{dice::Dice, ecs::Entity, impl_reg, ID};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -44,6 +44,12 @@ impl AsRef<Option<ID>> for Item {
     fn as_ref(&self) -> &Option<ID> {
         self.deref().as_ref()
     }
+}
+
+impl Entity for Item {
+    type Reg = Self;
+
+    type Base = ();
 }
 
 /// Basic information of an item is stored here.
@@ -151,7 +157,6 @@ pub struct Container {
     pub weight: i32,
     /// If the container is waterproof.
     pub waterproof: bool,
-    pub inside: Vec<UID<Item>>,
 }
 
 /// Melee weapons.
@@ -262,7 +267,7 @@ mod test {
         game::{item::OtherItem, DmgType},
         json,
         test::*,
-        ID, UID,
+        ID,
     };
 
     use super::{Armor, ArmorLayer, BaseItem, Container, Food, Item, Melee, Ranged, Species};
@@ -295,7 +300,6 @@ mod test {
                 volume: 514,
                 weight: 1919,
                 waterproof: false,
-                inside: vec![UID::new(114), UID::new(514)],
             }]
         }
     }
