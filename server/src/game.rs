@@ -8,7 +8,7 @@ use std::{
 use axum::http::header::CONNECTION;
 use vitium_common::game::GameStat;
 
-use self::{reg::GameReg, slave::Slave};
+use self::{slave::Slave};
 
 pub mod reg;
 pub mod slave;
@@ -29,7 +29,7 @@ pub struct Game {
     pub dir: PathBuf,
     /// Current game status.
     pub stat: GameStat,
-    reg: GameReg,
+    // reg: GameReg,
     slave: HashMap<usize, Slave>,
 }
 
@@ -46,7 +46,7 @@ impl Game {
                 host: String::new(),
                 modlist: HashSet::new(),
             },
-            reg: todo!(),
+            // reg: todo!(),
             slave: HashMap::new(),
         }
     }

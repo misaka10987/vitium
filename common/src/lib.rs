@@ -1,7 +1,6 @@
 pub mod cmd;
 pub mod delta;
 pub mod dice;
-pub mod ecs;
 pub mod error;
 pub mod game;
 pub mod module;
