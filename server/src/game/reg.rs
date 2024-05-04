@@ -1,8 +1,11 @@
-use vitium_common::game::{Item, Reg, Spell};
+use vitium_common::{
+    game::{Item, Spell},
+    Reg, RegTab,
+};
 
 pub struct GameReg {
-    pub item: &'static Reg<Item>,
-    pub spell: &'static Reg<Spell>,
+    pub item: &'static RegTab<Item>,
+    pub spell: &'static RegTab<(Item)>,
 }
 
 impl Drop for GameReg {

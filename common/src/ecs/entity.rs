@@ -1,6 +1,6 @@
-use super::Compon;
+use super::{reg::Registered, Data};
 
-pub trait Entity {
-    type Reg;
-    type Base: Compon;
+pub trait Entity: 'static {
+    type Reg: Registered;
+    type Base: Data;
 }

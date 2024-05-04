@@ -2,9 +2,9 @@ use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{tab::Tab, ID};
+use crate::ID;
 
-use super::{Cha, Item, PC};
+use super::PC;
 
 /// A 1m*1m block with vertical height of 3m.
 #[derive(Clone, Serialize, Deserialize)]
@@ -30,8 +30,8 @@ pub struct Scena {
     pub chunk: BTreeMap<(i16, i16), Chunk>,
     /// Player characters.
     pub pc: HashMap<String, PC>,
-    /// Non-player characters.
-    pub npc: Tab<Cha>,
-    /// Items.
-    pub item: Tab<Item>,
+    // /// Non-player characters.
+    // pub npc: Tab<Cha>,
+    // /// Items.
+    // pub item: Tab<Item>,
 }

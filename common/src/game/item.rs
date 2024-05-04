@@ -1,5 +1,5 @@
 use super::DmgType;
-use crate::{dice::Dice, ecs::Entity, impl_reg, ID};
+use crate::{dice::Dice, ecs::Entity, ID};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -8,7 +8,7 @@ use std::{
 
 /// Unboxed item, can be used for either registry or instance (`Cow<'a,Item>`/`Ox<Item>`).
 #[derive(Clone, Serialize, Deserialize)]
-pub enum Item {
+pub enum ItemReg {
     Basic(BaseItem),
     Container(Container),
     Melee(Melee),
@@ -18,36 +18,39 @@ pub enum Item {
     Other(OtherItem),
 }
 
-impl AsRef<BaseItem> for Item {
+impl AsRef<BaseItem> for ItemReg {
     fn as_ref(&self) -> &BaseItem {
         &self.deref()
     }
 }
 
-impl Deref for Item {
+impl AsRef<Option<ID>> for ItemReg {
+    fn as_ref(&self) -> &Option<ID> {
+        let base: &BaseItem = self.as_ref();
+        base.reg()
+    }
+}
+
+impl Deref for ItemReg {
     type Target = BaseItem;
 
     fn deref(&self) -> &Self::Target {
         match self {
-            Item::Basic(i) => i,
-            Item::Container(i) => i,
-            Item::Melee(i) => i,
-            Item::Ranged(i) => i,
-            Item::Armor(i) => i,
-            Item::Food(i) => i,
-            Item::Other(i) => i,
+            ItemReg::Basic(i) => i,
+            ItemReg::Container(i) => i,
+            ItemReg::Melee(i) => i,
+            ItemReg::Ranged(i) => i,
+            ItemReg::Armor(i) => i,
+            ItemReg::Food(i) => i,
+            ItemReg::Other(i) => i,
         }
     }
 }
 
-impl AsRef<Option<ID>> for Item {
-    fn as_ref(&self) -> &Option<ID> {
-        self.deref().as_ref()
-    }
-}
+pub struct Item;
 
 impl Entity for Item {
-    type Reg = Self;
+    type Reg = ItemReg;
 
     type Base = ();
 }
@@ -96,8 +99,6 @@ impl Clone for BaseItem {
         }
     }
 }
-
-impl_reg!(BaseItem);
 
 impl AsRef<BaseItem> for BaseItem {
     fn as_ref(&self) -> &BaseItem {
@@ -186,7 +187,7 @@ pub struct Ranged {
     pub moa: f32,
     /// Moving speed of the bullet.
     pub speed: f32,
-    /// Items that can be used to charge this weapon.
+    /// ItemRegs that can be used to charge this weapon.
     pub charge: HashSet<ID>,
     /// How many charges can be stored.
     pub load: i16,
@@ -270,23 +271,23 @@ mod test {
         ID,
     };
 
-    use super::{Armor, ArmorLayer, BaseItem, Container, Food, Item, Melee, Ranged, Species};
+    use super::{Armor, ArmorLayer, BaseItem, Container, Food, ItemReg, Melee, Ranged, Species};
 
     #[test]
     fn view_json() {
-        println!("{}", json(&Item::examples()).unwrap());
+        println!("{}", json(&ItemReg::examples()).unwrap());
     }
 
-    impl Example for Item {
+    impl Example for ItemReg {
         fn examples() -> Vec<Self> {
             vec![
-                Item::Basic(BaseItem::example()),
-                Item::Container(Container::example()),
-                Item::Melee(Melee::example()),
-                Item::Ranged(Ranged::example()),
-                Item::Armor(Armor::example()),
-                Item::Food(Food::example()),
-                Item::Other(OtherItem::example()),
+                ItemReg::Basic(BaseItem::example()),
+                ItemReg::Container(Container::example()),
+                ItemReg::Melee(Melee::example()),
+                ItemReg::Ranged(Ranged::example()),
+                ItemReg::Armor(Armor::example()),
+                ItemReg::Food(Food::example()),
+                ItemReg::Other(OtherItem::example()),
             ]
         }
     }

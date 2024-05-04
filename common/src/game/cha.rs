@@ -1,4 +1,4 @@
-use super::{item::Armor, level::Level, Item, Ox, TypeName};
+use super::{level::Level, TypeName};
 use crate::ID;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -17,8 +17,8 @@ pub struct Cha {
     pub skill: HashMap<ID, Level>,
     pub mart: HashMap<ID, Level>,
     pub spell: HashMap<ID, Level>,
-    pub invt: Vec<Ox<Item>>,
-    pub equip: Vec<Ox<Armor>>,
+    // pub invt: Vec<Ox<Item>>,
+    // pub equip: Vec<Ox<Armor>>,
     pub money: i32,
 }
 
@@ -82,8 +82,8 @@ mod test {
                 skill: HashMap::new(),
                 mart: HashMap::new(),
                 spell: HashMap::new(),
-                invt: vec![],
-                equip: vec![],
+                // invt: vec![],
+                // equip: vec![],
                 money: 114514,
             }]
         }

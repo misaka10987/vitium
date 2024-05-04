@@ -1,16 +1,12 @@
-use crate::UID;
+use crate::UId as UID;
 
-use super::{Compon, Entity};
+use super::{Data, Entity};
 
 /// Defines storage operation interface for a certain type of component.
-///
-/// # Note: `AsRef` reflexivity
-///
-///
 pub trait Store<E, C = <E as Entity>::Base>
 where
     E: Entity,
-    C: Compon,
+    C: Data,
 {
     /// Get a component.
     fn compon(&self, idx: UID<E>) -> Option<&C>;
