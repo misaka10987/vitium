@@ -1,76 +1,75 @@
-use crate::{func::invt, move_top};
-use cursive::{event::Key, views::TextView, CursiveRunnable};
-use futures::executor::block_on;
-use reqwest::Client;
-use serde_derive::Deserialize;
-use std::{char, fs::File, io::Read, path::Path};
-#[derive(Deserialize)]
-pub struct KeySet {
-    quit: char,
-    inventory: char,
-    console: char,
-    close: char,
-}
-pub fn config(obj: &mut CursiveRunnable) {
-    obj.add_layer(cursive::views::Dialog::new());
-}
-pub fn initctrl(obj: &mut CursiveRunnable) {
-    obj.add_global_callback(Key::Up, |s| move_top(s, 0, -1));
-    obj.add_global_callback(Key::Left, |s| move_top(s, -1, 0));
-    obj.add_global_callback(Key::Down, |s| move_top(s, 0, 1));
-    obj.add_global_callback(Key::Right, |s| move_top(s, 1, 0));
-    let path = Path::new("keyboard.toml");
-    match File::open(&path) {
-        Err(_) => initctrl_init(obj),
-        Ok(mut file) => {
-            let mut s = String::new();
-            match file.read_to_string(&mut s) {
-                Err(_) => initctrl_init(obj),
-                Ok(_) => {
-                    let p: Result<KeySet, toml::de::Error> = toml::from_str(&s);
-                    match p {
-                        Ok(k) => {
-                            obj.add_global_callback(k.quit, |s| s.quit());
-                            obj.add_global_callback(k.inventory, |s| {
-                                s.add_layer(
-                                    cursive::views::Dialog::new()
-                                        .content(TextView::new("Opening Inventory...")),
-                                );
-                                block_on(invt(s, &mut Client::new(), "idk".to_string()));
-                            });
-                            obj.add_global_callback(k.console, |s| s.toggle_debug_console());
-                            obj.add_global_callback(k.close, |s| {
-                                s.pop_layer();
-                            });
-                            obj.add_layer(
-                                cursive::views::Dialog::new()
-                                    .title("Keyboard Setting Accepted")
-                                    .button("Ok", |s| {
-                                        s.pop_layer();
-                                    }),
-                            );
-                        }
-                        Err(_) => initctrl_init(obj),
+use std::{fs::File, io::Write};
+
+use cursive::{
+    theme::BorderStyle,
+    view::Scrollable,
+    views::{Button, LinearLayout},
+    Cursive,
+};
+
+pub fn theme_adj(obj: &mut Cursive) {
+    let thm = obj.current_theme();
+    obj.add_layer(cursive::views::Dialog::around(
+        LinearLayout::vertical()
+            .child(Button::new(format!("shadow = {}", thm.shadow), |s| {
+                shadow_adj(s);
+            }))
+            .child(Button::new(
+                format!(
+                    "borders = {}",
+                    match thm.borders {
+                        BorderStyle::Simple => "Simple",
+                        BorderStyle::Outset => "Outset",
+                        BorderStyle::None => "None",
                     }
-                }
-            }
-        }
-    };
+                ),
+                |s| borders_adj(s),
+            ))
+            .child(Button::new("Exit", |s| {
+                s.pop_layer();
+            }))
+            .scrollable()
+            .scroll_x(true),
+    ));
 }
-pub fn initctrl_init(obj: &mut CursiveRunnable) {
-    obj.add_global_callback('q', |s| s.quit());
-    obj.add_global_callback('f', |s| {
-        block_on(invt(s, &mut Client::new(), "idk".to_string()));
-    });
-    obj.add_global_callback('~', |s| s.toggle_debug_console());
-    obj.add_global_callback('z', |s| {
-        s.pop_layer();
-    });
+fn shadow_adj(obj: &mut Cursive) {
     obj.add_layer(
         cursive::views::Dialog::new()
-            .title("Keyboard Setting Unaccepted")
-            .button("Ok", |s| {
+            .title("Enable shadow or not")
+            .button("Enable", |s| {
+                s.update_theme(|t| t.shadow = true);
                 s.pop_layer();
+                refresh(s);
+            })
+            .button("Disable", |s| {
+                s.update_theme(|t| t.shadow = false);
+                s.pop_layer();
+                refresh(s);
             }),
     );
+}
+fn borders_adj(obj: &mut Cursive) {
+    obj.add_layer(
+        cursive::views::Dialog::new()
+            .title("Changing the Type of the Borders")
+            .button("Simple", |s| {
+                s.update_theme(|t| t.borders = BorderStyle::Simple);
+                s.pop_layer();
+                refresh(s);
+            })
+            .button("None", |s| {
+                s.update_theme(|t| t.borders = BorderStyle::None);
+                s.pop_layer();
+                refresh(s);
+            })
+            .button("Outset", |s| {
+                s.update_theme(|t| t.borders = BorderStyle::Outset);
+                s.pop_layer();
+                refresh(s);
+            }),
+    )
+}
+fn refresh(obj: &mut Cursive) {
+    obj.pop_layer();
+    theme_adj(obj);
 }

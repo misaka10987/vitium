@@ -1,12 +1,12 @@
 use cursive::{views::TextView, Cursive};
 use reqwest::Client;
 
-use crate::init::Data;
+use crate::Ip;
 
 pub async fn invt(obj: &mut Cursive, clt: &mut Client, mes: String) {
     obj.add_layer(cursive::views::Dialog::new().content(TextView::new("Connecting")));
     match clt
-        .post(obj.user_data::<Data>().unwrap().server_ip.to_string())
+        .post(obj.user_data::<Ip>().unwrap().0.clone())
         .body(mes)
         .send()
         .await

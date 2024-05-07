@@ -35,7 +35,7 @@ borders = "simple" # Alternatives are "none" and "simple"
 
 	# Lower precision values can use only 3 digits.
 	highlight          = "black"
-	highlight_inactive = "black"
+	highlight_inactive = "white"
 
 [styles.highlight]
     effects = ["black"]

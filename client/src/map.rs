@@ -13,5 +13,5 @@ fn draw(obj:&mut CursiveRunnable,v:Vec<Terra>) -> String{
     String::new()
 }
 pub fn refresh_scr(obj:&mut CursiveRunnable,scr:String){
-
+    
 }
