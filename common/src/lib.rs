@@ -3,17 +3,15 @@ pub mod delta;
 pub mod dice;
 pub mod error;
 pub mod game;
-pub mod id;
 pub mod module;
 pub mod player;
 pub mod prelude;
 pub mod record;
 pub mod req;
 pub mod res;
-pub mod tab;
+pub mod t_recs;
 #[cfg(test)]
 mod test;
-pub mod uid;
 pub mod util;
 
 pub use crate::prelude::*;

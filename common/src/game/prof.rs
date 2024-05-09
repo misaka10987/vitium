@@ -1,4 +1,3 @@
-use super::Item;
 use crate::ID;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -17,5 +16,5 @@ pub struct Prof {
     /// Spells automatically learnt.
     pub spell: HashSet<ID>,
     /// Initial items given by this profession.
-    pub item: Vec<Item>,
+    pub item: Vec<ID>,
 }

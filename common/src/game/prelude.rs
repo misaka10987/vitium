@@ -4,7 +4,6 @@ pub use super::fight::DmgType;
 pub use super::item::{BaseItem, Item};
 pub use super::level::Level;
 pub use super::prof::Prof;
-pub use super::reg::{Ox, Reg};
 pub use super::scena::{Block, Chunk, Scena};
 pub use super::skill::Skill;
 pub use super::spell::Spell;

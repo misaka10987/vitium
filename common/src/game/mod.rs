@@ -9,7 +9,6 @@ pub mod mat;
 pub mod prelude;
 pub mod prof;
 pub mod race;
-pub mod reg;
 pub mod scena;
 pub mod skill;
 pub mod spell;
