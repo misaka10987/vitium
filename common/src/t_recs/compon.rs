@@ -1,24 +1,24 @@
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use super::{
     reg::{RegReader, Regis},
     Reg,
 };
 
-pub trait Data: Clone + Send + Sync + Serialize + Deserialize<'static> + 'static {}
+pub trait Data: Clone + Send + Sync + Serialize + DeserializeOwned + 'static {}
 
-impl<T> Data for T where T: Clone + Send + Sync + Serialize + Deserialize<'static> + 'static {}
+impl<T> Data for T where T: Clone + Send + Sync + Serialize + DeserializeOwned + 'static {}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Compon<T: Regis>(pub Reg<T>, pub T::Data);
 
 #[derive(Clone, Copy)]
-pub struct ComponReader<'a, T: Regis> {
+pub struct Cr<'a, T: Regis> {
     pub reg: RegReader<'a, T>,
     pub data: &'a T::Data,
 }
 
-pub struct ComponWriter<'a, T: Regis> {
+pub struct Cw<'a, T: Regis> {
     pub reg: RegReader<'a, T>,
     pub data: &'a mut T::Data,
 }

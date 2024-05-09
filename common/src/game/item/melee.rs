@@ -2,7 +2,11 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{game::DmgType, t_recs::Regis, Dice, Id};
+use crate::{
+    game::DmgType,
+    t_recs::{reg::RegTab, Regis},
+    Dice, Id,
+};
 
 /// Melee weapons.
 #[derive(Clone, Serialize, Deserialize)]
@@ -21,6 +25,12 @@ pub struct Melee {
 
 impl Regis for Melee {
     type Data = (i16,);
+}
+
+impl Default for RegTab<Melee> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
 }
 
 #[cfg(test)]

@@ -1,10 +1,17 @@
 use std::{
     collections::HashMap,
+    error::Error,
     fmt::{write, Display},
+    fs,
     ops::{Deref, DerefMut},
+    path::Path,
 };
 
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{
+    de::{DeserializeOwned, Visitor},
+    Deserialize, Serialize,
+};
+use tracing::trace;
 
 use super::Data;
 
@@ -38,7 +45,7 @@ impl<T: Regis> Deref for RegReader<'_, T> {
 }
 
 #[repr(transparent)]
-pub struct RegTab<T: Regis>(HashMap<Id, T>);
+pub struct RegTab<T: Regis>(pub HashMap<Id, T>);
 
 impl<T: Regis> Deref for RegTab<T> {
     type Target = HashMap<Id, T>;
@@ -66,12 +73,56 @@ impl<T: Regis> RegTab<T> {
         }
     }
 
+    /// Merges another `RegTab` into `self`, returns an iterator for items overridden.
+    pub fn merge(&mut self, other: Self) -> impl Iterator<Item = (Id, T)> + '_ {
+        let RegTab(map) = other;
+        map.into_iter()
+            .filter_map(|(k, v)| self.insert(k.to_owned(), v).map(|v| (k, v)))
+    }
+
+    /// Leaks this `RegTab` to be `'static`, used when loading completed.
     pub fn leak(self) -> &'static Self {
         Box::leak(Box::new(self))
     }
 
+    /// Unsafely drops the `RegTab`, used when the game is no longer needed.
+    /// Be careful to make sure that all its references have already been dropped.
     pub unsafe fn drop(reg: &'static Self) {
-        drop(unsafe { Box::from_raw(reg as *const Self as *mut Self) });
+        drop(Box::from_raw(reg as *const Self as *mut Self));
+    }
+}
+
+impl<T> RegTab<T>
+where
+    T: Regis + DeserializeOwned,
+{
+    /// Loads the registry table from every `.json` file in the specified directory.
+    ///
+    /// Note: it is **underined behaviour** to have multiple registries with the same id.
+    pub fn load(p: impl AsRef<Path>) -> Result<Self, Box<dyn Error>> {
+        let mut tab = RegTab::<T>(HashMap::new());
+        for i in fs::read_dir(p)? {
+            let i = i?;
+            if i.metadata()?.is_file() {
+                if let Some(filename) = i.file_name().to_str() {
+                    if filename.ends_with(".json") {
+                        trace!("loading \"{}\"", filename);
+                        let s = fs::read_to_string(i.path())?;
+                        let part: HashMap<_, _> = serde_json::from_str(&s)?;
+                        tab.extend(part);
+                    }
+                }
+            }
+        }
+        Ok(tab)
+    }
+
+    /// `load` registry table from directory and `.merge` it to `self`
+    pub fn load_more(
+        &mut self,
+        p: impl AsRef<Path>,
+    ) -> Result<impl Iterator<Item = (Id, T)> + '_, Box<dyn Error>> {
+        Ok(self.merge(Self::load(p)?))
     }
 }
 

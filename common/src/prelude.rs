@@ -1,5 +1,4 @@
 pub use crate::dice::Dice;
-pub use crate::t_recs::{ComponReader as Cr, ComponWriter as Cw};
 pub use crate::t_recs::{Id, UId};
 pub use crate::util::{Bottle, Envelop};
 

@@ -3,10 +3,10 @@ use std::collections::{linked_list, BTreeSet, LinkedList};
 use serde::{Deserialize, Serialize};
 
 pub trait Delta {
-    type Pack: Serialize + Deserialize<'static>;
-    fn calc(&mut self) -> &Self::Pack;
-    fn diff(&self) -> &Self::Pack;
-    fn apply(&mut self, delta: Self::Pack);
+    type Item: Serialize + Deserialize<'static>;
+    fn calc(&mut self) -> impl Iterator<Item = Self::Item>;
+    fn diff(&self) -> impl Iterator<Item = Self::Item>;
+    fn apply(&mut self, delta: impl Iterator<Item = Self::Item>);
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -15,7 +15,7 @@ where
     K: Clone + Eq + Ord,
 {
     pub cap: usize,
-    pub data: LinkedList<(K, V)>,
+    data: LinkedList<(K, V)>,
     key: BTreeSet<K>,
 }
 
@@ -24,6 +24,7 @@ pub type PackDeltaList<K, V> = LinkedList<(K, V)>;
 impl<K, V> Extend<(K, V)> for DeltaList<K, V>
 where
     K: Clone + Eq + Ord,
+    V: Clone,
 {
     fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T) {
         for (k, v) in iter {
@@ -48,6 +49,7 @@ where
 impl<K, V> DeltaList<K, V>
 where
     K: Clone + Eq + Ord,
+    V: Clone,
 {
     pub fn new(cap: usize) -> Self {
         Self {
@@ -72,7 +74,7 @@ where
             self.data.push_back((key, value));
         }
     }
-    pub fn pack(&self) -> &PackDeltaList<K, V> {
-        &self.data
+    pub fn pack(&self) -> impl Iterator<Item = (K, V)> + '_ {
+        self.data.iter().cloned()
     }
 }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::t_recs::Regis;
+use crate::t_recs::{reg::RegTab, Regis};
 
 /// Edible item.
 #[derive(Clone, Serialize, Deserialize)]
@@ -15,6 +15,12 @@ pub struct Edible {
 
 impl Regis for Edible {
     type Data = ();
+}
+
+impl Default for RegTab<Edible> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
 }
 
 #[cfg(test)]

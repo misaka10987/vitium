@@ -1,4 +1,4 @@
-use crate::t_recs::Regis;
+use crate::t_recs::{reg::RegTab, Regis};
 use serde::{Deserialize, Serialize};
 
 use super::Item;
@@ -25,6 +25,12 @@ impl Regis for Container {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ContainerData {
     pub inside: Vec<Item>,
+}
+
+impl Default for RegTab<Container> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
 }
 
 #[cfg(test)]
