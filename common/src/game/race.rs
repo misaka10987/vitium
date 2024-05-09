@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::ID;
+use crate::Id;
 
 pub struct Race {
     /// Average height.
@@ -10,7 +10,7 @@ pub struct Race {
     /// Average life, in years.
     pub life: u16,
     /// Martial arts automatically learnt.
-    pub mart: HashMap<ID, i16>,
+    pub mart: HashMap<Id, i16>,
     /// Spells automatically learnt.
-    pub spell: HashSet<ID>,
+    pub spell: HashSet<Id>,
 }

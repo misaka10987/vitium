@@ -23,7 +23,7 @@ mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        let id: ID = obj("\"homo:sapiens\"").unwrap();
-        assert_eq!(id, ID::new("homo", "sapiens"));
+        let id: Id = obj("\"homo:sapiens\"").unwrap();
+        assert_eq!(id, Id::new("homo", "sapiens"));
     }
 }

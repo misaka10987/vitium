@@ -1,5 +1,5 @@
 use super::{level::Level, TypeName};
-use crate::ID;
+use crate::Id;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -8,22 +8,22 @@ use std::{
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Cha {
-    pub reg: Option<ID>,
+    pub reg: Option<Id>,
     pub name: String,
     pub descr: String,
-    pub race: ID,
-    pub prof: ID,
-    pub attr: HashMap<ID, Level>,
-    pub skill: HashMap<ID, Level>,
-    pub mart: HashMap<ID, Level>,
-    pub spell: HashMap<ID, Level>,
+    pub race: Id,
+    pub prof: Id,
+    pub attr: HashMap<Id, Level>,
+    pub skill: HashMap<Id, Level>,
+    pub mart: HashMap<Id, Level>,
+    pub spell: HashMap<Id, Level>,
     // pub invt: Vec<Ox<Item>>,
     // pub equip: Vec<Ox<Armor>>,
     pub money: i32,
 }
 
-impl AsRef<Option<ID>> for Cha {
-    fn as_ref(&self) -> &Option<ID> {
+impl AsRef<Option<Id>> for Cha {
+    fn as_ref(&self) -> &Option<Id> {
         &self.reg
     }
 }
@@ -66,7 +66,7 @@ pub struct Pos {
 mod test {
     use std::collections::HashMap;
 
-    use crate::{test::*, ID};
+    use crate::{test::*, Id};
 
     use super::Cha;
 
@@ -76,8 +76,8 @@ mod test {
                 reg: None,
                 name: "Example Character".to_string(),
                 descr: DEBUG_DESCR.to_string(),
-                race: ID::example(),
-                prof: ID::example(),
+                race: Id::example(),
+                prof: Id::example(),
                 attr: HashMap::new(),
                 skill: HashMap::new(),
                 mart: HashMap::new(),

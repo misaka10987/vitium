@@ -9,8 +9,8 @@ mod test;
 use self::{armor::Armor, container::Container, edible::Edible, melee::Melee, ranged::Ranged};
 
 use crate::{
-    t_recs::{Compon, Entity, Regis},
-    Id,
+    t_recs::{reg::RegTab, store::btree::BTreeStore, Compon, Entity, Regis},
+    with_btree_store, with_reg, Id,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -53,3 +53,31 @@ pub struct BaseItem {
 impl Regis for BaseItem {
     type Data = ();
 }
+
+pub struct ItemStore {
+    r_base: &'static RegTab<BaseItem>,
+    r_armor: &'static RegTab<Armor>,
+    r_container: &'static RegTab<Container>,
+    r_edible: &'static RegTab<Edible>,
+    r_melee: &'static RegTab<Melee>,
+    r_ranged: &'static RegTab<Ranged>,
+    base: BTreeStore<Item>,
+    armor: BTreeStore<Item, Armor>,
+    container: BTreeStore<Item, Container>,
+    edible: BTreeStore<Item, Edible>,
+    melee: BTreeStore<Item, Melee>,
+    ranged: BTreeStore<Item, Ranged>,
+}
+
+with_reg!(ItemStore, r_base, BaseItem);
+with_reg!(ItemStore, r_armor, Armor);
+with_reg!(ItemStore, r_container, Container);
+with_reg!(ItemStore, r_edible, Edible);
+with_reg!(ItemStore, r_melee, Melee);
+with_reg!(ItemStore, r_ranged, Ranged);
+with_btree_store!(ItemStore, base, Item);
+with_btree_store!(ItemStore, armor, Item, Armor);
+with_btree_store!(ItemStore, container, Item, Container);
+with_btree_store!(ItemStore, edible, Item, Edible);
+with_btree_store!(ItemStore, melee, Item, Melee);
+with_btree_store!(ItemStore, ranged, Item, Ranged);

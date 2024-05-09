@@ -1,4 +1,4 @@
-use crate::{DEBUG_DESCR, ID, UID};
+use crate::{DEBUG_DESCR, Id, UId};
 use serde::{Deserialize, Serialize};
 
 use super::{item::Item, Obj, Target};
@@ -32,7 +32,7 @@ pub enum Action {
 pub enum SyncAction {
     Atk(Obj),
     Shoot(Obj),
-    Cast(ID, Target),
+    Cast(Id, Target),
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -40,7 +40,7 @@ pub enum UnsyncAction {
     Move((f32, f32)),
     Travel(usize),
     Speak(Bubble),
-    Consume(UID<Item>),
+    Consume(UId<Item>),
     Relax(usize),
 }
 

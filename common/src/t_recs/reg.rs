@@ -160,6 +160,17 @@ impl Id {
     }
 }
 
+#[macro_export]
+macro_rules! with_reg {
+    ($t:ty,$f:ident,$c:ty) => {
+        impl std::convert::AsRef<&'static $crate::t_recs::reg::RegTab<$c>> for $t {
+            fn as_ref(&self) -> &&'static $crate::t_recs::reg::RegTab<$c> {
+                &self.$f
+            }
+        }
+    };
+}
+
 #[cfg(test)]
 mod test {
     use super::Id;

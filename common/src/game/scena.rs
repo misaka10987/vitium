@@ -2,15 +2,15 @@ use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::ID;
+use crate::Id;
 
-use super::PC;
+use super::{item::ItemStore, PC};
 
 /// A 1m*1m block with vertical height of 3m.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Block {
     /// Terrain in this block.
-    pub terra: ID,
+    pub terra: Id,
 }
 
 /// A 16*16-blocked chunk, used for lazy loading of the map.
@@ -30,8 +30,5 @@ pub struct Scena {
     pub chunk: BTreeMap<(i16, i16), Chunk>,
     /// Player characters.
     pub pc: HashMap<String, PC>,
-    // /// Non-player characters.
-    // pub npc: Tab<Cha>,
-    // /// Items.
-    // pub item: Tab<Item>,
+    pub item: ItemStore,
 }

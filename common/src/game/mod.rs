@@ -17,7 +17,7 @@ pub mod vehicle;
 
 use serde::{Deserialize, Serialize};
 
-use crate::UID;
+use crate::UId;
 
 pub use self::prelude::*;
 
@@ -25,11 +25,11 @@ use std::{collections::HashSet, fmt::Display};
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Obj {
-    Item(UID<Item>),
-    Char(UID<Cha>),
-    PC(UID<PC>),
+    Item(UId<Item>),
+    Char(UId<Cha>),
+    PC(UId<PC>),
     Scena(usize),
-    Vehicle(UID<Vehicle>),
+    Vehicle(UId<Vehicle>),
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]

@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 
 pub trait Delta {
     type Pack: Serialize + Deserialize<'static>;
-    fn calc(&mut self) -> impl Iterator<Item =& Self::Pack>;
-    fn diff(&self) -> impl Iterator<Item = &Self::Pack>;
-    fn apply(&mut self, delta: impl Iterator<Item = Self::Pack>);
+    fn calc(&mut self) -> &Self::Pack;
+    fn diff(&self) -> &Self::Pack;
+    fn apply(&mut self, delta: Self::Pack);
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -24,7 +24,6 @@ pub type PackDeltaList<K, V> = LinkedList<(K, V)>;
 impl<K, V> Extend<(K, V)> for DeltaList<K, V>
 where
     K: Clone + Eq + Ord,
-    V: Clone,
 {
     fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T) {
         for (k, v) in iter {
@@ -49,7 +48,6 @@ where
 impl<K, V> DeltaList<K, V>
 where
     K: Clone + Eq + Ord,
-    V: Clone,
 {
     pub fn new(cap: usize) -> Self {
         Self {
@@ -74,7 +72,7 @@ where
             self.data.push_back((key, value));
         }
     }
-    pub fn pack(&self) -> PackDeltaList<K, V> {
-        self.data.clone()
+    pub fn pack(&self) -> &PackDeltaList<K, V> {
+        &self.data
     }
 }
