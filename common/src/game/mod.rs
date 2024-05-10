@@ -4,6 +4,7 @@ pub mod error;
 pub mod fight;
 pub mod item;
 pub mod level;
+pub mod map;
 pub mod mart;
 pub mod mat;
 pub mod prelude;

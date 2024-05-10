@@ -3,7 +3,7 @@ use crate::Id;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
-    ops::Deref,
+    ops::{Deref, DerefMut},
 };
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -11,6 +11,7 @@ pub struct Cha {
     pub reg: Option<Id>,
     pub name: String,
     pub descr: String,
+    pub pos: Pos,
     pub race: Id,
     pub prof: Id,
     pub attr: HashMap<Id, Level>,
@@ -33,7 +34,7 @@ pub struct PC {
     pub player: String,
     pub story: String,
     pub mods: HashSet<String>,
-    pub cha: Cha,
+    cha: Cha,
 }
 
 impl TypeName for PC {
@@ -47,6 +48,12 @@ impl Deref for PC {
 
     fn deref(&self) -> &Self::Target {
         &self.cha
+    }
+}
+
+impl DerefMut for PC {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.cha
     }
 }
 
@@ -66,9 +73,18 @@ pub struct Pos {
 mod test {
     use std::collections::HashMap;
 
-    use crate::{test::*, Id};
+    use crate::{game::cha::Pos, test::*, Id};
 
     use super::Cha;
+
+    impl Example for Pos {
+        fn examples() -> Vec<Self> {
+            vec![Self {
+                scena: 114514,
+                coord: (114.514, 1919.810),
+            }]
+        }
+    }
 
     impl Example for Cha {
         fn examples() -> Vec<Self> {
@@ -76,6 +92,7 @@ mod test {
                 reg: None,
                 name: "Example Character".to_string(),
                 descr: DEBUG_DESCR.to_string(),
+                pos: Pos::example(),
                 race: Id::example(),
                 prof: Id::example(),
                 attr: HashMap::new(),

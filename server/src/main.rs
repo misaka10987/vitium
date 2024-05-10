@@ -4,7 +4,7 @@ use clap::Parser;
 use server::Server;
 use tracing::{info, Level};
 
-use crate::server::ServerConfig;
+use crate::{input::input, server::ServerConfig};
 
 /// Dice implementation using `ndm`.
 pub mod dice;
@@ -30,6 +30,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let arg = Args::parse();
     info!("running with {:?}", arg);
     let cfg = ServerConfig::try_load(Path::new("./config.toml")).await;
+    let input = input();
     Server::with_cfg(cfg).run().await?;
+    input.send(()).expect("failed to shutdown input thread");
     Ok(())
 }

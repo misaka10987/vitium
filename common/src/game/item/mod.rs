@@ -14,7 +14,7 @@ use crate::{
     with_btree_store, with_reg, Id, UId,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, error::Error, path::Path};
+use std::{collections::HashSet, error::Error, path::Path, sync::Arc};
 use tracing::debug;
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -57,12 +57,12 @@ impl Regis for BaseItem {
 }
 
 pub struct ItemStore {
-    r_base: &'static RegTab<BaseItem>,
-    r_armor: &'static RegTab<Armor>,
-    r_container: &'static RegTab<Container>,
-    r_edible: &'static RegTab<Edible>,
-    r_melee: &'static RegTab<Melee>,
-    r_ranged: &'static RegTab<Ranged>,
+    r_base: Arc<RegTab<BaseItem>>,
+    r_armor: Arc<RegTab<Armor>>,
+    r_container: Arc<RegTab<Container>>,
+    r_edible: Arc<RegTab<Edible>>,
+    r_melee: Arc<RegTab<Melee>>,
+    r_ranged: Arc<RegTab<Ranged>>,
     base: BTreeStore<Item>,
     armor: BTreeStore<Item, Armor>,
     container: BTreeStore<Item, Container>,
@@ -143,36 +143,6 @@ pub struct PackItemStore {
     pub ranged: Pack<Ranged>,
 }
 
-#[derive(Clone, Copy)]
-pub struct ItemReg {
-    pub base: &'static RegTab<BaseItem>,
-    pub armor: &'static RegTab<Armor>,
-    pub container: &'static RegTab<Container>,
-    pub edible: &'static RegTab<Edible>,
-    pub melee: &'static RegTab<Melee>,
-    pub ranged: &'static RegTab<Ranged>,
-}
-
-impl ItemReg {
-    /// Unsafely drops the whole `ItemReg`.
-    pub unsafe fn drop(&self) {
-        let ItemReg {
-            base,
-            armor,
-            container,
-            edible,
-            melee,
-            ranged,
-        } = self;
-        RegTab::drop(base);
-        RegTab::drop(armor);
-        RegTab::drop(container);
-        RegTab::drop(edible);
-        RegTab::drop(melee);
-        RegTab::drop(ranged);
-    }
-}
-
 with_reg!(ItemReg, base, BaseItem);
 with_reg!(ItemReg, armor, Armor);
 with_reg!(ItemReg, container, Container);
@@ -180,7 +150,7 @@ with_reg!(ItemReg, edible, Edible);
 with_reg!(ItemReg, melee, Melee);
 with_reg!(ItemReg, ranged, Ranged);
 
-pub struct ItemRegLoader {
+pub struct ItemReg {
     base: RegTab<BaseItem>,
     armor: RegTab<Armor>,
     container: RegTab<Container>,
@@ -189,7 +159,7 @@ pub struct ItemRegLoader {
     ranged: RegTab<Ranged>,
 }
 
-impl Default for ItemRegLoader {
+impl Default for ItemReg {
     fn default() -> Self {
         Self {
             base: Default::default(),
@@ -202,7 +172,7 @@ impl Default for ItemRegLoader {
     }
 }
 
-impl ItemRegLoader {
+impl ItemReg {
     /// Create item registry **without** builtins.
     pub fn new() -> Self {
         Self {
@@ -256,17 +226,6 @@ impl ItemRegLoader {
             println!("module {} overrides reg[id={}]", modname, id);
         }
         Ok(self)
-    }
-
-    pub fn leak(self) -> ItemReg {
-        ItemReg {
-            base: self.base.leak(),
-            armor: self.armor.leak(),
-            container: self.container.leak(),
-            edible: self.edible.leak(),
-            melee: self.melee.leak(),
-            ranged: self.ranged.leak(),
-        }
     }
 }
 

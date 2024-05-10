@@ -1,17 +1,17 @@
 use std::{
-    borrow::Cow,
     collections::{HashMap, HashSet},
     path::PathBuf,
-    sync::Arc,
 };
 
-use axum::http::header::CONNECTION;
+use tokio::sync::RwLock;
 use vitium_common::game::GameStat;
 
-use self::{slave::Slave};
-
+pub mod prelude;
+pub mod proc;
 pub mod reg;
 pub mod slave;
+
+pub use self::prelude::*;
 
 // use axum::http::StatusCode;
 // use tokio::sync::oneshot::Sender;
@@ -30,7 +30,7 @@ pub struct Game {
     /// Current game status.
     pub stat: GameStat,
     // reg: GameReg,
-    slave: HashMap<usize, Slave>,
+    slave: HashMap<usize, RwLock<Slave>>,
 }
 
 impl Game {
@@ -50,11 +50,11 @@ impl Game {
             slave: HashMap::new(),
         }
     }
+    // /// Process an act submitted.
+    // pub async fn proc(act: Act, pc: String) -> Receiver<StatusCode> {
+    //     let _ = (act, pc);
+    //     let (s, r) = oneshot::channel();
+    //     s.send(StatusCode::NOT_IMPLEMENTED).unwrap();
+    //     r
+    // }
 }
-
-// fn f(x: &'static String) {}
-
-// fn g(){
-//     let y=Arc::new(String::new());
-//     f(&y);
-// }

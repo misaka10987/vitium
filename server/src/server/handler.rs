@@ -10,7 +10,7 @@ use vitium_common::{
     error::UnimplError,
     game::{GameStat, PC},
     player::Player,
-    req::{self, Chat},
+    req::{self, Action, Chat},
 };
 
 use super::Server;
@@ -25,6 +25,10 @@ pub async fn get_root(State(s): State<Server>) -> Redirect {
 /// A handler always returns `Hello, world!\n`.
 pub async fn hello() -> &'static str {
     "Hello, World!\n"
+}
+
+pub async fn deny() -> Result<(), StatusCode> {
+    Err(StatusCode::FORBIDDEN)
 }
 
 pub async fn recv_chat(State(s): State<Server>) -> (StatusCode, Json<VecDeque<(String, Chat)>>) {
@@ -128,16 +132,17 @@ pub async fn edit_pc(
 pub async fn act(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::Act>,
+    Json(req): Json<(String, Action)>,
 ) -> StatusCode {
     if let Some(name) = s.auth(&head).await {
-        if let Some(c) = s.pc.read().await.get(&req.cha) {
+        let (pc, _) = req;
+        if let Some(c) = s.pc.read().await.get(&pc) {
             if c.player == name {
                 let _ = s.game;
                 todo!()
             } else {
                 // the request has a token but not matches the character it operates on
-                StatusCode::UNAUTHORIZED
+                StatusCode::FORBIDDEN
             }
         } else {
             // trying to request act on a non-exist character

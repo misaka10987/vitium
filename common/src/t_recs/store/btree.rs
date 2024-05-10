@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     delta::{Delta, DeltaList},
@@ -55,7 +55,7 @@ where
 impl<E, T> Delta for BTreeStore<E, T>
 where
     E: Entity,
-    T: Clone + Serialize + Deserialize<'static> + Regis,
+    T: Clone + Serialize + DeserializeOwned + Regis,
 {
     type Item = (UId<E>, Option<Compon<T>>);
 

@@ -103,6 +103,7 @@ impl Server {
             .expect("failed to bind TCP listener");
         // initialize router
         let app = Router::new()
+            .route("/test", any(handler::deny))
             .route("/hello", get(handler::hello))
             .route("/game", get(handler::list_game))
             .route("/game/:name", get(handler::get_game))
@@ -113,8 +114,8 @@ impl Server {
             .route("/pswd", post(handler::edit_pswd))
             .route("/player", post(handler::edit_player))
             .route("/chara", post(handler::edit_pc))
-            .route("/act", post(handler::act))
-            .route("/sync", get(handler::sync))
+            .route("/act/:name", post(handler::act))
+            .route("/sync/:name", get(handler::sync))
             .route("/cmd", post(handler::cmd));
         let app = Router::new()
             .nest("/api", app)

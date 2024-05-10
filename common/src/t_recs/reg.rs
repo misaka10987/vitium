@@ -28,12 +28,12 @@ pub enum Reg<T> {
 /// A smart pointer that allows reading registry information
 /// regardless of whether it has been registered.
 #[derive(Clone, Copy)]
-pub struct RegReader<'a, T: Regis> {
-    tab: &'static RegTab<T>,
-    reg: &'a Reg<T>,
+pub struct RegReader<'a, 'b, T: Regis> {
+    tab: &'a RegTab<T>,
+    reg: &'b Reg<T>,
 }
 
-impl<T: Regis> Deref for RegReader<'_, T> {
+impl<T: Regis> Deref for RegReader<'_, '_, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -66,7 +66,7 @@ impl<T: Regis> RegTab<T> {
         Self(HashMap::new())
     }
 
-    pub fn read<'a>(&'static self, maybe_reg: &'a Reg<T>) -> RegReader<'a, T> {
+    pub fn read<'a, 'b>(&'a self, maybe_reg: &'b Reg<T>) -> RegReader<'a, 'b, T> {
         RegReader {
             tab: self,
             reg: maybe_reg,
@@ -78,17 +78,6 @@ impl<T: Regis> RegTab<T> {
         let RegTab(map) = other;
         map.into_iter()
             .filter_map(|(k, v)| self.insert(k.to_owned(), v).map(|v| (k, v)))
-    }
-
-    /// Leaks this `RegTab` to be `'static`, used when loading completed.
-    pub fn leak(self) -> &'static Self {
-        Box::leak(Box::new(self))
-    }
-
-    /// Unsafely drops the `RegTab`, used when the game is no longer needed.
-    /// Be careful to make sure that all its references have already been dropped.
-    pub unsafe fn drop(reg: &'static Self) {
-        drop(Box::from_raw(reg as *const Self as *mut Self));
     }
 }
 
@@ -214,8 +203,8 @@ impl Id {
 #[macro_export]
 macro_rules! with_reg {
     ($t:ty,$f:ident,$c:ty) => {
-        impl std::convert::AsRef<&'static $crate::t_recs::reg::RegTab<$c>> for $t {
-            fn as_ref(&self) -> &&'static $crate::t_recs::reg::RegTab<$c> {
+        impl std::convert::AsRef<$crate::t_recs::reg::RegTab<$c>> for $t {
+            fn as_ref(&self) -> &$crate::t_recs::reg::RegTab<$c> {
                 &self.$f
             }
         }

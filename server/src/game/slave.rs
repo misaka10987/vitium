@@ -1,6 +1,7 @@
-use tokio::sync::RwLock;
+pub mod walk;
+
 use vitium_common::game::Scena;
 
 pub struct Slave {
-    pub scena: RwLock<Scena>,
+    pub scena: Scena,
 }

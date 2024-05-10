@@ -13,13 +13,13 @@ impl<T> Data for T where T: Clone + Send + Sync + Serialize + DeserializeOwned +
 pub struct Compon<T: Regis>(pub Reg<T>, pub T::Data);
 
 #[derive(Clone, Copy)]
-pub struct Cr<'a, T: Regis> {
-    pub reg: RegReader<'a, T>,
+pub struct Cr<'a, 'b, T: Regis> {
+    pub reg: RegReader<'a, 'b, T>,
     pub data: &'a T::Data,
 }
 
-pub struct Cw<'a, T: Regis> {
-    pub reg: RegReader<'a, T>,
+pub struct Cw<'a, 'b, T: Regis> {
+    pub reg: RegReader<'a, 'b, T>,
     pub data: &'a mut T::Data,
 }
 

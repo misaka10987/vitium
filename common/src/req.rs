@@ -1,4 +1,4 @@
-pub use crate::{cmd::Cmd, game::Act};
+pub use crate::{cmd::Cmd, game::Action};
 use crate::{game::PC, player::Player};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -90,7 +90,7 @@ pub enum Req {
     /// Change password.
     EditPswd(EditPswd),
     /// Submit in-game action.
-    Act(Act),
+    Act(String, Action),
     /// Issue server command.
     Cmd(Cmd),
 }
@@ -106,7 +106,7 @@ impl Req {
             Req::SendChat(_) => "POST /chat",
             Req::EditPlayer(_) => "POST player",
             Req::EditChara(_) => "POST chara",
-            Req::Act(_) => "POST /act",
+            Req::Act(_, _) => "POST /act",
             Req::Cmd(_) => "POST /cmd",
             Req::EditPswd(_) => "POST /pswd",
         }
