@@ -15,13 +15,32 @@ use tracing::trace;
 
 use super::Data;
 
+/// A type that can be registered.
 pub trait Regis: 'static {
+    /// The mutating data which this registery constraints.
     type Data: Data;
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[macro_export]
+/// Automatically generate `impl Regis` for the specified type.
+/// `type Data=();` if no `Data` type is specified.
+macro_rules! regis {
+    ($r:ty) => {
+        regis!($r, ());
+    };
+    ($r:ty,$d:ty) => {
+        impl $crate::t_recs::reg::Regis for $r {
+            type Data = $d;
+        }
+    };
+}
+
+/// Representing registry information for a specific type `T`.
+#[derive(Clone, Hash, Serialize, Deserialize)]
 pub enum Reg<T> {
+    /// Representing an already registered `Id`.
     Id(Id),
+    /// Representing custom registries.
     Custom(Box<T>),
 }
 
@@ -62,10 +81,12 @@ impl<T: Regis> DerefMut for RegTab<T> {
 }
 
 impl<T: Regis> RegTab<T> {
+    /// Creates an empty instance.
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
+    /// Reads the referenced `Reg`, returns a smart pointer.
     pub fn read<'a, 'b>(&'a self, maybe_reg: &'b Reg<T>) -> RegReader<'a, 'b, T> {
         RegReader {
             tab: self,

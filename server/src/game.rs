@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
+    sync::Mutex,
 };
 
 use tokio::sync::RwLock;
@@ -29,8 +30,9 @@ pub struct Game {
     pub dir: PathBuf,
     /// Current game status.
     pub stat: GameStat,
+    pub pc_stat: HashMap<String, (usize, u64)>,
     // reg: GameReg,
-    slave: HashMap<usize, RwLock<Slave>>,
+    slave: HashMap<usize, Mutex<Slave>>,
 }
 
 impl Game {
@@ -46,6 +48,7 @@ impl Game {
                 host: String::new(),
                 modlist: HashSet::new(),
             },
+            pc_stat: HashMap::new(),
             // reg: todo!(),
             slave: HashMap::new(),
         }

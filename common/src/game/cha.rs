@@ -1,5 +1,5 @@
-use super::{level::Level, TypeName};
-use crate::Id;
+use super::level::Level;
+use crate::{typename, Id};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -23,6 +23,8 @@ pub struct Cha {
     pub money: i32,
 }
 
+typename!(Cha, "Character");
+
 impl AsRef<Option<Id>> for Cha {
     fn as_ref(&self) -> &Option<Id> {
         &self.reg
@@ -36,12 +38,7 @@ pub struct PC {
     pub mods: HashSet<String>,
     cha: Cha,
 }
-
-impl TypeName for PC {
-    fn typename() -> impl std::fmt::Display {
-        "PlayerCharacter"
-    }
-}
+typename!(PC, "PlayerCharacter");
 
 impl Deref for PC {
     type Target = Cha;

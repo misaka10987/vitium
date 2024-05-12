@@ -5,9 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::UId;
-
-use super::TypeName;
+use crate::{TypeName, UId};
 
 /// Error representing a UId with specific type currently does not exist.
 #[derive(Clone, Copy, Serialize, Deserialize)]

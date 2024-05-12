@@ -1,4 +1,5 @@
 use std::{
+    cell::{Ref, RefCell, RefMut},
     collections::BTreeMap,
     error::Error,
     fs::File,
@@ -105,17 +106,38 @@ impl MapProvider {
 
 pub struct Map {
     provider: MapProvider,
-    chunk: BTreeMap<(i16, i16), Chunk>,
+    chunk: RefCell<BTreeMap<(i16, i16), Chunk>>,
 }
 
 impl Map {
-    pub fn chunk(&mut self, x: i16, y: i16) -> &mut Chunk {
-        if !self.chunk.contains_key(&(x, y)) {
-            self.chunk.insert((x, y), self.provider.load(x, y));
+    pub fn chunk(&self, x: i16, y: i16) -> Ref<Chunk> {
+        let c = self.chunk.borrow();
+        if c.contains_key(&(x, y)) {
+            return Ref::map(c, |c| c.get(&(x, y)).unwrap());
         }
-        self.chunk.get_mut(&(x, y)).unwrap()
+        let loaded = self.provider.load(x, y);
+        self.chunk.borrow_mut().insert((x, y), loaded);
+        let c = self.chunk.borrow();
+        Ref::map(c, |c| c.get(&(x, y)).unwrap())
     }
-    pub fn block(&mut self, x: i16, y: i16) -> &mut Block {
-        &mut self.chunk(x / 16, y / 16).block[(x % 16) as usize][(y % 16) as usize]
+    pub fn chunk_mut(&mut self, x: i16, y: i16) -> RefMut<Chunk> {
+        let c = self.chunk.borrow_mut();
+        if c.contains_key(&(x, y)) {
+            return RefMut::map(c, |c| c.get_mut(&(x, y)).unwrap());
+        }
+        let loaded = self.provider.load(x, y);
+        let mut c = self.chunk.borrow_mut();
+        c.insert((x, y), loaded);
+        RefMut::map(c, |c| c.get_mut(&(x, y)).unwrap())
+    }
+    pub fn block(&self, x: i16, y: i16) -> Ref<Block> {
+        Ref::map(self.chunk(x / 16, y / 16), |c| {
+            &c.block[(x % 16) as usize][(y % 16) as usize]
+        })
+    }
+    pub fn block_mut(&mut self, x: i16, y: i16) -> RefMut<Block> {
+        RefMut::map(self.chunk_mut(x / 16, y / 16), |c| {
+            &mut c.block[(x % 16) as usize][(y % 16) as usize]
+        })
     }
 }

@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::Id;
+use crate::{regis, typename, Id};
 
 pub struct Race {
     /// Average height.
@@ -14,3 +14,5 @@ pub struct Race {
     /// Spells automatically learnt.
     pub spell: HashSet<Id>,
 }
+typename!(Race, "Race");
+regis!(Race);

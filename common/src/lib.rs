@@ -12,6 +12,7 @@ pub mod res;
 pub mod t_recs;
 #[cfg(test)]
 mod test;
+pub mod typename;
 pub mod util;
 
 pub use crate::prelude::*;

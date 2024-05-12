@@ -10,6 +10,7 @@ pub mod mat;
 pub mod prelude;
 pub mod prof;
 pub mod race;
+pub mod reg;
 pub mod scena;
 pub mod skill;
 pub mod spell;
@@ -37,10 +38,6 @@ pub enum Obj {
 pub enum Target {
     Entity(Obj),
     Pos(i16, i16),
-}
-
-pub trait TypeName {
-    fn typename() -> impl Display;
 }
 
 /// Refers to the current game status.

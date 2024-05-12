@@ -10,12 +10,13 @@ use self::{armor::Armor, container::Container, edible::Edible, melee::Melee, ran
 
 use crate::{
     delta::Delta,
-    t_recs::{reg::RegTab, store::btree::BTreeStore, Compon, Entity, Regis},
+    regis,
+    t_recs::{reg::RegTab, store::btree::BTreeStore, Compon, Entity},
     with_btree_store, with_reg, Id, UId,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, error::Error, path::Path, sync::Arc};
-use tracing::debug;
+use tracing::{debug, trace};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Item {
@@ -52,17 +53,10 @@ pub struct BaseItem {
     pub flag: HashSet<Id>,
 }
 
-impl Regis for BaseItem {
-    type Data = ();
-}
+regis!(BaseItem);
 
 pub struct ItemStore {
-    r_base: Arc<RegTab<BaseItem>>,
-    r_armor: Arc<RegTab<Armor>>,
-    r_container: Arc<RegTab<Container>>,
-    r_edible: Arc<RegTab<Edible>>,
-    r_melee: Arc<RegTab<Melee>>,
-    r_ranged: Arc<RegTab<Ranged>>,
+    reg: Arc<ItemReg>,
     base: BTreeStore<Item>,
     armor: BTreeStore<Item, Armor>,
     container: BTreeStore<Item, Container>,
@@ -71,12 +65,42 @@ pub struct ItemStore {
     ranged: BTreeStore<Item, Ranged>,
 }
 
-with_reg!(ItemStore, r_base, BaseItem);
-with_reg!(ItemStore, r_armor, Armor);
-with_reg!(ItemStore, r_container, Container);
-with_reg!(ItemStore, r_edible, Edible);
-with_reg!(ItemStore, r_melee, Melee);
-with_reg!(ItemStore, r_ranged, Ranged);
+impl AsRef<RegTab<BaseItem>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<BaseItem> {
+        &self.reg.base
+    }
+}
+
+impl AsRef<RegTab<Armor>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Armor> {
+        &self.reg.armor
+    }
+}
+
+impl AsRef<RegTab<Container>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Container> {
+        &self.reg.container
+    }
+}
+
+impl AsRef<RegTab<Edible>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Edible> {
+        &self.reg.edible
+    }
+}
+
+impl AsRef<RegTab<Melee>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Melee> {
+        &self.reg.melee
+    }
+}
+
+impl AsRef<RegTab<Ranged>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Ranged> {
+        &self.reg.ranged
+    }
+}
+
 with_btree_store!(ItemStore, base, Item);
 with_btree_store!(ItemStore, armor, Item, Armor);
 with_btree_store!(ItemStore, container, Item, Container);
@@ -203,9 +227,9 @@ impl ItemReg {
             .chain(ranged.merge(other.ranged).map(|x| omit(x)))
     }
 
-    pub fn load(path2mod: impl AsRef<Path>, modname: &str) -> Result<Self, Box<dyn Error>> {
-        let p = path2mod.as_ref().join("reg/item");
-        debug!("loading `Item` registries from {}", modname);
+    pub fn load(path2reg: impl AsRef<Path>) -> Result<Self, Box<dyn Error>> {
+        let p = path2reg.as_ref().join("item");
+        debug!("loading `Item` registries from {}", p.display());
         Ok(Self {
             base: RegTab::load(p.join("base"))?,
             armor: RegTab::load(p.join("armor"))?,
@@ -216,14 +240,14 @@ impl ItemReg {
         })
     }
 
-    pub fn load_more(
-        &mut self,
-        path2mod: impl AsRef<Path>,
-        modname: &str,
-    ) -> Result<&mut Self, Box<dyn Error>> {
-        let more = Self::load(&path2mod, modname)?;
+    pub fn load_more(&mut self, path2reg: impl AsRef<Path>) -> Result<&mut Self, Box<dyn Error>> {
+        let more = Self::load(&path2reg)?;
         for id in self.merge(more) {
-            println!("module {} overrides reg[id={}]", modname, id);
+            trace!(
+                "in {}: reg[id={}] overridden",
+                path2reg.as_ref().join("item").display(),
+                id
+            );
         }
         Ok(self)
     }

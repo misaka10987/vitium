@@ -1,4 +1,4 @@
-use crate::Id;
+use crate::{regis, typename, Id};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -18,3 +18,5 @@ pub struct Prof {
     /// Initial items given by this profession.
     pub item: Vec<Id>,
 }
+typename!(Prof, "Profession");
+regis!(Prof);
