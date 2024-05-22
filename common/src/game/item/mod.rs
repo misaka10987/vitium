@@ -9,11 +9,14 @@ mod test;
 use self::{armor::Armor, container::Container, edible::Edible, melee::Melee, ranged::Ranged};
 
 use crate::{
-    t_recs::{Compon, Entity, Regis},
-    Id,
+    delta::Delta,
+    regis,
+    t_recs::{reg::RegTab, store::btree::BTreeStore, Compon, Entity},
+    with_btree_store, with_reg, Id, UId,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::{collections::HashSet, error::Error, path::Path, sync::Arc};
+use tracing::{debug, trace};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Item {
@@ -50,6 +53,212 @@ pub struct BaseItem {
     pub flag: HashSet<Id>,
 }
 
-impl Regis for BaseItem {
-    type Data = ();
+regis!(BaseItem);
+
+pub struct ItemStore {
+    reg: Arc<ItemReg>,
+    base: BTreeStore<Item>,
+    armor: BTreeStore<Item, Armor>,
+    container: BTreeStore<Item, Container>,
+    edible: BTreeStore<Item, Edible>,
+    melee: BTreeStore<Item, Melee>,
+    ranged: BTreeStore<Item, Ranged>,
+}
+
+impl AsRef<RegTab<BaseItem>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<BaseItem> {
+        &self.reg.base
+    }
+}
+
+impl AsRef<RegTab<Armor>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Armor> {
+        &self.reg.armor
+    }
+}
+
+impl AsRef<RegTab<Container>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Container> {
+        &self.reg.container
+    }
+}
+
+impl AsRef<RegTab<Edible>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Edible> {
+        &self.reg.edible
+    }
+}
+
+impl AsRef<RegTab<Melee>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Melee> {
+        &self.reg.melee
+    }
+}
+
+impl AsRef<RegTab<Ranged>> for ItemStore {
+    fn as_ref(&self) -> &RegTab<Ranged> {
+        &self.reg.ranged
+    }
+}
+
+with_btree_store!(ItemStore, base, Item);
+with_btree_store!(ItemStore, armor, Item, Armor);
+with_btree_store!(ItemStore, container, Item, Container);
+with_btree_store!(ItemStore, edible, Item, Edible);
+with_btree_store!(ItemStore, melee, Item, Melee);
+with_btree_store!(ItemStore, ranged, Item, Ranged);
+
+impl Delta for ItemStore {
+    type Item = PackItemStore;
+
+    fn calc(&mut self) -> impl Iterator<Item = Self::Item> {
+        [PackItemStore {
+            base: self.base.calc().collect(),
+            armor: self.armor.calc().collect(),
+            container: self.container.calc().collect(),
+            edible: self.edible.calc().collect(),
+            melee: self.melee.calc().collect(),
+            ranged: self.ranged.calc().collect(),
+        }]
+        .into_iter()
+    }
+
+    fn diff(&self) -> impl Iterator<Item = Self::Item> {
+        [PackItemStore {
+            base: self.base.diff().collect(),
+            armor: self.armor.diff().collect(),
+            container: self.container.diff().collect(),
+            edible: self.edible.diff().collect(),
+            melee: self.melee.diff().collect(),
+            ranged: self.ranged.diff().collect(),
+        }]
+        .into_iter()
+    }
+
+    fn apply(&mut self, delta: impl Iterator<Item = Self::Item>) {
+        for i in delta {
+            let PackItemStore {
+                base,
+                armor,
+                container,
+                edible,
+                melee,
+                ranged,
+            } = i;
+            self.base.apply(base.into_iter());
+            self.armor.apply(armor.into_iter());
+            self.container.apply(container.into_iter());
+            self.edible.apply(edible.into_iter());
+            self.melee.apply(melee.into_iter());
+            self.ranged.apply(ranged.into_iter());
+        }
+    }
+}
+
+type Pack<T> = Vec<(UId<Item>, Option<Compon<T>>)>;
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct PackItemStore {
+    pub base: Pack<BaseItem>,
+    pub armor: Pack<Armor>,
+    pub container: Pack<Container>,
+    pub edible: Pack<Edible>,
+    pub melee: Pack<Melee>,
+    pub ranged: Pack<Ranged>,
+}
+
+with_reg!(ItemReg, base, BaseItem);
+with_reg!(ItemReg, armor, Armor);
+with_reg!(ItemReg, container, Container);
+with_reg!(ItemReg, edible, Edible);
+with_reg!(ItemReg, melee, Melee);
+with_reg!(ItemReg, ranged, Ranged);
+
+pub struct ItemReg {
+    base: RegTab<BaseItem>,
+    armor: RegTab<Armor>,
+    container: RegTab<Container>,
+    edible: RegTab<Edible>,
+    melee: RegTab<Melee>,
+    ranged: RegTab<Ranged>,
+}
+
+impl Default for ItemReg {
+    fn default() -> Self {
+        Self {
+            base: Default::default(),
+            armor: Default::default(),
+            container: Default::default(),
+            edible: Default::default(),
+            melee: Default::default(),
+            ranged: Default::default(),
+        }
+    }
+}
+
+impl ItemReg {
+    /// Create item registry **without** builtins.
+    pub fn new() -> Self {
+        Self {
+            base: RegTab::new(),
+            armor: RegTab::new(),
+            container: RegTab::new(),
+            edible: RegTab::new(),
+            melee: RegTab::new(),
+            ranged: RegTab::new(),
+        }
+    }
+
+    pub fn merge(&mut self, other: Self) -> impl Iterator<Item = Id> + '_ {
+        let Self {
+            base,
+            armor,
+            container,
+            edible,
+            melee,
+            ranged,
+        } = self;
+        base.merge(other.base)
+            .map(|x| omit(x))
+            .chain(armor.merge(other.armor).map(|x| omit(x)))
+            .chain(container.merge(other.container).map(|x| omit(x)))
+            .chain(edible.merge(other.edible).map(|x| omit(x)))
+            .chain(melee.merge(other.melee).map(|x| omit(x)))
+            .chain(ranged.merge(other.ranged).map(|x| omit(x)))
+    }
+
+    pub fn load(path2reg: impl AsRef<Path>) -> Result<Self, Box<dyn Error>> {
+        let p = path2reg.as_ref().join("item");
+        debug!("loading `Item` registries from {}", p.display());
+        Ok(Self {
+            base: RegTab::load(p.join("base"))?,
+            armor: RegTab::load(p.join("armor"))?,
+            container: RegTab::load(p.join("container"))?,
+            edible: RegTab::load(p.join("edible"))?,
+            melee: RegTab::load(p.join("melee"))?,
+            ranged: RegTab::load(p.join("ranged"))?,
+        })
+    }
+
+    pub fn load_more(&mut self, path2reg: impl AsRef<Path>) -> Result<&mut Self, Box<dyn Error>> {
+        let more = Self::load(&path2reg)?;
+        for id in self.merge(more) {
+            trace!(
+                "in {}: reg[id={}] overridden",
+                path2reg.as_ref().join("item").display(),
+                id
+            );
+        }
+        Ok(self)
+    }
+}
+
+fn omit<T>(x: (Id, T)) -> Id {
+    x.0
+}
+
+impl Default for RegTab<BaseItem> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
 }

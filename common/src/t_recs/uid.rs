@@ -6,7 +6,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::game::TypeName;
+use crate::typename::TypeName;
 
 /// A pointer-wide unique id for a specified type `T`.
 ///
@@ -81,7 +81,7 @@ impl<T> Hash for UId<T> {
 
 impl<T: TypeName> Display for UId<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "<{}>[uid={:#x}]", T::typename(), self.value)
+        write!(f, "<{}>[uid={:#x}]", T::TYPENAME, self.value)
     }
 }
 

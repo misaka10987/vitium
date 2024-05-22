@@ -2,7 +2,10 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{t_recs::Regis, Dice, Id};
+use crate::{
+    t_recs::{reg::RegTab, Regis},
+    Dice, Id,
+};
 
 /// Instance of armor.
 #[derive(Clone, Serialize, Deserialize)]
@@ -41,6 +44,12 @@ pub enum Species {
     NonHuman,
     /// Let host decide if able to wear.
     Else(String),
+}
+
+impl Default for RegTab<Armor> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
 }
 
 #[cfg(test)]

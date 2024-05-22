@@ -4,11 +4,13 @@ pub mod error;
 pub mod fight;
 pub mod item;
 pub mod level;
+pub mod map;
 pub mod mart;
 pub mod mat;
 pub mod prelude;
 pub mod prof;
 pub mod race;
+pub mod reg;
 pub mod scena;
 pub mod skill;
 pub mod spell;
@@ -17,7 +19,7 @@ pub mod vehicle;
 
 use serde::{Deserialize, Serialize};
 
-use crate::UID;
+use crate::UId;
 
 pub use self::prelude::*;
 
@@ -25,21 +27,17 @@ use std::{collections::HashSet, fmt::Display};
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Obj {
-    Item(UID<Item>),
-    Char(UID<Cha>),
-    PC(UID<PC>),
+    Item(UId<Item>),
+    Char(UId<Cha>),
+    PC(UId<PC>),
     Scena(usize),
-    Vehicle(UID<Vehicle>),
+    Vehicle(UId<Vehicle>),
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Target {
     Entity(Obj),
     Pos(i16, i16),
-}
-
-pub trait TypeName {
-    fn typename() -> impl Display;
 }
 
 /// Refers to the current game status.

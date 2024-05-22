@@ -1,29 +1,32 @@
-use super::{level::Level, TypeName};
-use crate::ID;
+use super::level::Level;
+use crate::{typename, Id};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
-    ops::Deref,
+    ops::{Deref, DerefMut},
 };
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Cha {
-    pub reg: Option<ID>,
+    pub reg: Option<Id>,
     pub name: String,
     pub descr: String,
-    pub race: ID,
-    pub prof: ID,
-    pub attr: HashMap<ID, Level>,
-    pub skill: HashMap<ID, Level>,
-    pub mart: HashMap<ID, Level>,
-    pub spell: HashMap<ID, Level>,
+    pub pos: Pos,
+    pub race: Id,
+    pub prof: Id,
+    pub attr: HashMap<Id, Level>,
+    pub skill: HashMap<Id, Level>,
+    pub mart: HashMap<Id, Level>,
+    pub spell: HashMap<Id, Level>,
     // pub invt: Vec<Ox<Item>>,
     // pub equip: Vec<Ox<Armor>>,
     pub money: i32,
 }
 
-impl AsRef<Option<ID>> for Cha {
-    fn as_ref(&self) -> &Option<ID> {
+typename!(Cha, "Character");
+
+impl AsRef<Option<Id>> for Cha {
+    fn as_ref(&self) -> &Option<Id> {
         &self.reg
     }
 }
@@ -33,20 +36,21 @@ pub struct PC {
     pub player: String,
     pub story: String,
     pub mods: HashSet<String>,
-    pub cha: Cha,
+    cha: Cha,
 }
-
-impl TypeName for PC {
-    fn typename() -> impl std::fmt::Display {
-        "PlayerCharacter"
-    }
-}
+typename!(PC, "PlayerCharacter");
 
 impl Deref for PC {
     type Target = Cha;
 
     fn deref(&self) -> &Self::Target {
         &self.cha
+    }
+}
+
+impl DerefMut for PC {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.cha
     }
 }
 
@@ -66,9 +70,18 @@ pub struct Pos {
 mod test {
     use std::collections::HashMap;
 
-    use crate::{test::*, ID};
+    use crate::{game::cha::Pos, test::*, Id};
 
     use super::Cha;
+
+    impl Example for Pos {
+        fn examples() -> Vec<Self> {
+            vec![Self {
+                scena: 114514,
+                coord: (114.514, 1919.810),
+            }]
+        }
+    }
 
     impl Example for Cha {
         fn examples() -> Vec<Self> {
@@ -76,8 +89,9 @@ mod test {
                 reg: None,
                 name: "Example Character".to_string(),
                 descr: DEBUG_DESCR.to_string(),
-                race: ID::example(),
-                prof: ID::example(),
+                pos: Pos::example(),
+                race: Id::example(),
+                prof: Id::example(),
                 attr: HashMap::new(),
                 skill: HashMap::new(),
                 mart: HashMap::new(),

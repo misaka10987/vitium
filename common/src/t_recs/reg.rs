@@ -1,32 +1,58 @@
 use std::{
     collections::HashMap,
+    error::Error,
     fmt::{write, Display},
+    fs,
     ops::{Deref, DerefMut},
+    path::Path,
 };
 
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{
+    de::{DeserializeOwned, Visitor},
+    Deserialize, Serialize,
+};
+use tracing::trace;
 
 use super::Data;
 
+/// A type that can be registered.
 pub trait Regis: 'static {
+    /// The mutating data which this registery constraints.
     type Data: Data;
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[macro_export]
+/// Automatically generate `impl Regis` for the specified type.
+/// `type Data=();` if no `Data` type is specified.
+macro_rules! regis {
+    ($r:ty) => {
+        regis!($r, ());
+    };
+    ($r:ty,$d:ty) => {
+        impl $crate::t_recs::reg::Regis for $r {
+            type Data = $d;
+        }
+    };
+}
+
+/// Representing registry information for a specific type `T`.
+#[derive(Clone, Hash, Serialize, Deserialize)]
 pub enum Reg<T> {
+    /// Representing an already registered `Id`.
     Id(Id),
+    /// Representing custom registries.
     Custom(Box<T>),
 }
 
 /// A smart pointer that allows reading registry information
 /// regardless of whether it has been registered.
 #[derive(Clone, Copy)]
-pub struct RegReader<'a, T: Regis> {
-    tab: &'static RegTab<T>,
-    reg: &'a Reg<T>,
+pub struct RegReader<'a, 'b, T: Regis> {
+    tab: &'a RegTab<T>,
+    reg: &'b Reg<T>,
 }
 
-impl<T: Regis> Deref for RegReader<'_, T> {
+impl<T: Regis> Deref for RegReader<'_, '_, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -38,7 +64,7 @@ impl<T: Regis> Deref for RegReader<'_, T> {
 }
 
 #[repr(transparent)]
-pub struct RegTab<T: Regis>(HashMap<Id, T>);
+pub struct RegTab<T: Regis>(pub HashMap<Id, T>);
 
 impl<T: Regis> Deref for RegTab<T> {
     type Target = HashMap<Id, T>;
@@ -55,23 +81,58 @@ impl<T: Regis> DerefMut for RegTab<T> {
 }
 
 impl<T: Regis> RegTab<T> {
+    /// Creates an empty instance.
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
-    pub fn read<'a>(&'static self, maybe_reg: &'a Reg<T>) -> RegReader<'a, T> {
+    /// Reads the referenced `Reg`, returns a smart pointer.
+    pub fn read<'a, 'b>(&'a self, maybe_reg: &'b Reg<T>) -> RegReader<'a, 'b, T> {
         RegReader {
             tab: self,
             reg: maybe_reg,
         }
     }
 
-    pub fn leak(self) -> &'static Self {
-        Box::leak(Box::new(self))
+    /// Merges another `RegTab` into `self`, returns an iterator for items overridden.
+    pub fn merge(&mut self, other: Self) -> impl Iterator<Item = (Id, T)> + '_ {
+        let RegTab(map) = other;
+        map.into_iter()
+            .filter_map(|(k, v)| self.insert(k.to_owned(), v).map(|v| (k, v)))
+    }
+}
+
+impl<T> RegTab<T>
+where
+    T: Regis + DeserializeOwned,
+{
+    /// Loads the registry table from every `.json` file in the specified directory.
+    ///
+    /// Note: it is **underined behaviour** to have multiple registries with the same id.
+    pub fn load(p: impl AsRef<Path>) -> Result<Self, Box<dyn Error>> {
+        let mut tab = RegTab::<T>(HashMap::new());
+        for i in fs::read_dir(p)? {
+            let i = i?;
+            if i.metadata()?.is_file() {
+                if let Some(filename) = i.file_name().to_str() {
+                    if filename.ends_with(".json") {
+                        trace!("loading \"{}\"", filename);
+                        let s = fs::read_to_string(i.path())?;
+                        let part: HashMap<_, _> = serde_json::from_str(&s)?;
+                        tab.extend(part);
+                    }
+                }
+            }
+        }
+        Ok(tab)
     }
 
-    pub unsafe fn drop(reg: &'static Self) {
-        drop(unsafe { Box::from_raw(reg as *const Self as *mut Self) });
+    /// `load` registry table from directory and `.merge` it to `self`
+    pub fn load_more(
+        &mut self,
+        p: impl AsRef<Path>,
+    ) -> Result<impl Iterator<Item = (Id, T)> + '_, Box<dyn Error>> {
+        Ok(self.merge(Self::load(p)?))
     }
 }
 
@@ -158,6 +219,17 @@ impl Id {
     pub fn builtin(id: &str) -> Self {
         Self::new(id, "")
     }
+}
+
+#[macro_export]
+macro_rules! with_reg {
+    ($t:ty,$f:ident,$c:ty) => {
+        impl std::convert::AsRef<$crate::t_recs::reg::RegTab<$c>> for $t {
+            fn as_ref(&self) -> &$crate::t_recs::reg::RegTab<$c> {
+                &self.$f
+            }
+        }
+    };
 }
 
 #[cfg(test)]

@@ -2,7 +2,11 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{game::DmgType, t_recs::Regis, Dice, Id};
+use crate::{
+    game::DmgType,
+    t_recs::{reg::RegTab, Regis},
+    Dice, Id,
+};
 
 /// Ranged weapons.
 #[derive(Clone, Serialize, Deserialize)]
@@ -31,6 +35,12 @@ impl Regis for Ranged {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RangedData {
     pub charge: Vec<(Id, i16)>,
+}
+
+impl Default for RegTab<Ranged> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
 }
 
 #[cfg(test)]

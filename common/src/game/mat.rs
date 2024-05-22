@@ -1,3 +1,5 @@
+use crate::{regis, typename};
+
 use super::DmgType;
 use std::collections::HashMap;
 
@@ -7,3 +9,5 @@ pub struct Mat {
     /// Per-milimetre resistance to damage.
     pub resist: HashMap<DmgType, f32>,
 }
+typename!(Mat, "Material");
+regis!(Mat);

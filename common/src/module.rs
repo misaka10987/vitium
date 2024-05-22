@@ -9,6 +9,7 @@ pub struct Module {
     pub name: String,
     /// Optional download source when the mod is not found.
     pub url: Option<String>,
+    pub ver: String,
     /// Dependencies.
     pub dep: Vec<String>,
 }
