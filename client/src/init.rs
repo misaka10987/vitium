@@ -12,10 +12,12 @@ use std::{fs::File, io::Read, path::Path};
 
 
 pub fn theme_init(obj: &mut CursiveRunnable, rd: impl AsRef<Path>){
-    if let Err(e)= obj.load_theme_file(rd){
-        obj.add_layer(cursive::views::Dialog::new().content(TextView::new("Theme Not Loaded")))
+    if let Err(_)= obj.load_theme_file(rd){
+        obj.add_layer(cursive::views::Dialog::new().content(TextView::new("Theme Not Loaded")).dismiss_button("OK"))
     }
-    
+    else{
+        obj.add_layer(cursive::views::Dialog::new().title("ThemeLoaded").dismiss_button("Ok"));
+    }
 }
 pub fn internet_init(obj: &mut CursiveRunnable) {
     obj.set_user_data(Ip("".to_string()));
@@ -165,8 +167,6 @@ pub fn initctrl_init(obj: &mut CursiveRunnable) {
     obj.add_layer(
         cursive::views::Dialog::new()
             .title("Keyboard Setting Unaccepted")
-            .button("Ok", |s| {
-                s.pop_layer();
-            }),
+            .dismiss_button("OK")
     );
 }

@@ -1,15 +1,43 @@
+use cursive::theme::PaletteColor;
 use cursive::view::Position;
 use cursive::views::{LayerPosition, TextView};
 use cursive::{Cursive, CursiveRunnable};
 use reqwest::{Client, Error};
+use serde::Serialize;
 pub mod chatbox;
 pub mod config;
 pub mod func;
 pub mod init;
 pub mod map;
-
+pub mod module;
 pub struct Ip(pub String);
 
+#[derive(Serialize)]
+pub struct Thm {
+    pub shadow: bool,
+    pub borders: BS,
+    pub colors: Pal,
+}
+#[derive(Serialize)]
+pub enum BS {
+    Simple,
+    Outset,
+    None,
+}
+#[derive(Serialize)]
+pub struct Pal {
+    pub background: String,
+    pub shadow: String,
+    pub view: String,
+    pub primary: String,
+    pub secondary: String,
+    pub tertiary: String,
+    pub title_primary: String,
+    pub title_secondary: String,
+    pub highlight: String,
+    pub highlight_inactive: String,
+    pub highlight_text: String,
+}
 pub fn addtxt(obj: &mut CursiveRunnable, mes: String) {
     obj.add_layer(TextView::new(mes));
 }

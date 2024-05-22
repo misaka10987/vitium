@@ -1,6 +1,12 @@
+use std::fs;
+
 use cursive::CursiveRunnable;
 use reqwest::Client;
-use vitium_client::{config::theme_adj, init::{initctrl, theme_init}};
+use vitium_client::{
+    addtxt,
+    config::theme_adj,
+    init::{initctrl, theme_init},
+};
 
 fn main() {
     let mut mainscr = CursiveRunnable::default();
@@ -12,6 +18,7 @@ fn main() {
     theme_adj(mainss);
     //mainss.add_fullscreen_layer(TextView::new("hello, dddd\neeeee dseff"));
     //internet_init(mainss);
+    //fs::write("text.txt", "FROM RUST PROGRAM").unwrap();
     //mainss.add_layer(cursive::views::Dialog::new().button("First",|s| s.quit()).button("Second",|s| s.quit()));
     mainss.run();
     //println!("{}", mainss.user_data::<Data>().unwrap().server_ip);

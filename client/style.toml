@@ -30,7 +30,7 @@ borders = "simple" # Alternatives are "none" and "simple"
 
 	# Hex values can use lower or uppercase.
 	# (base color MUST be lowercase)
-	title_primary   = "black"
+	title_primary   = "#000000"
 	title_secondary = "black"
 
 	# Lower precision values can use only 3 digits.
