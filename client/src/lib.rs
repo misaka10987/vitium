@@ -1,4 +1,3 @@
-use cursive::theme::PaletteColor;
 use cursive::view::Position;
 use cursive::views::{LayerPosition, TextView};
 use cursive::{Cursive, CursiveRunnable};

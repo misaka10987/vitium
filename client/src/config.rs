@@ -1,14 +1,10 @@
-use std::{
-    fs::{self, File},
-    io::Write,
-};
+use std::fs;
 
 use cursive::{
     theme::{
         BaseColor, BorderStyle, Color,
         PaletteColor::{self, *},
     },
-    view::Scrollable,
     views::{Button, Dialog, LinearLayout},
     Cursive,
 };
@@ -35,31 +31,24 @@ fn ctoc(frm: Color) -> String {
         Color::RgbLowRes(a, b, c) => format!("#{:x?}{:x?}{:x?}", a, b, c),
     }
 }
+fn pctopc(frm: PaletteColor) -> String {
+    match frm {
+        Background => "background".to_string(),
+        Shadow => "shadow".to_string(),
+        View => "view".to_string(),
+        Primary => "primary".to_string(),
+        Secondary => "secondary".to_string(),
+        Tertiary => "tertiary".to_string(),
+        TitlePrimary => "titleprimary".to_string(),
+        TitleSecondary => "titlesecondary".to_string(),
+        Highlight => "highlight".to_string(),
+        HighlightInactive => "highlight inactive".to_string(),
+        HighlightText => "hightlight text".to_string(),
+    }
+}
 pub fn theme_adj(obj: &mut Cursive) {
     let thm = obj.current_theme();
-    let dialog = LinearLayout::vertical().child(Button::new(format!("shadow = {}", thm.shadow), |s| {
-        shadow_adj(s);
-    }));
-    let mut f = |label, color| {
-        dialog.add_button(label, move |s| {
-            s.update_theme(|t| t.palette[typ] = Color::Dark(color));
-            s.pop_layer();
-            refresh(s);
-        })
-    };
-    for (label, color) in [
-        ("Black", BaseColor::Black),
-        ("Red", BaseColor::Red),
-        ("Green", BaseColor::Green),
-        ("Yellow", BaseColor::Yellow),
-        ("Blue", BaseColor::Blue),
-        ("Magenta", BaseColor::Magenta),
-        ("Cyan", BaseColor::Cyan),
-        ("White", BaseColor::White),
-    ] {
-        f(label, color);
-    }
-    obj.add_layer(cursive::views::Dialog::around(
+    obj.add_layer(
         LinearLayout::vertical()
             .child(Button::new(format!("shadow = {}", thm.shadow), |s| {
                 shadow_adj(s);
@@ -76,21 +65,86 @@ pub fn theme_adj(obj: &mut Cursive) {
                 |s| borders_adj(s),
             ))
             .child(Button::new(
-                format!("background = {}", ctoc(thm.palette[Background])),
-                |s| colors_adj(s, PaletteColor::Background),
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::Background),
+                    ctoc(thm.palette[PaletteColor::Background])
+                ),
+                move |s| colors_adj(s, PaletteColor::Background),
             ))
             .child(Button::new(
-                format!("shadow = {}", ctoc(thm.palette[Shadow])),
-                |s| colors_adj(s, PaletteColor::Shadow),
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::Shadow),
+                    ctoc(thm.palette[PaletteColor::Shadow])
+                ),
+                move |s| colors_adj(s, PaletteColor::Shadow),
             ))
             .child(Button::new(
-                format!("background = {}", ctoc(thm.palette[Background])),
-                |s| colors_adj(s, PaletteColor::Background),
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::View),
+                    ctoc(thm.palette[PaletteColor::View])
+                ),
+                move |s| colors_adj(s, PaletteColor::View),
             ))
             .child(Button::new(
-                format!("background = {}", ctoc(thm.palette[Background])),
-                |s| colors_adj(s, PaletteColor::Background),
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::Primary),
+                    ctoc(thm.palette[PaletteColor::Primary])
+                ),
+                move |s| colors_adj(s, PaletteColor::Primary),
             ))
+            .child(Button::new(
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::Secondary),
+                    ctoc(thm.palette[PaletteColor::Secondary])
+                ),
+                move |s| colors_adj(s, PaletteColor::Secondary),
+            ))
+            .child(Button::new(
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::Tertiary),
+                    ctoc(thm.palette[PaletteColor::Tertiary])
+                ),
+                move |s| colors_adj(s, PaletteColor::Tertiary),
+            ))
+            .child(Button::new(
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::TitlePrimary),
+                    ctoc(thm.palette[PaletteColor::TitlePrimary])
+                ),
+                move |s| colors_adj(s, PaletteColor::TitlePrimary),
+            ))
+            .child(Button::new(
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::TitleSecondary),
+                    ctoc(thm.palette[PaletteColor::TitleSecondary])
+                ),
+                move |s| colors_adj(s, PaletteColor::TitleSecondary),
+            ))
+            .child(Button::new(
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::Highlight),
+                    ctoc(thm.palette[PaletteColor::Highlight])
+                ),
+                move |s| colors_adj(s, PaletteColor::Highlight),
+            ))
+            .child(Button::new(
+                format!(
+                    "{} = {}",
+                    pctopc(PaletteColor::HighlightInactive),
+                    ctoc(thm.palette[PaletteColor::HighlightInactive])
+                ),
+                move |s| colors_adj(s, PaletteColor::HighlightInactive),
+            ))
+            .child(Button::new("Return to Default",|s| {s.set_theme(cursive::theme::load_default())}))
             .child(Button::new("Save", |s| {
                 let thme = s.current_theme();
                 let target = Thm {
@@ -139,10 +193,8 @@ pub fn theme_adj(obj: &mut Cursive) {
             }))
             .child(Button::new("Exit", |s| {
                 s.pop_layer();
-            }))
-            .scrollable()
-            .scroll_x(true),
-    ));
+            })),
+    );
 }
 fn shadow_adj(obj: &mut Cursive) {
     obj.add_layer(
@@ -182,22 +234,7 @@ fn borders_adj(obj: &mut Cursive) {
     )
 }
 fn colors_adj(obj: &mut Cursive, typ: PaletteColor) {
-    let mut dialog = Dialog::new().title(format!(
-        "Change the color of {}",
-        match typ {
-            Background => "background",
-            Shadow => "shadow",
-            View => "view",
-            Primary => "primary",
-            Secondary => "secondary",
-            Tertiary => "tertiary",
-            TitlePrimary => "titleprimary",
-            TitleSecondary => "titlesecondary",
-            Highlight => "highlight",
-            HighlightInactive => "highlight inactive",
-            HighlightText => "hightlight text",
-        }
-    ));
+    let mut dialog = Dialog::new().title(format!("Change the color of {}", pctopc(typ)));
     let mut f = |label, color| {
         dialog.add_button(label, move |s| {
             s.update_theme(|t| t.palette[typ] = Color::Dark(color));
@@ -224,16 +261,11 @@ fn colors_adj(obj: &mut Cursive, typ: PaletteColor) {
                 s.pop_layer();
                 refresh(s);
             })
-            .button("Other", move |s| {
-                s.update_theme(|t| t.palette[typ] = Color::TerminalDefault);
+            .button("Cancel", |s| {
                 s.pop_layer();
-                refresh(s);
             }),
     )
 }
-// fn inputu8(obj: &mut Cursive,mes:String)->u8{
-//     obj.add_layer(cursive::views::Dialog::new().title(mes));
-// }
 fn refresh(obj: &mut Cursive) {
     obj.pop_layer();
     theme_adj(obj);
