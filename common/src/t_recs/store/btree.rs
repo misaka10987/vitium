@@ -29,7 +29,7 @@ where
             None
         }
     }
-
+    
     fn compon_mut(&mut self, idx: UId<E>) -> Option<crate::t_recs::Cw<C>> {
         let rt: &RegTab<C> = *self.as_ref();
         let store: &mut BTreeStore<E, C> = self.as_mut();

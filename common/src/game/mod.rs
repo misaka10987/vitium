@@ -23,7 +23,7 @@ use crate::UId;
 
 pub use self::prelude::*;
 
-use std::{collections::HashSet, fmt::Display};
+use std::collections::HashSet;
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Obj {

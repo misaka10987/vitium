@@ -100,6 +100,17 @@ impl<T: Regis> RegTab<T> {
         map.into_iter()
             .filter_map(|(k, v)| self.insert(k.to_owned(), v).map(|v| (k, v)))
     }
+
+    /// Leaks this `RegTab` to be `'static`, used when loading completed.
+    pub fn leak(self) -> &'static Self {
+        Box::leak(Box::new(self))
+    }
+
+    /// Unsafely drops the `RegTab`, used when the game is no longer needed.
+    /// Be careful to make sure that all its references have already been dropped.
+    pub unsafe fn drop(reg: &'static Self) {
+        drop(Box::from_raw(reg as *const Self as *mut Self));
+    }
 }
 
 impl<T> RegTab<T>
@@ -224,8 +235,8 @@ impl Id {
 #[macro_export]
 macro_rules! with_reg {
     ($t:ty,$f:ident,$c:ty) => {
-        impl std::convert::AsRef<$crate::t_recs::reg::RegTab<$c>> for $t {
-            fn as_ref(&self) -> &$crate::t_recs::reg::RegTab<$c> {
+        impl std::convert::AsRef<&'static $crate::t_recs::reg::RegTab<$c>> for $t {
+            fn as_ref(&self) -> &&'static $crate::t_recs::reg::RegTab<$c> {
                 &self.$f
             }
         }
