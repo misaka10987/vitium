@@ -8,7 +8,7 @@ use crate::{
     UId,
 };
 
-use super::Store;
+use super::{BaseStore, Store};
 
 pub struct BTreeStore<E: Entity, T: Regis = <E as Entity>::Base> {
     map: BTreeMap<UId<E>, Compon<T>>,
@@ -17,7 +17,7 @@ pub struct BTreeStore<E: Entity, T: Regis = <E as Entity>::Base> {
 
 impl<E: Entity, C: Regis, T> Store<E, C> for T
 where
-    T: AsRef<BTreeStore<E, C>> + AsMut<BTreeStore<E, C>> + AsRef<&'static RegTab<C>>,
+    T: AsRef<BTreeStore<E, C>> + AsMut<BTreeStore<E, C>> + AsRef<&'static RegTab<C>> + BaseStore<E>,
 {
     fn compon(&self, idx: UId<E>) -> Option<crate::t_recs::Cr<C>> {
         let rt: &RegTab<C> = *self.as_ref();
@@ -29,7 +29,7 @@ where
             None
         }
     }
-    
+
     fn compon_mut(&mut self, idx: UId<E>) -> Option<crate::t_recs::Cw<C>> {
         let rt: &RegTab<C> = *self.as_ref();
         let store: &mut BTreeStore<E, C> = self.as_mut();

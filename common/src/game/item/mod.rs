@@ -11,7 +11,7 @@ use self::{armor::Armor, container::Container, edible::Edible, melee::Melee, ran
 use crate::{
     delta::Delta,
     t_recs::{reg::RegTab, store::btree::BTreeStore, Compon, Entity, Regis},
-    with_btree_store, with_reg, Id, UId,
+    with_btree_store, with_compon, with_reg, Id, UId,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, error::Error, path::Path};
@@ -71,6 +71,7 @@ pub struct ItemStore {
     ranged: BTreeStore<Item, Ranged>,
 }
 
+with_compon![ItemStore, Item, BaseItem, Armor, Container, Edible, Melee, Ranged];
 with_reg!(ItemStore, r_base, BaseItem);
 with_reg!(ItemStore, r_armor, Armor);
 with_reg!(ItemStore, r_container, Container);

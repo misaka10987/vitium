@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, State},
+    extract::State,
     http::{HeaderMap, StatusCode},
     response::Redirect,
     Json,
@@ -8,7 +8,7 @@ use std::collections::{HashMap, VecDeque};
 use vitium_common::{
     cmd::Echo,
     error::UnimplError,
-    game::{GameStat, PC},
+    game::PC,
     player::Player,
     req::{self, Action, Chat},
 };
@@ -40,14 +40,6 @@ pub async fn get_player(State(s): State<Server>) -> (StatusCode, Json<HashMap<St
 }
 pub async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC>>) {
     (StatusCode::OK, Json(s.pc.read().await.clone()))
-}
-
-pub async fn list_game(State(s): State<Server>) -> Json<Vec<String>> {
-    Json(s.game.read().await.keys().cloned().collect())
-}
-
-pub async fn get_game(State(s): State<Server>, Path(name): Path<String>) -> Json<Option<GameStat>> {
-    Json(s.game.read().await.get(&name).map(|g| g.stat.clone()))
 }
 
 pub async fn send_chat(
@@ -164,14 +156,14 @@ pub async fn cmd(
     Json(req): Json<req::Cmd>,
 ) -> (StatusCode, Json<Option<Echo>>) {
     if let Some(name) = s.auth(&head).await {
-        if let Some(g) = s.game.read().await.get(&req.game) {
-            if g.stat.host == name {
-                let err = UnimplError("command".to_owned());
-                return (
-                    StatusCode::NOT_IMPLEMENTED,
-                    Json(Some(Err(err.to_string()))),
-                );
-            }
+        let g = s.game.read().await;
+        let _ = req;
+        if g.stat.host == name {
+            let err = UnimplError("command".to_owned());
+            return (
+                StatusCode::NOT_IMPLEMENTED,
+                Json(Some(Err(err.to_string()))),
+            );
         }
     }
     (StatusCode::FORBIDDEN, Json(None))
