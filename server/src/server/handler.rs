@@ -1,9 +1,9 @@
 use axum::{
     extract::State,
-    http::{HeaderMap, StatusCode},
-    response::Redirect,
+    http::{header::AUTHORIZATION, HeaderMap, StatusCode},
     Json,
 };
+use http_auth_basic::Credentials;
 use std::collections::{HashMap, VecDeque};
 use vitium_common::{
     cmd::Echo,
@@ -14,22 +14,6 @@ use vitium_common::{
 };
 
 use super::Server;
-pub async fn not_found() -> &'static str {
-    "not found"
-}
-
-pub async fn get_root(State(s): State<Server>) -> Redirect {
-    Redirect::to(&s.cfg.page_url)
-}
-
-/// A handler always returns `Hello, world!\n`.
-pub async fn hello() -> &'static str {
-    "Hello, World!\n"
-}
-
-pub async fn deny() -> Result<(), StatusCode> {
-    Err(StatusCode::FORBIDDEN)
-}
 
 pub async fn recv_chat(State(s): State<Server>) -> (StatusCode, Json<VecDeque<(String, Chat)>>) {
     (StatusCode::OK, Json(s.chat.read().await.clone()))
@@ -45,15 +29,14 @@ pub async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String
 pub async fn send_chat(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::SendChat>,
+    Json(req): Json<req::Chat>,
 ) -> StatusCode {
     if let Some(name) = s.auth(&head).await {
         let mut dat = s.chat.write().await;
         while dat.len() >= s.cfg.chat_cap {
             dat.pop_front();
         }
-        let content = req.chat;
-        dat.push_back((name, content));
+        dat.push_back((name, req.received()));
         StatusCode::ACCEPTED
     } else {
         StatusCode::FORBIDDEN
@@ -63,35 +46,43 @@ pub async fn send_chat(
 pub async fn edit_pswd(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::EditPswd>,
+    Json(req::EditPswd(pswd)): Json<req::EditPswd>,
 ) -> StatusCode {
-    if let Some(name) = s.auth(&head).await {
-        if let Some(p) = s.pswd.write().await.get_mut(&name) {
-            *p = req.pswd;
-            StatusCode::OK
-        } else {
-            StatusCode::NOT_FOUND
+    if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
+        if let Ok(b) = Credentials::from_header(h.to_string()) {
+            let safe = s.safe.lock().unwrap();
+            if safe.update(&b.user_id, &pswd, &b.password).is_ok() {
+                return StatusCode::OK;
+            }
         }
-    } else {
-        StatusCode::FORBIDDEN
     }
+    StatusCode::FORBIDDEN
 }
 
 pub async fn edit_player(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::EditPlayer>,
+    Json(req): Json<req::Edit<Player>>,
 ) -> StatusCode {
     if let Some(name) = s.auth(&head).await {
-        if name != req.name {
+        if name != req.src {
             return StatusCode::FORBIDDEN;
         }
-        let mut dat = s.player.write().await;
-        if let Some(player) = dat.get_mut(&req.name) {
-            *player = req;
-            StatusCode::OK
-        } else {
-            StatusCode::NOT_FOUND
+        let mut tab = s.player.write().await;
+        match (tab.contains_key(&req.src), req.dst) {
+            (true, None) => {
+                tab.remove(&req.src);
+                StatusCode::OK
+            }
+            (true, Some(p)) => {
+                tab.insert(req.src, p);
+                StatusCode::OK
+            }
+            (false, None) => StatusCode::NOT_FOUND,
+            (false, Some(p)) => {
+                tab.insert(req.src, p);
+                StatusCode::CREATED
+            }
         }
     } else {
         StatusCode::FORBIDDEN
@@ -102,19 +93,29 @@ pub async fn edit_player(
 pub async fn edit_pc(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::EditChara>,
+    Json(req): Json<req::Edit<PC>>,
 ) -> StatusCode {
     if let Some(name) = s.auth(&head).await {
-        let mut dat = s.pc.write().await;
-        if let Some(chara) = dat.get_mut(&req.dest) {
-            if chara.player != name {
+        let mut tab = s.pc.write().await;
+        if let Some(c) = tab.get(&req.src) {
+            if name != c.player {
                 return StatusCode::FORBIDDEN;
             }
-            *chara = req.new;
-            StatusCode::ACCEPTED
-        } else {
-            dat.insert(req.dest, req.new);
-            StatusCode::CREATED
+        }
+        match (tab.contains_key(&req.src), req.dst) {
+            (true, None) => {
+                tab.remove(&req.src);
+                StatusCode::OK
+            }
+            (true, Some(c)) => {
+                tab.insert(req.src, c);
+                StatusCode::OK
+            }
+            (false, None) => StatusCode::NOT_FOUND,
+            (false, Some(c)) => {
+                tab.insert(req.src, c);
+                StatusCode::CREATED
+            }
         }
     } else {
         StatusCode::FORBIDDEN

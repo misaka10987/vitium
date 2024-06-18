@@ -1,18 +1,20 @@
 mod handler;
 
 use axum::{
-    http::{header::AUTHORIZATION, HeaderMap},
+    http::{header::AUTHORIZATION, HeaderMap, StatusCode},
+    response::Redirect,
     routing::{any, get, post},
     Router,
 };
 use http_auth_basic::Credentials;
+use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     error::Error,
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 use tokio::{
     fs,
@@ -30,7 +32,7 @@ use crate::game::Game;
 pub struct ServerInst {
     pub cfg: ServerConfig,
     player: RwLock<HashMap<String, Player>>,
-    pswd: RwLock<HashMap<String, String>>,
+    safe: Mutex<SafeBox>,
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
@@ -73,7 +75,7 @@ impl Server {
         Self(Arc::new(ServerInst {
             cfg,
             player: RwLock::new(HashMap::new()),
-            pswd: RwLock::new(HashMap::new()),
+            safe: Mutex::new(SafeBox::new("./password.db")),
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat: RwLock::new(VecDeque::new()),
@@ -82,14 +84,12 @@ impl Server {
     }
     /// Reads from the header and get authentication info.
     pub async fn auth(&self, head: &HeaderMap) -> Option<String> {
-        if let Some(token) = head.get(AUTHORIZATION) {
-            if let Ok(s) = token.to_str() {
-                if let Ok(b) = Credentials::from_header(s.to_string()) {
-                    if let Some(p) = self.pswd.read().await.get(&b.user_id) {
-                        if b.password == *p {
-                            return Some(b.user_id);
-                        }
-                    }
+        if let Some(Ok(s)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
+            if let Ok(b) = Credentials::from_header(s.to_string()) {
+                let safe = self.safe.lock().unwrap();
+                match safe.verify(&b.user_id, &b.password) {
+                    Ok(_) => return Some(b.user_id),
+                    Err(e) => warn!("{e}"),
                 }
             }
         }
@@ -97,14 +97,11 @@ impl Server {
     }
     /// Consumes `self` and start the server.
     pub async fn run(self) -> Result<(), std::io::Error> {
-        // listening globally on the port specified
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
             .await
             .expect("failed to bind TCP listener");
-        // initialize router
         let app = Router::new()
-            .route("/test", any(handler::deny))
-            .route("/hello", get(handler::hello))
+            .route("/hello", get("Hello, world!"))
             .route("/chat", get(handler::recv_chat))
             .route("/player", get(handler::get_player))
             .route("/chara", get(handler::get_pc))
@@ -112,16 +109,15 @@ impl Server {
             .route("/pswd", post(handler::edit_pswd))
             .route("/player", post(handler::edit_player))
             .route("/chara", post(handler::edit_pc))
-            .route("/act/:name", post(handler::act))
-            .route("/sync/:name", get(handler::sync))
+            .route("/act", post(handler::act))
+            .route("/sync", get(handler::sync))
             .route("/cmd", post(handler::cmd));
         let app = Router::new()
             .nest("/api", app)
-            .route("/", get(handler::get_root))
-            .fallback(any(handler::not_found))
+            .route("/", get(Redirect::to(&self.cfg.page_url)))
+            .fallback(any(StatusCode::NOT_FOUND))
             .with_state(self)
             .layer(TraceLayer::new_for_http());
-        // run our app with hyper
         axum::serve(listener, app)
             .with_graceful_shutdown(sig_shut())
             .await
@@ -142,16 +138,15 @@ pub mod exec {
         let p = s.player.read().await;
         let mut o = s.op.write().await;
         if !p.contains_key(player) {
-            Err(NoPlayerError(player.to_string()).to_string())
-        } else if o.contains(player) {
-            Ok(format!(
-                "{} is already operator, no modification is made",
-                player
-            ))
-        } else {
-            o.insert(player.to_string());
-            Ok(format!("opped {}", player))
+            return Err(NoPlayerError(player.to_owned()).to_string());
         }
+        if o.contains(player) {
+            return Err(format!(
+                "{player} is already operator, no modification is made",
+            ));
+        }
+        o.insert(player.to_string());
+        Ok(format!("opped {player}"))
     }
     pub async fn shutdown(
         _s: &Server,
@@ -188,6 +183,7 @@ pub struct ServerConfig {
     pub port: u16,
     pub chat_cap: usize,
     pub page_url: String,
+    pub password_salt: String,
 }
 
 impl Default for ServerConfig {
@@ -197,12 +193,14 @@ impl Default for ServerConfig {
             port: 10987,
             chat_cap: 255,
             page_url: "https://github.com/misaka10987/vitium".to_string(),
+            password_salt: "0123456789abcdef".to_string(),
         }
     }
 }
 
 impl ServerConfig {
-    pub async fn load(path: &Path) -> Result<Self, Box<dyn Error>> {
+    pub async fn load(path: impl AsRef<Path>) -> Result<Self, Box<dyn Error>> {
+        let path = path.as_ref();
         if !path.exists() {
             let err = io::Error::new(
                 io::ErrorKind::NotFound,
@@ -219,14 +217,14 @@ impl ServerConfig {
             Ok(toml::from_str::<ServerConfig>(&s)?)
         }
     }
-    pub async fn try_load(path: &Path) -> Self {
+    pub async fn try_load(path: impl AsRef<Path>) -> Self {
+        let path = path.as_ref();
         match Self::load(path).await {
             Ok(cfg) => cfg,
             Err(e) => {
                 error!(
-                    "failed to load server config at \"{}\": \"{}\"",
-                    path.display(),
-                    e
+                    "failed to load server config at \"{}\": \"{e}\"",
+                    path.display()
                 );
                 warn!("using default config instead");
                 Self::default()
