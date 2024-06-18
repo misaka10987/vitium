@@ -1,10 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-/// All possible responses are defined here.
-#[derive(Serialize, Deserialize)]
-pub enum Res {
-    Sync(Sync),
-}
+use crate::req::Req;
 
 #[derive(Serialize, Deserialize)]
 pub struct Sync {}
+
+pub type Res<T> = Result<<T as Req>::Response, String>;

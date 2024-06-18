@@ -104,7 +104,7 @@ impl Server {
             .route("/hello", get("Hello, world!"))
             .route("/chat", get(handler::recv_chat))
             .route("/player", get(handler::get_player))
-            .route("/chara", get(handler::get_pc))
+            .route("/pc", get(handler::get_pc))
             .route("/chat", post(handler::send_chat))
             .route("/pswd", post(handler::edit_pswd))
             .route("/player", post(handler::edit_player))

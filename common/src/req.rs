@@ -1,15 +1,10 @@
 pub use crate::{cmd::Cmd, game::Action};
-use crate::player::Password;
-use serde::{Deserialize, Serialize};
+use crate::{game::PC, player::Password};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::time::SystemTime;
 
-#[cfg(test)]
-use crate::test::*;
-
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Enroll {
-    pub chara: String,
-}
+pub struct Enroll(pub String);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chat {
@@ -48,3 +43,17 @@ pub struct Edit<T, Id = String> {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EditPswd(pub Password);
+
+pub trait Req {
+    type Response: Serialize + DeserializeOwned;
+    const PATH: &'static str;
+    const METHOD: &'static str;
+}
+
+impl Req for Edit<PC> {
+    type Response = Option<PC>;
+
+    const PATH: &'static str = "/api/pc";
+
+    const METHOD: &'static str = "post";
+}

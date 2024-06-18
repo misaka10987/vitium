@@ -11,9 +11,12 @@ use vitium_common::{
     game::PC,
     player::Player,
     req::{self, Action, Chat},
+    Res,
 };
 
 use super::Server;
+
+type Responce<T> = Result<Json<Res<T>>, StatusCode>;
 
 pub async fn recv_chat(State(s): State<Server>) -> (StatusCode, Json<VecDeque<(String, Chat)>>) {
     (StatusCode::OK, Json(s.chat.read().await.clone()))
@@ -94,31 +97,22 @@ pub async fn edit_pc(
     State(s): State<Server>,
     head: HeaderMap,
     Json(req): Json<req::Edit<PC>>,
-) -> StatusCode {
+) -> Responce<req::Edit<PC>> {
     if let Some(name) = s.auth(&head).await {
         let mut tab = s.pc.write().await;
         if let Some(c) = tab.get(&req.src) {
             if name != c.player {
-                return StatusCode::FORBIDDEN;
+                return Err(StatusCode::FORBIDDEN);
             }
         }
         match (tab.contains_key(&req.src), req.dst) {
-            (true, None) => {
-                tab.remove(&req.src);
-                StatusCode::OK
-            }
-            (true, Some(c)) => {
-                tab.insert(req.src, c);
-                StatusCode::OK
-            }
-            (false, None) => StatusCode::NOT_FOUND,
-            (false, Some(c)) => {
-                tab.insert(req.src, c);
-                StatusCode::CREATED
-            }
+            (true, None) => Ok(Json(Ok(tab.remove(&req.src)))),
+            (true, Some(c)) => Ok(Json(Ok(tab.insert(req.src, c)))),
+            (false, None) => Ok(Json(Err(format!("no player character: {}", req.src)))),
+            (false, Some(c)) => Ok(Json(Ok(tab.insert(req.src, c)))),
         }
     } else {
-        StatusCode::FORBIDDEN
+        Err(StatusCode::FORBIDDEN)
     }
 }
 
