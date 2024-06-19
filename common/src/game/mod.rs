@@ -4,6 +4,7 @@ pub mod error;
 pub mod fight;
 pub mod item;
 pub mod level;
+pub mod map;
 pub mod mart;
 pub mod mat;
 pub mod prelude;
@@ -15,36 +16,32 @@ pub mod skill;
 pub mod spell;
 pub mod terra;
 pub mod vehicle;
-pub mod world;
 
 use serde::{Deserialize, Serialize};
 
-use crate::UID;
+use crate::UId;
 
 pub use self::prelude::*;
 
-use std::{collections::HashSet, fmt::Display};
+use std::collections::HashSet;
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Obj<'a> {
-    Item(UID<Item<'a>>),
-    Char(UID<Cha<'a>>),
-    PC(UID<PC<'a>>),
-    Scena(UID<ScenaInst<'a>>),
-    Vehicle(UID<Vehicle>),
+pub enum Obj {
+    Item(UId<Item>),
+    Char(UId<Cha>),
+    PC(UId<PC>),
+    Scena(usize),
+    Vehicle(UId<Vehicle>),
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum Target<'a> {
-    Entity(Obj<'a>),
+pub enum Target {
+    Entity(Obj),
     Pos(i16, i16),
 }
 
-pub trait TypeName {
-    fn typename() -> impl Display;
-}
-
 /// Refers to the current game status.
+#[derive(Clone, Serialize, Deserialize)]
 pub struct GameStat {
     /// Whether the game is ongoing now.
     pub on: bool,

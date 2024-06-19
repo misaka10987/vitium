@@ -1,5 +1,5 @@
 use super::Obj;
-use crate::ID;
+use crate::{regis, typename, Id};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -11,11 +11,13 @@ pub struct Skill {
     /// Bonus provided by race.
     pub race_bonus: i16,
     /// Attributions that can give bonus to this skill.
-    pub attr: HashSet<ID>,
+    pub attr: HashSet<Id>,
 }
+typename!(Skill, "Skill");
+regis!(Skill);
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct SkillAction<'a> {
-    pub obj: Obj<'a>,
+pub struct SkillAction {
+    pub obj: Obj,
     pub skill: String,
 }

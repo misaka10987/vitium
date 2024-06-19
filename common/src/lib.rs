@@ -3,16 +3,16 @@ pub mod delta;
 pub mod dice;
 pub mod error;
 pub mod game;
-pub mod id;
 pub mod module;
 pub mod player;
 pub mod prelude;
 pub mod record;
 pub mod req;
 pub mod res;
-pub mod tab;
-pub mod test;
-pub mod uid;
+pub mod t_recs;
+#[cfg(test)]
+mod test;
+pub mod typename;
 pub mod util;
 
 pub use crate::prelude::*;
@@ -24,7 +24,7 @@ mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        let id: ID = obj("\"homo:sapiens\"").unwrap();
-        assert_eq!(id, ID::new("homo", "sapiens"));
+        let id: Id = obj("\"homo:sapiens\"").unwrap();
+        assert_eq!(id, Id::new("homo", "sapiens"));
     }
 }

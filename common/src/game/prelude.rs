@@ -1,10 +1,14 @@
 pub use super::act::{Act, Action};
 pub use super::cha::{Cha, PC};
 pub use super::fight::DmgType;
-pub use super::item::Item;
+pub use super::item::{BaseItem, Item, ItemReg};
 pub use super::level::Level;
+pub use super::map::{Block, Chunk, Map};
+pub use super::mat::Mat;
 pub use super::prof::Prof;
-pub use super::reg::{Ox, Reg};
-pub use super::scena::{Scena, ScenaInst};
+pub use super::reg::GameReg;
+pub use super::scena::Scena;
 pub use super::skill::Skill;
+pub use super::spell::Spell;
+pub use super::terra::Terra;
 pub use super::vehicle::Vehicle;

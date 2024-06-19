@@ -3,10 +3,10 @@ use std::collections::{linked_list, BTreeSet, LinkedList};
 use serde::{Deserialize, Serialize};
 
 pub trait Delta {
-    type Pack: Serialize + Deserialize<'static>;
-    fn calc(&mut self) -> impl Iterator<Item = Self::Pack>;
-    fn diff(&self) -> impl Iterator<Item = Self::Pack>;
-    fn apply(&mut self, delta: impl Iterator<Item = Self::Pack>);
+    type Item: Serialize + Deserialize<'static>;
+    fn calc(&mut self) -> impl Iterator<Item = Self::Item>;
+    fn diff(&self) -> impl Iterator<Item = Self::Item>;
+    fn apply(&mut self, delta: impl Iterator<Item = Self::Item>);
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -15,7 +15,7 @@ where
     K: Clone + Eq + Ord,
 {
     pub cap: usize,
-    pub data: LinkedList<(K, V)>,
+    data: LinkedList<(K, V)>,
     key: BTreeSet<K>,
 }
 
@@ -74,7 +74,7 @@ where
             self.data.push_back((key, value));
         }
     }
-    pub fn pack(&self) -> PackDeltaList<K, V> {
-        self.data.clone()
+    pub fn pack(&self) -> impl Iterator<Item = (K, V)> + '_ {
+        self.data.iter().cloned()
     }
 }

@@ -1,5 +1,7 @@
-pub use crate::id::ID;
-pub use crate::uid::UID;
+pub use crate::dice::Dice;
+pub use crate::res::Res;
+pub use crate::t_recs::{Id, UId};
+pub use crate::typename::TypeName;
 pub use crate::util::{Bottle, Envelop};
 
 pub use serde_json::from_str as obj;
