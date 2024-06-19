@@ -9,11 +9,3 @@ pub struct GameReg {
     pub mat: Arc<RegTab<Mat>>,
     pub terra: Arc<RegTab<Terra>>,
 }
-
-pub struct RegLoader {
-    item: ItemReg,
-}
-
-// impl RegLoader{
-//     pub fn
-// }

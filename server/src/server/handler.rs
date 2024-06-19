@@ -4,13 +4,12 @@ use axum::{
     Json,
 };
 use http_auth_basic::Credentials;
-use std::collections::{HashMap, VecDeque};
 use vitium_common::{
     cmd::Echo,
     error::UnimplError,
     game::PC,
     player::Player,
-    req::{self, Action, Chat},
+    req::{self, Action},
     Res,
 };
 
@@ -18,77 +17,117 @@ use super::Server;
 
 type Responce<T> = Result<Json<Res<T>>, StatusCode>;
 
-pub async fn recv_chat(State(s): State<Server>) -> (StatusCode, Json<VecDeque<(String, Chat)>>) {
-    (StatusCode::OK, Json(s.chat.read().await.clone()))
+pub async fn edit_pswd(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(req::EditPswd(pswd)): Json<req::EditPswd>,
+) -> Responce<req::EditPswd> {
+    if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
+        if let Ok(b) = Credentials::from_header(h.to_string()) {
+            let safe = s.safe.lock().unwrap();
+            return match safe.update(&b.user_id, &pswd, &b.password) {
+                Ok(_) => Ok(Json(Ok(()))),
+                Err(e) => Ok(Json(Err(format!("{e}")))),
+            };
+        }
+    }
+    Err(StatusCode::UNAUTHORIZED)
 }
 
-pub async fn get_player(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, Player>>) {
-    (StatusCode::OK, Json(s.player.read().await.clone()))
+pub async fn recv_chat(
+    State(s): State<Server>,
+    Json(req::RecvChat(time)): Json<req::RecvChat>,
+) -> Responce<req::RecvChat> {
+    let data = s.chat.read().await;
+    let res = data
+        .iter()
+        .filter(|(_, chat)| chat.recv_time > time)
+        .cloned()
+        .collect();
+    Ok(Json(Ok(res)))
 }
-pub async fn get_pc(State(s): State<Server>) -> (StatusCode, Json<HashMap<String, PC>>) {
-    (StatusCode::OK, Json(s.pc.read().await.clone()))
+
+pub async fn get_player(State(s): State<Server>) -> Responce<req::GetPlayer> {
+    let res = s
+        .player
+        .read()
+        .await
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    Ok(Json(Ok(res)))
+}
+
+pub async fn get_pc(State(s): State<Server>) -> Responce<req::GetPC> {
+    let res =
+        s.pc.read()
+            .await
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+    Ok(Json(Ok(res)))
 }
 
 pub async fn send_chat(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::Chat>,
-) -> StatusCode {
+    Json(req): Json<req::SendChat>,
+) -> Responce<req::SendChat> {
     if let Some(name) = s.auth(&head).await {
         let mut dat = s.chat.write().await;
         while dat.len() >= s.cfg.chat_cap {
             dat.pop_front();
         }
-        dat.push_back((name, req.received()));
-        StatusCode::ACCEPTED
+        let chat = req.received();
+        let time = chat.recv_time;
+        dat.push_back((name, chat));
+        Ok(Json(Ok(time)))
     } else {
-        StatusCode::FORBIDDEN
+        Err(StatusCode::FORBIDDEN)
     }
-}
-
-pub async fn edit_pswd(
-    State(s): State<Server>,
-    head: HeaderMap,
-    Json(req::EditPswd(pswd)): Json<req::EditPswd>,
-) -> StatusCode {
-    if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
-        if let Ok(b) = Credentials::from_header(h.to_string()) {
-            let safe = s.safe.lock().unwrap();
-            if safe.update(&b.user_id, &pswd, &b.password).is_ok() {
-                return StatusCode::OK;
-            }
-        }
-    }
-    StatusCode::FORBIDDEN
 }
 
 pub async fn edit_player(
     State(s): State<Server>,
     head: HeaderMap,
     Json(req): Json<req::Edit<Player>>,
-) -> StatusCode {
+) -> Responce<req::Edit<Player>> {
+    // edit existing player
     if let Some(name) = s.auth(&head).await {
         if name != req.src {
-            return StatusCode::FORBIDDEN;
+            return Err(StatusCode::FORBIDDEN);
         }
         let mut tab = s.player.write().await;
         match (tab.contains_key(&req.src), req.dst) {
-            (true, None) => {
-                tab.remove(&req.src);
-                StatusCode::OK
-            }
-            (true, Some(p)) => {
-                tab.insert(req.src, p);
-                StatusCode::OK
-            }
-            (false, None) => StatusCode::NOT_FOUND,
-            (false, Some(p)) => {
-                tab.insert(req.src, p);
-                StatusCode::CREATED
+            (true, None) => Ok(Json(Ok(tab.remove(&req.src)))),
+            (true, Some(p)) => Ok(Json(Ok(tab.insert(req.src, p)))),
+            (false, None) => Ok(Json(Err(format!("player {} not found", req.src)))),
+            (false, Some(p)) => Ok(Json(Ok(tab.insert(req.src, p)))),
+        }
+    }
+    // create new player
+    else {
+        if let Some(Ok(token)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
+            if let Ok(b) = Credentials::from_header(token.to_string()) {
+                let mut data = s.player.write().await;
+                if b.user_id != req.src {
+                    return Err(StatusCode::BAD_REQUEST);
+                }
+                if data.contains_key(&req.src) {
+                    return Err(StatusCode::FORBIDDEN);
+                }
+                let safe = s.safe.lock().unwrap();
+                if let Err(e) = safe.create(&b.user_id, &b.password) {
+                    return Ok(Json(Err(format!("{e}"))));
+                }
+                return if let Some(p) = req.dst {
+                    Ok(Json(Ok(data.insert(req.src, p))))
+                } else {
+                    Err(StatusCode::BAD_REQUEST)
+                };
             }
         }
-    } else {
-        StatusCode::FORBIDDEN
+        Err(StatusCode::UNAUTHORIZED)
     }
 }
 
@@ -108,7 +147,7 @@ pub async fn edit_pc(
         match (tab.contains_key(&req.src), req.dst) {
             (true, None) => Ok(Json(Ok(tab.remove(&req.src)))),
             (true, Some(c)) => Ok(Json(Ok(tab.insert(req.src, c)))),
-            (false, None) => Ok(Json(Err(format!("no player character: {}", req.src)))),
+            (false, None) => Ok(Json(Err(format!("player character {} not found", req.src)))),
             (false, Some(c)) => Ok(Json(Ok(tab.insert(req.src, c)))),
         }
     } else {

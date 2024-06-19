@@ -4,7 +4,6 @@ use std::{
     sync::Mutex,
 };
 
-use tokio::sync::RwLock;
 use vitium_common::game::GameStat;
 
 pub mod prelude;
