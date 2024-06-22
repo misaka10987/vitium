@@ -149,6 +149,19 @@ where
     }
 }
 
+pub trait Builtin: Sized {
+    fn builtin() -> impl IntoIterator<Item = (Id, Self)>;
+}
+
+impl<T: Regis> Default for RegTab<T>
+where
+    T: Builtin,
+{
+    fn default() -> Self {
+        Self(T::builtin().into_iter().collect())
+    }
+}
+
 /// String identifier for a class of entity, usually used in registeries.
 ///
 /// # Formats

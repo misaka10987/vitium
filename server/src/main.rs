@@ -1,7 +1,6 @@
 use std::{error::Error, path::Path};
 
 use clap::Parser;
-use server::Server;
 use tracing::{info, Level};
 
 use crate::{input::input, server::ServerConfig};
@@ -15,6 +14,8 @@ pub mod input;
 pub mod script;
 /// New server.
 pub mod server;
+
+pub use server::Server;
 
 #[derive(Parser, Debug)]
 struct Args {

@@ -9,7 +9,7 @@ use vitium_common::{
     error::UnimplError,
     game::PC,
     player::Player,
-    req::{self, Action},
+    req::{self},
     Res,
 };
 
@@ -152,30 +152,6 @@ pub async fn edit_pc(
         }
     } else {
         Err(StatusCode::FORBIDDEN)
-    }
-}
-
-pub async fn act(
-    State(s): State<Server>,
-    head: HeaderMap,
-    Json(req): Json<(String, Action)>,
-) -> StatusCode {
-    if let Some(name) = s.auth(&head).await {
-        let (pc, _) = req;
-        if let Some(c) = s.pc.read().await.get(&pc) {
-            if c.player == name {
-                let _ = s.game;
-                todo!()
-            } else {
-                // the request has a token but not matches the character it operates on
-                StatusCode::FORBIDDEN
-            }
-        } else {
-            // trying to request act on a non-exist character
-            StatusCode::NOT_FOUND
-        }
-    } else {
-        StatusCode::FORBIDDEN
     }
 }
 

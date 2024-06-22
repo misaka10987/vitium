@@ -14,11 +14,7 @@ pub struct Atk {
 impl Act for Atk {
     const SYNC: bool = true;
 
-    type Res = AtkRes;
-}
+    type Success = HashMap<DmgType, i16>;
 
-#[derive(Clone, Serialize, Deserialize)]
-pub enum AtkRes {
-    Success(HashMap<DmgType, i16>),
-    Miss,
+    type Failure = ();
 }

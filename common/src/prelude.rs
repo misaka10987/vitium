@@ -1,4 +1,5 @@
 pub use crate::dice::Dice;
+pub use crate::req::Req;
 pub use crate::res::Res;
 pub use crate::t_recs::{Id, UId};
 pub use crate::typename::TypeName;

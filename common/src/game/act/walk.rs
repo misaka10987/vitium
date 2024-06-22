@@ -12,11 +12,7 @@ pub struct Walk {
 impl Act for Walk {
     const SYNC: bool = false;
 
-    type Res = WalkRes;
-}
+    type Success = ();
 
-#[derive(Clone, Serialize, Deserialize)]
-pub enum WalkRes {
-    Success,
-    Forbidden,
+    type Failure = ();
 }

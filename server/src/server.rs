@@ -27,7 +27,7 @@ use tower_http::trace::TraceLayer;
 use tracing::{error, warn};
 use vitium_common::{game::PC, player::Player, req::Chat};
 
-use crate::game::Game;
+use crate::game::{self, Game};
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
@@ -36,7 +36,7 @@ pub struct ServerInst {
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
-    game: RwLock<Game>,
+    pub game: RwLock<Game>,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -109,9 +109,9 @@ impl Server {
             .route("/player", post(handler::edit_player))
             .route("/pc", get(handler::get_pc))
             .route("/pc", post(handler::edit_pc))
-            .route("/act", post(handler::act))
             .route("/sync", get(handler::sync))
-            .route("/cmd", post(handler::cmd));
+            .route("/cmd", post(handler::cmd))
+            .nest("/act", game::act_handler());
         let app = Router::new()
             .nest("/api", app)
             .route("/", get(Redirect::to(&self.cfg.page_url)))
