@@ -80,7 +80,7 @@ impl MapProvider {
             MapProvider::Loader(l) => match l.load(x, y) {
                 Ok(c) => c,
                 Err(e) => {
-                    error!("failed to load chunk: {}", e);
+                    error!("failed to load chunk: {e}");
                     error!("continue anyway using void chunk");
                     Chunk::void()
                 }
@@ -96,7 +96,7 @@ impl MapProvider {
         match self {
             MapProvider::Loader(l) => {
                 if let Err(e) = l.save(x, y, chunk) {
-                    error!("failed to save chunk: {}", e)
+                    error!("failed to save chunk: {e}")
                 }
             }
             MapProvider::Template(_) => {}

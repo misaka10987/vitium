@@ -1,9 +1,9 @@
 use std::collections::{linked_list, BTreeSet, LinkedList};
 
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 pub trait Delta {
-    type Item: Serialize + Deserialize<'static>;
+    type Item: Serialize + DeserializeOwned;
     fn calc(&mut self) -> impl Iterator<Item = Self::Item>;
     fn diff(&self) -> impl Iterator<Item = Self::Item>;
     fn apply(&mut self, delta: impl Iterator<Item = Self::Item>);
@@ -19,7 +19,7 @@ where
     key: BTreeSet<K>,
 }
 
-pub type PackDeltaList<K, V> = LinkedList<(K, V)>;
+pub type PackDeltaList<K, V> = Vec<(K, V)>;
 
 impl<K, V> Extend<(K, V)> for DeltaList<K, V>
 where

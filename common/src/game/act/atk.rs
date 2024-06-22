@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::game::{DmgType, Obj};
+use crate::game::{DmgType, Target};
 
 use super::Act;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Atk {
-    pub target: Obj,
+    pub target: Target,
 }
 
 impl Act for Atk {

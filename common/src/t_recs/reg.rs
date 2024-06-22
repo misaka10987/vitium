@@ -1,14 +1,16 @@
 use std::{
     collections::HashMap,
     error::Error,
-    fmt::{write, Display},
+    fmt::Display,
     fs,
     ops::{Deref, DerefMut},
     path::Path,
+    str::FromStr,
 };
 
+use kstring::StackString;
 use serde::{
-    de::{DeserializeOwned, Visitor},
+    de::{DeserializeOwned, Unexpected, Visitor},
     Deserialize, Serialize,
 };
 use tracing::trace;
@@ -151,8 +153,9 @@ where
 ///
 /// # Formats
 ///
-/// A valid `Id` should contain one and only one char `:` that seperates it into two strings,
-/// with the former stands for module name and latter stands for id, e.g. `example-module:example-id`.
+/// A valid `Id` contains only one char `:` that seperates it into two strings,
+/// with the former stands for module name and latter stands for id, e.g. `example:example-id`.
+/// The `id` field must not exceed 12 characters and `module` must not exceed 10.
 ///
 /// Despite the fact that case-sensitive characters,
 /// some special characters and Unicode *is* supported,
@@ -163,18 +166,34 @@ where
 /// # Special rules
 ///
 /// An `Id` with an empty module name (like `:builtin-id`) is for the vitium-builtin objects.
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Id {
     /// The local identifier, should be unique inside the module,
     /// even if the type is different.
-    pub id: String,
+    pub id: StackString<12>,
     /// Module name.
-    pub module: String,
+    pub module: StackString<10>,
 }
 
 impl Display for Id {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write(f, format_args!("{}:{}", self.id, self.module))
+        write!(f, "{}:{}", self.module, self.id)
+    }
+}
+
+impl FromStr for Id {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v: Vec<_> = s.split(':').collect();
+        if v.len() != 2 {
+            return Err(format!("invalid id: {s}"));
+        }
+        let (module, id) = (v[0], v[1]);
+        match (StackString::try_new(module), StackString::try_new(id)) {
+            (Some(module), Some(id)) => Ok(Self { id, module }),
+            _ => Err(format!("invalid id: {s}")),
+        }
     }
 }
 
@@ -183,7 +202,7 @@ impl Serialize for Id {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&format!("{}:{}", self.id, self.module))
+        serializer.serialize_str(&format!("{self}"))
     }
 }
 
@@ -193,21 +212,17 @@ impl<'de> Visitor<'de> for IdVisitor {
     type Value = Id;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            formatter,
-            "a string that can be splitted by a ':' into two valid identifiers"
-        )
+        write!(formatter, "${{module}}:${{id}}")
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
     {
-        let s: Vec<&str> = v.split(':').collect();
-        if s.len() != 2 {
-            return Err(E::missing_field("`id` or `module`"));
+        match v.parse() {
+            Ok(id) => Ok(id),
+            Err(_) => Err(E::invalid_value(Unexpected::Str(v), &self)),
         }
-        Ok(Id::new(s[0], s[1]))
     }
 }
 
@@ -221,10 +236,12 @@ impl<'de> Deserialize<'de> for Id {
 }
 
 impl Id {
+    /// # Panics
+    /// Panic if `id.len()>=12` or `module.len()>=10`.
     pub fn new(id: &str, module: &str) -> Self {
         Self {
-            module: module.to_string(),
-            id: id.to_string(),
+            id: StackString::new(id),
+            module: StackString::new(module),
         }
     }
     pub fn builtin(id: &str) -> Self {
@@ -249,7 +266,7 @@ mod test {
     use crate::test::*;
     impl Example for Id {
         fn examples() -> Vec<Self> {
-            vec![Id::new("example-id", "example-module")]
+            vec![Id::new("example-id", "example")]
         }
     }
 }
