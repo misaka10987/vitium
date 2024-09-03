@@ -8,7 +8,7 @@ use crate::{input::input, server::ServerConfig};
 /// Dice implementation using `ndm`.
 pub mod dice;
 /// Specific game logics goes here.
-pub mod game;
+// pub mod game;
 /// Process the input when running server.
 pub mod input;
 pub mod script;

@@ -25,9 +25,9 @@ use tokio::{
 };
 use tower_http::trace::TraceLayer;
 use tracing::{error, warn};
-use vitium_common::{game::PC, player::Player, req::Chat};
+use vitium_api::{game::PC, player::Player, req::Chat};
 
-use crate::game::{self, Game};
+// use crate::game::{self, Game};
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
@@ -36,7 +36,7 @@ pub struct ServerInst {
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
-    pub game: RwLock<Game>,
+    // pub game: RwLock<Game>,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -79,7 +79,7 @@ impl Server {
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat: RwLock::new(VecDeque::new()),
-            game: RwLock::new(Game::new()),
+            // game: RwLock::new(Game::new()),
         }))
     }
     /// Reads from the header and get authentication info.
@@ -110,8 +110,8 @@ impl Server {
             .route("/pc", get(handler::get_pc))
             .route("/pc", post(handler::edit_pc))
             .route("/sync", get(handler::sync))
-            .route("/cmd", post(handler::cmd))
-            .nest("/act", game::act_handler());
+            .route("/cmd", post(handler::cmd));
+        // .nest("/act", game::act_handler());
         let app = Router::new()
             .nest("/api", app)
             .route("/", get(Redirect::to(&self.cfg.page_url)))
@@ -126,32 +126,8 @@ impl Server {
 
 /// Command executors. Note that permission will **NOT** be verified.
 pub mod exec {
-    use std::error::Error;
-
-    use super::Server;
-    use serde::{Deserialize, Serialize};
-    use vitium_common::{error::UnimplError, player::NoPlayerError};
     pub fn hello() -> String {
         "Hello, world!".to_string()
-    }
-    pub async fn grant(s: &Server, player: &str) -> Result<String, String> {
-        let p = s.player.read().await;
-        let mut o = s.op.write().await;
-        if !p.contains_key(player) {
-            return Err(NoPlayerError(player.to_owned()).to_string());
-        }
-        if o.contains(player) {
-            return Err(format!(
-                "{player} is already operator, no modification is made",
-            ));
-        }
-        o.insert(player.to_string());
-        Ok(format!("opped {player}"))
-    }
-    pub async fn shutdown(
-        _s: &Server,
-    ) -> Result<String, impl Error + Serialize + Deserialize<'static>> {
-        Err(UnimplError("shutdown".to_string()))
     }
 }
 

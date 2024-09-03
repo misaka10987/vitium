@@ -4,14 +4,8 @@ use axum::{
     Json,
 };
 use http_auth_basic::Credentials;
-use vitium_common::{
-    cmd::Echo,
-    error::UnimplError,
-    game::PC,
-    player::Player,
-    req::{self},
-    Res,
-};
+
+use vitium_api::{cmd::Echo, game::PC, req, res::Res, Player};
 
 use super::Server;
 
@@ -163,18 +157,22 @@ pub async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
 pub async fn cmd(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::Cmd>,
+    Json(_): Json<req::Cmd>,
 ) -> (StatusCode, Json<Option<Echo>>) {
-    if let Some(name) = s.auth(&head).await {
-        let g = s.game.read().await;
-        let _ = req;
-        if g.stat.host == name {
-            let err = UnimplError("command".to_owned());
-            return (
-                StatusCode::NOT_IMPLEMENTED,
-                Json(Some(Err(err.to_string()))),
-            );
-        }
+    if let Some(_) = s.auth(&head).await {
+        // let g = s.game.read().await;
+        // let _ = req;
+        // if g.stat.host == name {
+        //     let err = UnimplError("command".to_owned());
+        //     return (
+        //         StatusCode::NOT_IMPLEMENTED,
+        //         Json(Some(Err(err.to_string()))),
+        //     );
+        // };
+        return (
+            StatusCode::NOT_IMPLEMENTED,
+            Json(Some(Err("not implemented".to_string()))),
+        );
     }
     (StatusCode::FORBIDDEN, Json(None))
 }
