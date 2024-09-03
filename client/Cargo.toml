@@ -6,5 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cursive = "0.20.0"
 vitium-common = { path = "../common" }
+
+[target.'cfg(unix)'.dependencies]
+cursive = { version = "0.20.0", features = [
+    "ncurses-backend",
+], default-features = false }
+
+[target.'cfg(not(unix))'.dependencies]
+cursive = { version = "0.20.0" }
