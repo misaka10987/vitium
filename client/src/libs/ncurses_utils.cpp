@@ -1,4 +1,4 @@
-#include <ncurses.h>
+#include "curses_include.hpp"
 #include <utility>
 namespace nutils
 {
