@@ -11,7 +11,7 @@ int main()
     keypad(stdscr, true);
     noecho();
 
-
+    /// here, we will fork out threads for the registry, the timer. Frontend will run under this main thread.
 
     while (!Exit_Flag) // main loop
     {
@@ -22,4 +22,5 @@ int main()
     }
 
     endwin(); // end curses mode
+    return 0;
 }
