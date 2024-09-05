@@ -11,3 +11,12 @@ Just run the "build.sh" and things should be fine. If you fail to find ncurses, 
 Please put the PDCurses folder parallel to the 'vitium' git repo (in the same parent folder).
 You have to rename the extracted (or perhaps cloned) PDCurses repo (e.g. from "PDCurses-3.9") to "PDCurses".
 Remember to compile the pdcurses library with make (follow their docs, dump it into ./wincon as defualt).
+
+### The include tree
+| Tree Top | - | - | - | - | 
+| - | - | - | - | - |
+| pdcurses/ncurses | - | - | - | - |
+| curses_include.hpp | - | - | - | - |
+|ncurses_utils.cpp|-|cpr.h|-|-|
+|frontend.cpp|-|connect.cpp|-|registry.cpp|
+|-|-|main.cpp|-|-|
