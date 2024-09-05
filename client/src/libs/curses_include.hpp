@@ -1,4 +1,4 @@
-#ifndef __UNIX__
+#ifndef __unix__
 #include "../PDCurses/curses.h"
 #include "../PDCurses/panel.h"
 #include "../PDCurses/curspriv.h"

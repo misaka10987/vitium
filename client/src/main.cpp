@@ -1,4 +1,4 @@
-#include "libs/ncurses_utils.hpp"
+#include "libs/ncurses_utils.cpp"
 
 int main()
 {
