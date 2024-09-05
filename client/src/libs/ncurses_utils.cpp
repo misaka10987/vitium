@@ -1,5 +1,6 @@
 #include "curses_include.hpp"
 #include <utility>
+#include <cstdint>
 namespace nutils
 {
     auto screen_size()

@@ -1,0 +1,1 @@
+g++ src\main.cpp ..\..\PDCurses\wincon\pdcurses.a
