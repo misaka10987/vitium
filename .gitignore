@@ -3,5 +3,6 @@
 **/Cargo.lock
 **/build
 /common-cfi/test
-**/test.exe
+**/*.exe
 **/a.out
+**/.vs
