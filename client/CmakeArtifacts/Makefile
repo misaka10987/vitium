@@ -85,6 +85,51 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+.PHONY : list_install_components/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
 # The main all target
 all: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts/CMakeFiles /mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts//CMakeFiles/progress.marks
@@ -129,6 +174,71 @@ Vitium/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Vitium.dir/build.make CMakeFiles/Vitium.dir/build
 .PHONY : Vitium/fast
 
+#=============================================================================
+# Target rules for targets named zlib
+
+# Build rule for target.
+zlib: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 zlib
+.PHONY : zlib
+
+# fast build rule for target.
+zlib/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/zlib-build/CMakeFiles/zlib.dir/build.make _deps/zlib-build/CMakeFiles/zlib.dir/build
+.PHONY : zlib/fast
+
+#=============================================================================
+# Target rules for targets named curl_uninstall
+
+# Build rule for target.
+curl_uninstall: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 curl_uninstall
+.PHONY : curl_uninstall
+
+# fast build rule for target.
+curl_uninstall/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/curl-build/CMakeFiles/curl_uninstall.dir/build.make _deps/curl-build/CMakeFiles/curl_uninstall.dir/build
+.PHONY : curl_uninstall/fast
+
+#=============================================================================
+# Target rules for targets named curlu
+
+# Build rule for target.
+curlu: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 curlu
+.PHONY : curlu
+
+# fast build rule for target.
+curlu/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/curl-build/lib/CMakeFiles/curlu.dir/build.make _deps/curl-build/lib/CMakeFiles/curlu.dir/build
+.PHONY : curlu/fast
+
+#=============================================================================
+# Target rules for targets named libcurl_shared
+
+# Build rule for target.
+libcurl_shared: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libcurl_shared
+.PHONY : libcurl_shared
+
+# fast build rule for target.
+libcurl_shared/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/curl-build/lib/CMakeFiles/libcurl_shared.dir/build.make _deps/curl-build/lib/CMakeFiles/libcurl_shared.dir/build
+.PHONY : libcurl_shared/fast
+
+#=============================================================================
+# Target rules for targets named cpr
+
+# Build rule for target.
+cpr: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cpr
+.PHONY : cpr
+
+# fast build rule for target.
+cpr/fast:
+	$(MAKE) $(MAKESILENT) -f _deps/cpr-build/cpr/CMakeFiles/cpr.dir/build.make _deps/cpr-build/cpr/CMakeFiles/cpr.dir/build
+.PHONY : cpr/fast
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -160,8 +270,17 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... install"
+	@echo "... install/local"
+	@echo "... install/strip"
+	@echo "... list_install_components"
 	@echo "... rebuild_cache"
+	@echo "... curl_uninstall"
 	@echo "... Vitium"
+	@echo "... cpr"
+	@echo "... curlu"
+	@echo "... libcurl_shared"
+	@echo "... zlib"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

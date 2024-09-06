@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = 
+CXX_INCLUDES = -I/mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts/_deps/cpr-src/include -I/mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts/_deps/cpr-build/cpr_generated_includes -I/mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts/_deps/curl-src/include
 
-CXX_FLAGS = -g
+CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 

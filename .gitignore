@@ -6,3 +6,5 @@
 **/*.exe
 **/a.out
 **/.vs
+**/CmakeArtifacts
+

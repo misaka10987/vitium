@@ -92,6 +92,8 @@ Vitium_EXTERNAL_OBJECTS =
 
 Vitium: CMakeFiles/Vitium.dir/src/main.cpp.o
 Vitium: CMakeFiles/Vitium.dir/build.make
+Vitium: _deps/cpr-build/cpr/libcpr.so.1.10.5
+Vitium: _deps/curl-build/lib/libcurl.so.4.8.0
 Vitium: CMakeFiles/Vitium.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable Vitium"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Vitium.dir/link.txt --verbose=$(VERBOSE)
