@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/Vitium.dir/src/main.cpp.o -o Vitium

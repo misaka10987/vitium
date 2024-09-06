@@ -1,1 +1,0 @@
-cl src\main.cpp ..\..\PDCurses\wincon\pdcurses.lib
