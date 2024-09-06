@@ -1,5 +1,5 @@
-#include "connect.cpp"
 #include "registry.cpp"
+#include "connect.cpp"
 #include <thread>
 #include "frontend.cpp" // This file have to be included last because "curses.h" has some shit macros that would crash into the lib-cpr.
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
-project(Vitium-client-ng)
-set(CMAKE_CXX_STANDARD 17)
+project(Vitium)
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Vitium src/main.cpp)
 

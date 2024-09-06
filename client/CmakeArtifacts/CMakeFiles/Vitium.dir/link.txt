@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/Vitium.dir/src/main.cpp.o -o Vitium  -Wl,-rpath,/mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts/_deps/cpr-build/cpr:/mnt/3466745F667423B0/Coding/Vitium-dev/vitium/client/CmakeArtifacts/_deps/curl-build/lib _deps/cpr-build/cpr/libcpr.so.1.10.5 _deps/curl-build/lib/libcurl.so.4.8.0

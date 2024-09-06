@@ -6,5 +6,5 @@
 **/*.exe
 **/a.out
 **/.vs
-**/CmakeArtifacts
+/client/CmakeArtifacts
 
