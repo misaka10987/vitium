@@ -4,6 +4,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Vitium src/main.cpp)
 
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIR})
+target_link_libraries(Vitium PRIVATE ${CURSES_LIBRARIES})
+
 include(FetchContent)
 FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
                          GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8) # Replace with your desired git commit, we are using the ver 1.10.5
