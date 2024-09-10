@@ -1,6 +1,7 @@
 #pragma once
 #include "curses_include.hpp"
 #include <tuple>
+#include <string>
 #include <cstdint>
 namespace nutils
 {
@@ -10,9 +11,4 @@ namespace nutils
         int y;
     };
 
-    auto update_screen_size()
-    {
-        struct vec2 screen_size = {getmaxx(stdscr), getmaxy(stdscr)};
-        return screen_size;
-    }
 } // namespace nutils, a few useful tool functions, structs and definitions

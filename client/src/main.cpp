@@ -7,12 +7,9 @@ const bool DEBUG = true;
 
 int main()
 {
-    initscr(); // Start curses mode
-    raw();
-    keypad(stdscr, true);
-    noecho();
-
     /// here, we will fork out threads for the registry, the timer. The frontend should run under this main thread.
+
+    frontend::curses_init();
 
     while (!frontend::Exit_Flag) // main loop
     {
