@@ -1,13 +1,14 @@
 /// this file is meant to provide an interface and tools to show messeges on the screen, as well as maintain the vitium ui.
+#pragma once
 #include "libs/ncurses_utils.cpp"
 #include <iostream>
-#include "keyboard.cpp"
+#include "map.cpp"
 
 namespace frontend
 {
-    inline volatile bool Exit_Flag = false;
+    volatile bool Exit_Flag = false; // only in keyboard event handler could this flag be set.
 
-    inline void curses_init()
+    void curses_init()
     {
         initscr(); // Start curses mode
         cbreak();
@@ -16,7 +17,7 @@ namespace frontend
         noecho();
     } // intialize the ncurses and configure a few of the display settings
 
-    inline void pop_up(int height, int width, std::string title, std::string message)
+    void pop_up(int height, int width, std::string title, std::string message)
     {
         if (height < 3 || width < 3)
         {
@@ -53,7 +54,7 @@ namespace frontend
         delwin(pop_box_up);
     }
 
-    inline void hello_world() noexcept
+    void hello_world() noexcept
     {
         printw("Hello World !!!");
         refresh(); // Move the 'window' on to the screen

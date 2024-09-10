@@ -1,13 +1,16 @@
+#define DEBUG
+
 #include "registry.cpp"
 #include "connect.cpp"
 #include <thread>
-#include "frontend.cpp" // This file have to be included last because "curses.h" has some shit macros that would crash into the lib-cpr.
-
-const bool DEBUG = true;
+#include "keyboard.cpp" // This file have to be included last because "curses.h" from "frontend.cpp" has some shit macros that would crash into the lib-cpr.
 
 int main()
 {
+    freopen("vitium_client.log", "w", stderr);
+
     /// here, we will fork out threads for the registry, the timer. The frontend should run under this main thread.
+    std::thread(keyboard::keyboard_event_listener);
 
     frontend::curses_init();
 
