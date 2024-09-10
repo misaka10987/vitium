@@ -29,3 +29,16 @@
 - GUI
 
 - LLM-plugin
+
+**Vitium TUI client dev TODOs**
+
+- all connectivities
+
+- regit
+
+- block class
+
+- frontend main view
+    - map display
+    - chat display
+    - object info window

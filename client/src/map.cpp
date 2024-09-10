@@ -1,11 +1,12 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include "registry.cpp"
 /// @brief This file is a class only file. You use it to access the maintained scene cache.
 /// @note All pointers should be either 0 (not initialized) or nullptr or a valid block pointer. DO NOT USE "NULL".
 namespace map
 {
-    class block
+    class block // @todo
     {
     };
 
@@ -43,9 +44,7 @@ namespace map
             scene_base[x % 65535][y % 65535] = blk;
         } // usage: scene.set(x, y, new block(...));
 
-        scene()
-        {
-        }
+        scene() {}
         ~scene()
         {
             for (int i = 0; i < 65535; i++)
