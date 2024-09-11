@@ -118,16 +118,8 @@ pub struct Edit<T, Id = String> {
     pub dst: Option<T>,
 }
 
-impl Req for Edit<Player> {
-    type Response = Option<Player>;
-
-    const PATH: &'static str = "/api/player";
-
-    const METHOD: &'static str = "POST";
-}
-
 impl Req for Edit<PC> {
-    type Response = Option<PC>;
+    type Response = ();
 
     const PATH: &'static str = "/api/pc";
 
@@ -135,16 +127,26 @@ impl Req for Edit<PC> {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct EditPswd(pub Password);
+pub struct EditPass(pub Password);
 
-impl Req for EditPswd {
+impl Req for EditPass {
     type Response = ();
 
-    const PATH: &'static str = "/api/password";
+    const PATH: &'static str = "/api/auth/pass";
 
     const METHOD: &'static str = "POST";
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EditPlayer(pub Player);
+
+impl Req for EditPlayer{
+    type Response = ();
+
+    const PATH: &'static str = "/api/player";
+
+    const METHOD: &'static str = "POST";
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Sync {}
