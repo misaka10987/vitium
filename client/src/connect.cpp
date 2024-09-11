@@ -4,3 +4,10 @@
 #include "libs/timer.cpp"
 #include "map.cpp"
 #include <cpr/cpr.h>
+#include <string>
+namespace connct{
+    struct Player {
+        std::string display_name;
+
+    };
+}
