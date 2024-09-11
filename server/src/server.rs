@@ -11,23 +11,20 @@ use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
-    error::Error,
     ops::{Deref, DerefMut},
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, Mutex},
 };
 use tokio::{
-    fs,
-    io::{self, AsyncWriteExt},
     net::TcpListener,
     signal,
     sync::RwLock,
 };
 use tower_http::trace::TraceLayer;
-use tracing::{error, warn};
-use vitium_common::{game::PC, player::Player, req::Chat};
+use tracing::warn;
+use vitium_api::{game::PC, player::Player, net::Chat};
 
-use crate::game::Game;
+// use crate::game::{self, Game};
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
@@ -36,7 +33,7 @@ pub struct ServerInst {
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
-    game: RwLock<Game>,
+    // pub game: RwLock<Game>,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -79,7 +76,7 @@ impl Server {
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat: RwLock::new(VecDeque::new()),
-            game: RwLock::new(Game::new()),
+            // game: RwLock::new(Game::new()),
         }))
     }
     /// Reads from the header and get authentication info.
@@ -109,9 +106,9 @@ impl Server {
             .route("/player", post(handler::edit_player))
             .route("/pc", get(handler::get_pc))
             .route("/pc", post(handler::edit_pc))
-            .route("/act", post(handler::act))
             .route("/sync", get(handler::sync))
             .route("/cmd", post(handler::cmd));
+        // .nest("/act", game::act_handler());
         let app = Router::new()
             .nest("/api", app)
             .route("/", get(Redirect::to(&self.cfg.page_url)))
@@ -126,32 +123,8 @@ impl Server {
 
 /// Command executors. Note that permission will **NOT** be verified.
 pub mod exec {
-    use std::error::Error;
-
-    use super::Server;
-    use serde::{Deserialize, Serialize};
-    use vitium_common::{error::UnimplError, player::NoPlayerError};
     pub fn hello() -> String {
         "Hello, world!".to_string()
-    }
-    pub async fn grant(s: &Server, player: &str) -> Result<String, String> {
-        let p = s.player.read().await;
-        let mut o = s.op.write().await;
-        if !p.contains_key(player) {
-            return Err(NoPlayerError(player.to_owned()).to_string());
-        }
-        if o.contains(player) {
-            return Err(format!(
-                "{player} is already operator, no modification is made",
-            ));
-        }
-        o.insert(player.to_string());
-        Ok(format!("opped {player}"))
-    }
-    pub async fn shutdown(
-        _s: &Server,
-    ) -> Result<String, impl Error + Serialize + Deserialize<'static>> {
-        Err(UnimplError("shutdown".to_string()))
     }
 }
 
@@ -183,7 +156,6 @@ pub struct ServerConfig {
     pub port: u16,
     pub chat_cap: usize,
     pub page_url: String,
-    pub password_salt: String,
 }
 
 impl Default for ServerConfig {
@@ -193,42 +165,6 @@ impl Default for ServerConfig {
             port: 10987,
             chat_cap: 255,
             page_url: "https://github.com/misaka10987/vitium".to_string(),
-            password_salt: "0123456789abcdef".to_string(),
-        }
-    }
-}
-
-impl ServerConfig {
-    pub async fn load(path: impl AsRef<Path>) -> Result<Self, Box<dyn Error>> {
-        let path = path.as_ref();
-        if !path.exists() {
-            let err = io::Error::new(
-                io::ErrorKind::NotFound,
-                format!("{} not found", path.display()),
-            );
-            let f = fs::File::create(path);
-            let cfg = Self::default();
-            f.await?
-                .write(toml::to_string(&cfg).unwrap().as_bytes())
-                .await?;
-            Err(Box::new(err))
-        } else {
-            let s = fs::read_to_string(path).await?;
-            Ok(toml::from_str::<ServerConfig>(&s)?)
-        }
-    }
-    pub async fn try_load(path: impl AsRef<Path>) -> Self {
-        let path = path.as_ref();
-        match Self::load(path).await {
-            Ok(cfg) => cfg,
-            Err(e) => {
-                error!(
-                    "failed to load server config at \"{}\": \"{e}\"",
-                    path.display()
-                );
-                warn!("using default config instead");
-                Self::default()
-            }
         }
     }
 }

@@ -1,15 +1,17 @@
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
-    sync::Mutex,
 };
 
-use vitium_common::game::GameStat;
+use axum::{routing::post, Router};
+use vitium_api::game::GameStat;
 
 pub mod prelude;
 pub mod proc;
 pub mod reg;
 pub mod slave;
+
+use crate::Server;
 
 pub use self::prelude::*;
 
@@ -30,8 +32,7 @@ pub struct Game {
     /// Current game status.
     pub stat: GameStat,
     pub pc_stat: HashMap<String, (usize, u64)>,
-    // reg: GameReg,
-    slave: HashMap<usize, Mutex<Slave>>,
+    // slave: HashMap<usize, Mutex<Slave>>,
 }
 
 impl Game {
@@ -48,8 +49,7 @@ impl Game {
                 modlist: HashSet::new(),
             },
             pc_stat: HashMap::new(),
-            // reg: todo!(),
-            slave: HashMap::new(),
+            // slave: HashMap::new(),
         }
     }
     // /// Process an act submitted.
@@ -59,4 +59,8 @@ impl Game {
     //     s.send(StatusCode::NOT_IMPLEMENTED).unwrap();
     //     r
     // }
+}
+
+pub fn act_handler() -> Router<Server> {
+    Router::new().route("/attack", post(proc::atk))
 }

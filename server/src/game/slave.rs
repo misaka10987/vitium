@@ -1,7 +1,6 @@
 pub mod walk;
 
-use tokio::sync::Mutex;
-use vitium_common::game::Scena;
+use vitium_api::game::Scena;
 
 pub struct Slave {
     pub scena: Scena,
