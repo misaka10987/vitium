@@ -1,35 +1,31 @@
 mod handler;
 
 use axum::{
-    http::{header::AUTHORIZATION, HeaderMap, StatusCode},
+    http::StatusCode,
     response::Redirect,
     routing::{any, get, post},
     Router,
 };
-use http_auth_basic::Credentials;
+use axum_extra::extract::CookieJar;
 use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     ops::{Deref, DerefMut},
     path::PathBuf,
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
-use tokio::{
-    net::TcpListener,
-    signal,
-    sync::RwLock,
-};
+use tokio::{net::TcpListener, signal, sync::RwLock};
 use tower_http::trace::TraceLayer;
-use tracing::warn;
-use vitium_api::{game::PC, player::Player, net::Chat};
+use tracing::trace;
+use vitium_api::{game::PC, net::Chat, player::Player};
 
 // use crate::game::{self, Game};
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
     player: RwLock<HashMap<String, Player>>,
-    safe: Mutex<SafeBox>,
+    safe: SafeBox,
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     chat: RwLock<VecDeque<(String, Chat)>>,
@@ -61,45 +57,46 @@ impl DerefMut for Server {
     }
 }
 
-impl Default for Server {
-    fn default() -> Self {
-        Self::with_cfg(ServerConfig::default())
-    }
-}
-
 impl Server {
-    pub fn with_cfg(cfg: ServerConfig) -> Self {
+    /// Create a server with specified configuration.
+    pub async fn new(cfg: ServerConfig) -> Self {
         Self(Arc::new(ServerInst {
             cfg,
             player: RwLock::new(HashMap::new()),
-            safe: Mutex::new(SafeBox::new("./password.db")),
+            safe: SafeBox::new("./password.db").await.unwrap(),
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat: RwLock::new(VecDeque::new()),
             // game: RwLock::new(Game::new()),
         }))
     }
+
     /// Reads from the header and get authentication info.
-    pub async fn auth(&self, head: &HeaderMap) -> Option<String> {
-        if let Some(Ok(s)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
-            if let Ok(b) = Credentials::from_header(s.to_string()) {
-                let safe = self.safe.lock().unwrap();
-                match safe.verify(&b.user_id, &b.password) {
-                    Ok(_) => return Some(b.user_id),
-                    Err(e) => warn!("{e}"),
+    pub fn auth(&self, jar: &CookieJar) -> Option<String> {
+        if let Some(token) = jar.get("token") {
+            let token = token.value();
+            match self.safe.verify_token(token) {
+                Ok(user) => {
+                    trace!("authorized {user} by token");
+                    return Some(user);
                 }
+                Err(e) => trace!("failed to authorize with token {token}: {e}"),
             }
         }
         None
     }
+
     /// Consumes `self` and start the server.
     pub async fn run(self) -> Result<(), std::io::Error> {
         let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
             .await
             .expect("failed to bind TCP listener");
+        let auth = Router::new()
+            .route("/login", get(handler::login))
+            .route("/pass", post(handler::edit_pass));
         let app = Router::new()
+            .nest("/auth", auth)
             .route("/hello", get("Hello, world!"))
-            .route("/password", post(handler::edit_pswd))
             .route("/chat", get(handler::recv_chat))
             .route("/chat", post(handler::send_chat))
             .route("/player", get(handler::get_player))

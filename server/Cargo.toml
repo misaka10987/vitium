@@ -16,7 +16,7 @@ license = "GPL-3.0-only"
 [dependencies]
 vitium-api = { path = "../api" }
 vitium-common = { path = "../common" }
-axum = "0.7.3"
+axum = "0.7.5"
 ndm = "0.9.10"
 tokio = { version = "1.35.1", features = ["full"] }
 serde = { version = "1.0.194", features = ["derive"] }
@@ -28,5 +28,6 @@ clearscreen = "3.0.0"
 http-auth-basic = "0.3.3"
 toml = "0.8.12"
 serde_json = "1.0.117"
-safe-box = "0.1.0"
+safe-box = "0.1.2"
 thiserror = "1.0.63"
+axum-extra = { version = "0.9.3", features = ["cookie"] }

@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     info!("running with {:?}", arg);
     let cfg = try_load_toml(arg.config).await;
     let input = input();
-    Server::with_cfg(cfg).run().await?;
+    Server::new(cfg).await.run().await?;
     input.send(()).expect("failed to shutdown input thread");
     Ok(())
 }
