@@ -8,10 +8,3 @@ edition = "2021"
 [dependencies]
 vitium-common = { path = "../common" }
 
-[target.'cfg(unix)'.dependencies]
-cursive = { version = "0.20.0", features = [
-    "ncurses-backend",
-], default-features = false }
-
-[target.'cfg(not(unix))'.dependencies]
-cursive = { version = "0.20.0" }
