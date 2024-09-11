@@ -23,9 +23,10 @@ serde = { version = "1.0.194", features = ["derive"] }
 tower-http = { version = "0.5.0", features = ["trace"] }
 tracing-subscriber = "0.3.18"
 tracing = "0.1.40"
-clap = { version = "4.4.14", features = ["derive"] }
+clap = { version = "4.4.14", features = ["derive", "string"] }
 clearscreen = "3.0.0"
 http-auth-basic = "0.3.3"
 toml = "0.8.12"
 serde_json = "1.0.117"
 safe-box = "0.1.0"
+thiserror = "1.0.63"

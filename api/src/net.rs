@@ -144,3 +144,9 @@ impl Req for EditPswd {
 
     const METHOD: &'static str = "POST";
 }
+
+
+#[derive(Serialize, Deserialize)]
+pub struct Sync {}
+
+pub type Res<T> = Result<<T as Req>::Response, String>;

@@ -46,7 +46,7 @@ pub type Result<T> =
 
 macro_rules! req_act {
     ($act:ty,$name:expr) => {
-        impl $crate::req::Req for $crate::game::act::Action<$act> {
+        impl $crate::net::Req for $crate::game::act::Action<$act> {
             type Response = $crate::game::act::Result<$act>;
 
             const PATH: &'static str = concat!("/api/act/", $name);

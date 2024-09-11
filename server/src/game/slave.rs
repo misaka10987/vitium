@@ -1,6 +1,6 @@
 pub mod walk;
 
-use vitium_common::game::Scena;
+use vitium_api::game::Scena;
 
 pub struct Slave {
     pub scena: Scena,

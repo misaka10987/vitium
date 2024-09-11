@@ -11,21 +11,18 @@ use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
-    error::Error,
     ops::{Deref, DerefMut},
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, Mutex},
 };
 use tokio::{
-    fs,
-    io::{self, AsyncWriteExt},
     net::TcpListener,
     signal,
     sync::RwLock,
 };
 use tower_http::trace::TraceLayer;
-use tracing::{error, warn};
-use vitium_api::{game::PC, player::Player, req::Chat};
+use tracing::warn;
+use vitium_api::{game::PC, player::Player, net::Chat};
 
 // use crate::game::{self, Game};
 
@@ -159,7 +156,6 @@ pub struct ServerConfig {
     pub port: u16,
     pub chat_cap: usize,
     pub page_url: String,
-    pub password_salt: String,
 }
 
 impl Default for ServerConfig {
@@ -169,42 +165,6 @@ impl Default for ServerConfig {
             port: 10987,
             chat_cap: 255,
             page_url: "https://github.com/misaka10987/vitium".to_string(),
-            password_salt: "0123456789abcdef".to_string(),
-        }
-    }
-}
-
-impl ServerConfig {
-    pub async fn load(path: impl AsRef<Path>) -> Result<Self, Box<dyn Error>> {
-        let path = path.as_ref();
-        if !path.exists() {
-            let err = io::Error::new(
-                io::ErrorKind::NotFound,
-                format!("{} not found", path.display()),
-            );
-            let f = fs::File::create(path);
-            let cfg = Self::default();
-            f.await?
-                .write(toml::to_string(&cfg).unwrap().as_bytes())
-                .await?;
-            Err(Box::new(err))
-        } else {
-            let s = fs::read_to_string(path).await?;
-            Ok(toml::from_str::<ServerConfig>(&s)?)
-        }
-    }
-    pub async fn try_load(path: impl AsRef<Path>) -> Self {
-        let path = path.as_ref();
-        match Self::load(path).await {
-            Ok(cfg) => cfg,
-            Err(e) => {
-                error!(
-                    "failed to load server config at \"{}\": \"{e}\"",
-                    path.display()
-                );
-                warn!("using default config instead");
-                Self::default()
-            }
         }
     }
 }

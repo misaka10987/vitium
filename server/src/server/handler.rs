@@ -5,7 +5,12 @@ use axum::{
 };
 use http_auth_basic::Credentials;
 
-use vitium_api::{cmd::Echo, game::PC, req, res::Res, Player};
+use vitium_api::{
+    cmd::Echo,
+    game::PC,
+    net::{self, Res},
+    Player,
+};
 
 use super::Server;
 
@@ -14,8 +19,8 @@ type Responce<T> = Result<Json<Res<T>>, StatusCode>;
 pub async fn edit_pswd(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req::EditPswd(pswd)): Json<req::EditPswd>,
-) -> Responce<req::EditPswd> {
+    Json(net::EditPswd(pswd)): Json<net::EditPswd>,
+) -> Responce<net::EditPswd> {
     if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
         if let Ok(b) = Credentials::from_header(h.to_string()) {
             let safe = s.safe.lock().unwrap();
@@ -30,8 +35,8 @@ pub async fn edit_pswd(
 
 pub async fn recv_chat(
     State(s): State<Server>,
-    Json(req::RecvChat(time)): Json<req::RecvChat>,
-) -> Responce<req::RecvChat> {
+    Json(net::RecvChat(time)): Json<net::RecvChat>,
+) -> Responce<net::RecvChat> {
     let data = s.chat.read().await;
     let res = data
         .iter()
@@ -41,7 +46,7 @@ pub async fn recv_chat(
     Ok(Json(Ok(res)))
 }
 
-pub async fn get_player(State(s): State<Server>) -> Responce<req::GetPlayer> {
+pub async fn get_player(State(s): State<Server>) -> Responce<net::GetPlayer> {
     let res = s
         .player
         .read()
@@ -52,7 +57,7 @@ pub async fn get_player(State(s): State<Server>) -> Responce<req::GetPlayer> {
     Ok(Json(Ok(res)))
 }
 
-pub async fn get_pc(State(s): State<Server>) -> Responce<req::GetPC> {
+pub async fn get_pc(State(s): State<Server>) -> Responce<net::GetPC> {
     let res =
         s.pc.read()
             .await
@@ -65,8 +70,8 @@ pub async fn get_pc(State(s): State<Server>) -> Responce<req::GetPC> {
 pub async fn send_chat(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::SendChat>,
-) -> Responce<req::SendChat> {
+    Json(req): Json<net::SendChat>,
+) -> Responce<net::SendChat> {
     if let Some(name) = s.auth(&head).await {
         let mut dat = s.chat.write().await;
         while dat.len() >= s.cfg.chat_cap {
@@ -84,8 +89,8 @@ pub async fn send_chat(
 pub async fn edit_player(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::Edit<Player>>,
-) -> Responce<req::Edit<Player>> {
+    Json(req): Json<net::Edit<Player>>,
+) -> Responce<net::Edit<Player>> {
     // edit existing player
     if let Some(name) = s.auth(&head).await {
         if name != req.src {
@@ -129,8 +134,8 @@ pub async fn edit_player(
 pub async fn edit_pc(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(req): Json<req::Edit<PC>>,
-) -> Responce<req::Edit<PC>> {
+    Json(req): Json<net::Edit<PC>>,
+) -> Responce<net::Edit<PC>> {
     if let Some(name) = s.auth(&head).await {
         let mut tab = s.pc.write().await;
         if let Some(c) = tab.get(&req.src) {
@@ -157,7 +162,7 @@ pub async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
 pub async fn cmd(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(_): Json<req::Cmd>,
+    Json(_): Json<net::Cmd>,
 ) -> (StatusCode, Json<Option<Echo>>) {
     if let Some(_) = s.auth(&head).await {
         // let g = s.game.read().await;

@@ -1,9 +1,9 @@
-use vitium_common::{
+use vitium_api::{
     game::{
         act::{self, atk::Atk},
         Act, Action,
     },
-    req, Res,
+    net::{self, Res},
 };
 
 use super::Game;
@@ -31,14 +31,14 @@ type Response<T> = Result<Json<Res<act::Action<T>>>, StatusCode>;
 pub async fn atk(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(act): Json<req::Action<Atk>>,
+    Json(act): Json<net::Action<Atk>>,
 ) -> Response<Atk> {
-    if let Some(name) = s.auth(&head).await {
-        if name != act.pc {
-            return Err(StatusCode::FORBIDDEN);
-        }
-        Ok(Json(Ok(s.game.read().await.proc(act))))
-    } else {
+    // if let Some(name) = s.auth(&head).await {
+    //     if name != act.pc {
+    //         return Err(StatusCode::FORBIDDEN);
+    //     }
+    //     Ok(Json(Ok(s.game.read().await.proc(act))))
+    // } else {
         Err(StatusCode::FORBIDDEN)
-    }
+    // }
 }
