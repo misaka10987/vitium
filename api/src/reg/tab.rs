@@ -2,16 +2,16 @@ use std::ops::{Deref, DerefMut};
 
 use dashmap::DashMap;
 
-use super::{Id, Register};
+use super::Register;
 
-pub struct RegTab<T: Register>(pub(crate) DashMap<Id<T>, T>);
+pub struct RegTab<T: Register>(pub(crate) DashMap<&'static str, T>);
 
 pub trait HasRegTab: Register {
     fn reg_rab() -> &'static RegTab<Self>;
 }
 
 impl<T: Register> Deref for RegTab<T> {
-    type Target = DashMap<Id<T>, T>;
+    type Target = DashMap<&'static str, T>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

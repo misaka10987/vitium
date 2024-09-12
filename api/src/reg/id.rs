@@ -112,19 +112,15 @@ impl<'de, T: HasRegTab> Visitor<'de> for IdVisitor<T> {
     where
         E: serde::de::Error,
     {
-        // let tab = T::reg_rab();
-        // let res = tab.view(v, |k, _| k);
-        // match res {
-        //     Some(i) => Ok(*i),
-        //     None => Err(E::invalid_value(
-        //         serde::de::Unexpected::Str(v),
-        //         &"an already registered id string",
-        //     )),
-        // }
-        Err(E::invalid_value(
-            serde::de::Unexpected::Str(v),
-            &"an already registered id string",
-        ))
+        let tab = T::reg_rab();
+        let res = tab.view(v, |k, _| *k);
+        match res {
+            Some(i) => Ok(id(i)),
+            None => Err(E::invalid_value(
+                serde::de::Unexpected::Str(v),
+                &"an already registered id string",
+            )),
+        }
     }
 }
 
