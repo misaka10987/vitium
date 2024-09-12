@@ -3,7 +3,6 @@ pub mod err;
 pub mod game;
 pub mod player;
 pub mod prelude;
-pub mod reg;
 pub mod net;
 pub mod uid;
 

@@ -7,7 +7,7 @@ use std::time::SystemTime;
 /// Any type that implements `Req` should be correctly handled
 /// if sent to the server with specified `PATH` and `METHOD`.
 pub trait Req: Serialize + DeserializeOwned {
-    /// The response expected if everything's ok.
+    /// The JSON body of response.
     type Response: Serialize + DeserializeOwned;
     /// The path this request should be sent to.
     fn path(&self) -> String;
@@ -16,17 +16,16 @@ pub trait Req: Serialize + DeserializeOwned {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct CreatePlayer {
-    pub name: String,
-    pub password: String,
-    pub info: Player,
+pub struct SignUp {
+    pub user: String,
+    pub pass: String,
 }
 
-impl Req for CreatePlayer {
+impl Req for SignUp {
     type Response = ();
 
     fn path(&self) -> String {
-        format!("/api/player")
+        format!("/api/auth/signup")
     }
 
     const METHOD: &'static str = "POST";
@@ -186,5 +185,3 @@ impl Req for EditPass {
 
 #[derive(Serialize, Deserialize)]
 pub struct Sync {}
-
-pub type Res<T> = Result<<T as Req>::Response, String>;

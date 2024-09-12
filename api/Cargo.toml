@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dashmap = "6.0.1"
-lazy_static = "1.5.0"
-serde = { version = "1.0.204", features = ["derive"] }
 thiserror = "1.0.63"
+serde = { version = "1.0.210", features = ["derive"] }
+fe3o4 = "0.1.1"
