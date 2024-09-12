@@ -6,4 +6,4 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.63"
 serde = { version = "1.0.210", features = ["derive"] }
-fe3o4 = "0.1.1"
+fe3o4 = "0.1.2"
