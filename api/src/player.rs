@@ -19,5 +19,3 @@ impl Display for NoPlayerError {
 }
 
 impl Error for NoPlayerError {}
-
-pub type Password = String;

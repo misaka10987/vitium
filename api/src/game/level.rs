@@ -28,7 +28,7 @@ impl Sub<i16> for Level {
     }
 }
 
-impl Add<Self> for Level {
+impl Add for Level {
     type Output = i16;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -36,7 +36,7 @@ impl Add<Self> for Level {
     }
 }
 
-impl Sub<Self> for Level {
+impl Sub for Level {
     type Output = i16;
 
     fn sub(self, rhs: Self) -> Self::Output {

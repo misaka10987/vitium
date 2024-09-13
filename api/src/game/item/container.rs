@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::UId;
+
 use super::Item;
 
 /// Containers.
@@ -19,5 +21,5 @@ pub struct Container {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ContainerData {
-    pub inside: Vec<Item>,
+    pub inside: Vec<UId<Item>>,
 }

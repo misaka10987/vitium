@@ -3,15 +3,13 @@ use std::{
     path::PathBuf,
 };
 
-use axum::{routing::post, Router};
-use vitium_common::game::GameStat;
+use vitium_api::game::GameStat;
 
 pub mod prelude;
-pub mod proc;
+// pub mod proc;
 pub mod reg;
 pub mod slave;
 
-use crate::Server;
 
 pub use self::prelude::*;
 
@@ -32,7 +30,6 @@ pub struct Game {
     /// Current game status.
     pub stat: GameStat,
     pub pc_stat: HashMap<String, (usize, u64)>,
-    // reg: GameReg,
     // slave: HashMap<usize, Mutex<Slave>>,
 }
 
@@ -50,7 +47,6 @@ impl Game {
                 modlist: HashSet::new(),
             },
             pc_stat: HashMap::new(),
-            // reg: todo!(),
             // slave: HashMap::new(),
         }
     }
@@ -63,6 +59,6 @@ impl Game {
     // }
 }
 
-pub fn act_handler() -> Router<Server> {
-    Router::new().route("/attack", post(proc::atk))
-}
+// pub fn act_handler() -> Router<Server> {
+//     Router::new().route("/attack", post(proc::atk))
+// }

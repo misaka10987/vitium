@@ -2,9 +2,11 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
+use fe3o4::Id;
+
 use crate::{
     game::{DmgType, Mart, Skill},
-    Dice, Id,
+    Dice,
 };
 
 /// Melee weapons.

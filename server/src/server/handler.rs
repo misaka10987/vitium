@@ -1,28 +1,76 @@
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::{header::AUTHORIZATION, HeaderMap, StatusCode},
     Json,
 };
+use axum_extra::extract::{cookie::Cookie, CookieJar};
 use http_auth_basic::Credentials;
 
-use vitium_api::{cmd::Echo, game::PC, req, res::Res, Player};
+use safe_box::err::SafeBoxError;
+use tracing::{error, trace};
+use vitium_api::{
+    cmd::Echo,
+    net::{self, Req},
+};
 
 use super::Server;
 
-type Responce<T> = Result<Json<Res<T>>, StatusCode>;
+type Responce<T> = Result<Json<<T as Req>::Response>, StatusCode>;
 
-pub async fn edit_pswd(
-    State(s): State<Server>,
-    head: HeaderMap,
-    Json(req::EditPswd(pswd)): Json<req::EditPswd>,
-) -> Responce<req::EditPswd> {
+pub async fn login(State(s): State<Server>, head: HeaderMap) -> Result<CookieJar, StatusCode> {
     if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
         if let Ok(b) = Credentials::from_header(h.to_string()) {
-            let safe = s.safe.lock().unwrap();
-            return match safe.update(&b.user_id, &pswd, &b.password) {
-                Ok(_) => Ok(Json(Ok(()))),
-                Err(e) => Ok(Json(Err(format!("{e}")))),
+            let res = s.safe.verify(&b.user_id, &b.password).await;
+            return match res {
+                Ok(token) => Ok(CookieJar::new().add(Cookie::new("token", token))),
+                Err(e) => {
+                    if let SafeBoxError::BadPass { user, pass } = e {
+                        trace!("bad password {pass} for user {user}");
+                        Err(StatusCode::FORBIDDEN)
+                    } else {
+                        Err(StatusCode::INTERNAL_SERVER_ERROR)
+                    }
+                }
             };
+        }
+    }
+    Err(StatusCode::BAD_REQUEST)
+}
+
+pub async fn signup(
+    State(s): State<Server>,
+    Json(req): Json<net::SignUp>,
+) -> Responce<net::SignUp> {
+    let res = s.safe.create(&req.user, &req.pass).await;
+    if let Err(e) = res {
+        match e {
+            SafeBoxError::UserAlreadyExist(_) => Err(StatusCode::CONFLICT),
+            e => {
+                error!("{e}");
+                Err(StatusCode::INTERNAL_SERVER_ERROR)
+            }
+        }
+    } else {
+        Ok(Json(()))
+    }
+}
+
+pub async fn edit_pass(
+    State(s): State<Server>,
+    head: HeaderMap,
+    Json(net::EditPass(pswd)): Json<net::EditPass>,
+) -> Responce<net::EditPass> {
+    if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
+        if let Ok(b) = Credentials::from_header(h.to_string()) {
+            let res = s.safe.update(&b.user_id, &b.password, &pswd).await;
+            if let Err(e) = res {
+                if let SafeBoxError::BadPass { user, pass } = e {
+                    trace!("bad password {pass} for user {user}");
+                    return Err(StatusCode::FORBIDDEN);
+                }
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+            return Ok(Json(()));
         }
     }
     Err(StatusCode::UNAUTHORIZED)
@@ -30,136 +78,135 @@ pub async fn edit_pswd(
 
 pub async fn recv_chat(
     State(s): State<Server>,
-    Json(req::RecvChat(time)): Json<req::RecvChat>,
-) -> Responce<req::RecvChat> {
+    Json(net::RecvChat(time)): Json<net::RecvChat>,
+) -> Responce<net::RecvChat> {
     let data = s.chat.read().await;
     let res = data
         .iter()
         .filter(|(_, chat)| chat.recv_time > time)
         .cloned()
         .collect();
-    Ok(Json(Ok(res)))
+    Ok(Json(res))
 }
 
-pub async fn get_player(State(s): State<Server>) -> Responce<req::GetPlayer> {
+pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {
     let res = s
         .player
         .read()
         .await
         .iter()
-        .map(|(k, v)| (k.clone(), v.clone()))
+        .map(|(k, _)| k.clone())
         .collect();
-    Ok(Json(Ok(res)))
+    Ok(Json(res))
 }
 
-pub async fn get_pc(State(s): State<Server>) -> Responce<req::GetPC> {
+pub async fn get_player(
+    State(s): State<Server>,
+    Path(name): Path<String>,
+) -> Responce<net::GetPlayer> {
+    let res = s.player.read().await.get(&name).cloned();
+    if let Some(p) = res {
+        Ok(Json(p))
+    } else {
+        Err(StatusCode::NOT_FOUND)
+    }
+}
+
+pub async fn edit_player(
+    State(s): State<Server>,
+    Path(name): Path<String>,
+    jar: CookieJar,
+    Json(net::EditPlayer(_, player)): Json<net::EditPlayer>,
+) -> Responce<net::EditPlayer> {
+    if let Some(user) = s.auth(&jar) {
+        if user == name {
+            let mut tab = s.player.write().await;
+            tab.insert(user, player);
+            return Ok(Json(()));
+        }
+    }
+    Err(StatusCode::FORBIDDEN)
+}
+
+pub async fn list_pc(State(s): State<Server>) -> Responce<net::ListPC> {
     let res =
         s.pc.read()
             .await
             .iter()
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
-    Ok(Json(Ok(res)))
+    Ok(Json(res))
+}
+
+pub async fn get_pc(State(s): State<Server>, Path(name): Path<String>) -> Responce<net::GetPC> {
+    let res = s.pc.read().await.get(&name).cloned();
+    if let Some(p) = res {
+        Ok(Json(p))
+    } else {
+        Err(StatusCode::NOT_FOUND)
+    }
 }
 
 pub async fn send_chat(
     State(s): State<Server>,
-    head: HeaderMap,
-    Json(req): Json<req::SendChat>,
-) -> Responce<req::SendChat> {
-    if let Some(name) = s.auth(&head).await {
-        let mut dat = s.chat.write().await;
-        while dat.len() >= s.cfg.chat_cap {
-            dat.pop_front();
+    jar: CookieJar,
+    Json(req): Json<net::SendChat>,
+) -> Responce<net::SendChat> {
+    if let Some(user) = s.auth(&jar) {
+        let mut list = s.chat.write().await;
+        while list.len() >= s.cfg.chat_cap {
+            list.pop_front();
         }
         let chat = req.received();
-        let time = chat.recv_time;
-        dat.push_back((name, chat));
-        Ok(Json(Ok(time)))
+        let t = chat.recv_time;
+        list.push_back((user, chat));
+        Ok(Json(t))
     } else {
         Err(StatusCode::FORBIDDEN)
-    }
-}
-
-pub async fn edit_player(
-    State(s): State<Server>,
-    head: HeaderMap,
-    Json(req): Json<req::Edit<Player>>,
-) -> Responce<req::Edit<Player>> {
-    // edit existing player
-    if let Some(name) = s.auth(&head).await {
-        if name != req.src {
-            return Err(StatusCode::FORBIDDEN);
-        }
-        let mut tab = s.player.write().await;
-        match (tab.contains_key(&req.src), req.dst) {
-            (true, None) => Ok(Json(Ok(tab.remove(&req.src)))),
-            (true, Some(p)) => Ok(Json(Ok(tab.insert(req.src, p)))),
-            (false, None) => Ok(Json(Err(format!("player {} not found", req.src)))),
-            (false, Some(p)) => Ok(Json(Ok(tab.insert(req.src, p)))),
-        }
-    }
-    // create new player
-    else {
-        if let Some(Ok(token)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
-            if let Ok(b) = Credentials::from_header(token.to_string()) {
-                let mut data = s.player.write().await;
-                if b.user_id != req.src {
-                    return Err(StatusCode::BAD_REQUEST);
-                }
-                if data.contains_key(&req.src) {
-                    return Err(StatusCode::FORBIDDEN);
-                }
-                let safe = s.safe.lock().unwrap();
-                if let Err(e) = safe.create(&b.user_id, &b.password) {
-                    return Ok(Json(Err(format!("{e}"))));
-                }
-                return if let Some(p) = req.dst {
-                    Ok(Json(Ok(data.insert(req.src, p))))
-                } else {
-                    Err(StatusCode::BAD_REQUEST)
-                };
-            }
-        }
-        Err(StatusCode::UNAUTHORIZED)
     }
 }
 
 /// Handler for `POST /chara`.
 pub async fn edit_pc(
     State(s): State<Server>,
-    head: HeaderMap,
-    Json(req): Json<req::Edit<PC>>,
-) -> Responce<req::Edit<PC>> {
-    if let Some(name) = s.auth(&head).await {
+    Path(name): Path<String>,
+    jar: CookieJar,
+    Json(net::EditPC(_, new)): Json<net::EditPC>,
+) -> Responce<net::EditPC> {
+    if let Some(user) = s.auth(&jar) {
         let mut tab = s.pc.write().await;
-        if let Some(c) = tab.get(&req.src) {
-            if name != c.player {
+        if let Some(c) = tab.get(&name) {
+            if user != c.player {
                 return Err(StatusCode::FORBIDDEN);
             }
         }
-        match (tab.contains_key(&req.src), req.dst) {
-            (true, None) => Ok(Json(Ok(tab.remove(&req.src)))),
-            (true, Some(c)) => Ok(Json(Ok(tab.insert(req.src, c)))),
-            (false, None) => Ok(Json(Err(format!("player character {} not found", req.src)))),
-            (false, Some(c)) => Ok(Json(Ok(tab.insert(req.src, c)))),
+        match (tab.contains_key(&name), new) {
+            (true, None) => {
+                tab.remove(&name);
+                Ok(Json(()))
+            }
+            (_, Some(c)) => {
+                tab.insert(name, c);
+                Ok(Json(()))
+            }
+            (false, None) => Err(StatusCode::NOT_FOUND),
         }
     } else {
         Err(StatusCode::FORBIDDEN)
     }
 }
 
-pub async fn sync(State(s): State<Server>, head: HeaderMap) -> StatusCode {
-    if let Some(_) = s.auth(&head).await {};
+pub async fn sync(State(s): State<Server>, jar: CookieJar) -> StatusCode {
+    if let Some(_) = s.auth(&jar) {};
     todo!()
 }
 
 pub async fn cmd(
     State(s): State<Server>,
-    head: HeaderMap,
-    Json(_): Json<req::Cmd>,
+    jar: CookieJar,
+    Json(_): Json<net::Cmd>,
 ) -> (StatusCode, Json<Option<Echo>>) {
-    if let Some(_) = s.auth(&head).await {
+    if let Some(_) = s.auth(&jar) {
         // let g = s.game.read().await;
         // let _ = req;
         // if g.stat.host == name {

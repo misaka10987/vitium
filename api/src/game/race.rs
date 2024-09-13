@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{def_regtab, Id};
+use fe3o4::{def_regtab, Id};
 
 use super::{Mart, Spell};
 

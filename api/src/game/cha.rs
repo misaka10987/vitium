@@ -1,5 +1,5 @@
 use super::{level::Level, Attr, Mart, Prof, Race, Skill, Spell};
-use crate::Id;
+use fe3o4::Id;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -55,4 +55,3 @@ pub struct Pos {
     pub scena: usize,
     pub coord: (f32, f32),
 }
-

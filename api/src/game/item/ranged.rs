@@ -2,7 +2,9 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{game::DmgType, Dice, Id, RegTab};
+use fe3o4::Id;
+
+use crate::{game::DmgType, Dice};
 
 use super::Item;
 
@@ -29,10 +31,4 @@ pub struct Ranged {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RangedData {
     pub charge: Vec<(Id<Item>, i16)>,
-}
-
-impl Default for RegTab<Ranged> {
-    fn default() -> Self {
-        Self(Default::default())
-    }
 }

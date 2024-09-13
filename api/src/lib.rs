@@ -3,9 +3,7 @@ pub mod err;
 pub mod game;
 pub mod player;
 pub mod prelude;
-pub mod reg;
-pub mod req;
-pub mod res;
+pub mod net;
 pub mod uid;
 
 pub use prelude::*;
