@@ -15,16 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Compile crates
-      run: cargo build
-    - name: Upload vitium-common build
-      uses: actions/upload-artifact@v3
-      with:
-          name: vitium-common
-          path: target/debug/libvitium_common.rlib
-    - name: Upload vitium-server build
-      uses: actions/upload-artifact@v3
-      with:
-          name: vitium-server
-          path: target/debug/vitium-server
+      run: cargo check
