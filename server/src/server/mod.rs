@@ -88,11 +88,12 @@ impl Server {
 
     /// Consumes `self` and start the server.
     pub async fn run(self) -> Result<(), std::io::Error> {
-        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
+        let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
             .await
             .expect("failed to bind TCP listener");
         let auth = Router::new()
             .route("/login", get(handler::login))
+            .route("/signup", post(handler::signup))
             .route("/pass", post(handler::edit_pass));
         let api = Router::new()
             .nest("/auth", auth)
@@ -104,7 +105,7 @@ impl Server {
             .route("/player/*name", post(handler::edit_player))
             .route("/pc", get(handler::list_pc))
             .route("/pc/*name", get(handler::get_pc))
-            .route("/pc", post(handler::edit_pc))
+            .route("/pc/*name", post(handler::edit_pc))
             .route("/sync", get(handler::sync))
             .route("/cmd", post(handler::cmd));
         // .nest("/act", game::act_handler());

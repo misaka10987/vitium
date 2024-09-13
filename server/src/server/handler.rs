@@ -7,15 +7,15 @@ use axum_extra::extract::{cookie::Cookie, CookieJar};
 use http_auth_basic::Credentials;
 
 use safe_box::err::SafeBoxError;
-use tracing::trace;
+use tracing::{error, trace};
 use vitium_api::{
     cmd::Echo,
-    net::{self, Res},
+    net::{self, Req},
 };
 
 use super::Server;
 
-type Responce<T> = Result<Json<Res<T>>, StatusCode>;
+type Responce<T> = Result<Json<<T as Req>::Response>, StatusCode>;
 
 pub async fn login(State(s): State<Server>, head: HeaderMap) -> Result<CookieJar, StatusCode> {
     if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
@@ -37,6 +37,24 @@ pub async fn login(State(s): State<Server>, head: HeaderMap) -> Result<CookieJar
     Err(StatusCode::BAD_REQUEST)
 }
 
+pub async fn signup(
+    State(s): State<Server>,
+    Json(req): Json<net::SignUp>,
+) -> Responce<net::SignUp> {
+    let res = s.safe.create(&req.user, &req.pass).await;
+    if let Err(e) = res {
+        match e {
+            SafeBoxError::UserAlreadyExist(_) => Err(StatusCode::CONFLICT),
+            e => {
+                error!("{e}");
+                Err(StatusCode::INTERNAL_SERVER_ERROR)
+            }
+        }
+    } else {
+        Ok(Json(()))
+    }
+}
+
 pub async fn edit_pass(
     State(s): State<Server>,
     head: HeaderMap,
@@ -52,7 +70,7 @@ pub async fn edit_pass(
                 }
                 return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }
-            return Ok(Json(Ok(())));
+            return Ok(Json(()));
         }
     }
     Err(StatusCode::UNAUTHORIZED)
@@ -68,7 +86,7 @@ pub async fn recv_chat(
         .filter(|(_, chat)| chat.recv_time > time)
         .cloned()
         .collect();
-    Ok(Json(Ok(res)))
+    Ok(Json(res))
 }
 
 pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {
@@ -79,7 +97,7 @@ pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {
         .iter()
         .map(|(k, _)| k.clone())
         .collect();
-    Ok(Json(Ok(res)))
+    Ok(Json(res))
 }
 
 pub async fn get_player(
@@ -88,7 +106,7 @@ pub async fn get_player(
 ) -> Responce<net::GetPlayer> {
     let res = s.player.read().await.get(&name).cloned();
     if let Some(p) = res {
-        Ok(Json(Ok(p)))
+        Ok(Json(p))
     } else {
         Err(StatusCode::NOT_FOUND)
     }
@@ -104,7 +122,7 @@ pub async fn edit_player(
         if user == name {
             let mut tab = s.player.write().await;
             tab.insert(user, player);
-            return Ok(Json(Ok(())));
+            return Ok(Json(()));
         }
     }
     Err(StatusCode::FORBIDDEN)
@@ -117,13 +135,13 @@ pub async fn list_pc(State(s): State<Server>) -> Responce<net::ListPC> {
             .iter()
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
-    Ok(Json(Ok(res)))
+    Ok(Json(res))
 }
 
 pub async fn get_pc(State(s): State<Server>, Path(name): Path<String>) -> Responce<net::GetPC> {
     let res = s.pc.read().await.get(&name).cloned();
     if let Some(p) = res {
-        Ok(Json(Ok(p)))
+        Ok(Json(p))
     } else {
         Err(StatusCode::NOT_FOUND)
     }
@@ -142,7 +160,7 @@ pub async fn send_chat(
         let chat = req.received();
         let t = chat.recv_time;
         list.push_back((user, chat));
-        Ok(Json(Ok(t)))
+        Ok(Json(t))
     } else {
         Err(StatusCode::FORBIDDEN)
     }
@@ -165,13 +183,13 @@ pub async fn edit_pc(
         match (tab.contains_key(&name), new) {
             (true, None) => {
                 tab.remove(&name);
-                Ok(Json(Ok(())))
+                Ok(Json(()))
             }
             (_, Some(c)) => {
                 tab.insert(name, c);
-                Ok(Json(Ok(())))
+                Ok(Json(()))
             }
-            (false, None) => Ok(Json(Err(format!("player character {} not found", name)))),
+            (false, None) => Err(StatusCode::NOT_FOUND),
         }
     } else {
         Err(StatusCode::FORBIDDEN)

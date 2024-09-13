@@ -3,15 +3,13 @@ use std::{
     path::PathBuf,
 };
 
-use axum::{routing::post, Router};
 use vitium_api::game::GameStat;
 
 pub mod prelude;
-pub mod proc;
+// pub mod proc;
 pub mod reg;
 pub mod slave;
 
-use crate::Server;
 
 pub use self::prelude::*;
 
@@ -61,6 +59,6 @@ impl Game {
     // }
 }
 
-pub fn act_handler() -> Router<Server> {
-    Router::new().route("/attack", post(proc::atk))
-}
+// pub fn act_handler() -> Router<Server> {
+//     Router::new().route("/attack", post(proc::atk))
+// }
