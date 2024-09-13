@@ -1,4 +1,4 @@
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display},
     hash::Hash,
@@ -6,28 +6,37 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-/// A pointer-wide unique id for a specified type `T`.
+/// A unique 64-bit integer id with type hint `T`.
 ///
-/// This type is serialized into an unsigned 64bit integer using `serde`,
-/// thus, on 32bit platforms, it is sliced during serialization,
-/// with only the lower 32 bits reserved.
+/// Note that despite the generic parameter `T`,
+/// this can be used to access component of any type if valid using `.to()`.
+#[derive(Serialize, Deserialize)]
+#[repr(transparent)]
+#[serde(transparent)]
 pub struct UId<T> {
-    /// The UId.
-    pub value: usize,
+    /// The id.
+    pub value: u64,
+    #[serde(skip)]
     _t: PhantomData<T>,
 }
 
 impl<T> UId<T> {
-    pub fn new(value: usize) -> Self {
+    /// Create new id.
+    pub const fn new(value: u64) -> Self {
         Self {
             value,
             _t: PhantomData,
         }
     }
+
+    /// Convert to another component type.
+    pub const fn to<U>(self) -> UId<U> {
+        UId::new(self.value)
+    }
 }
 
 impl<T> Deref for UId<T> {
-    type Target = usize;
+    type Target = u64;
 
     fn deref(&self) -> &Self::Target {
         &self.value
@@ -89,42 +98,5 @@ impl<T> Debug for UId<T> {
             .field("value", &self.value)
             .field("_t", &self._t)
             .finish()
-    }
-}
-
-impl<T> Serialize for UId<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u64(self.value as u64)
-    }
-}
-
-struct UIdVisitor<T> {
-    _t: PhantomData<T>,
-}
-
-impl<'de, T> Visitor<'de> for UIdVisitor<T> {
-    type Value = UId<T>;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(formatter, "an unsigned pointer-wide (64bit) integer")
-    }
-
-    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(UId::new(v as usize))
-    }
-}
-
-impl<'de, T> Deserialize<'de> for UId<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        deserializer.deserialize_u64(UIdVisitor::<T> { _t: PhantomData })
     }
 }

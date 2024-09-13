@@ -93,7 +93,7 @@ impl Req for RecvChat {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct ListPlayer();
+pub struct ListPlayer;
 
 impl Req for ListPlayer {
     type Response = Vec<String>;
@@ -132,7 +132,7 @@ impl Req for EditPlayer {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct ListPC();
+pub struct ListPC;
 
 impl Req for ListPC {
     type Response = Vec<(String, PC)>;

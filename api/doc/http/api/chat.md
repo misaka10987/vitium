@@ -34,7 +34,7 @@ pub struct SendChat(pub Chat);
 
 which contains a `Chat` message to send.
 
-## Response Body
+### Response Body
 
 JSON representation of the following Rust object:
 
