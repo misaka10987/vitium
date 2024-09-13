@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::def_regtab;
+use fe3o4::def_regtab;
 
 use super::DmgType;
 use std::collections::HashMap;

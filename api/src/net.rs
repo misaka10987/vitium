@@ -1,8 +1,5 @@
 pub use crate::{cmd::Cmd, game::Action};
-use crate::{
-    game::PC,
-    player::{Password, Player},
-};
+use crate::{game::PC, player::Player};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::time::SystemTime;
 
@@ -10,25 +7,26 @@ use std::time::SystemTime;
 /// Any type that implements `Req` should be correctly handled
 /// if sent to the server with specified `PATH` and `METHOD`.
 pub trait Req: Serialize + DeserializeOwned {
-    /// The response expected if everything's ok.
+    /// The JSON body of response.
     type Response: Serialize + DeserializeOwned;
     /// The path this request should be sent to.
-    const PATH: &'static str;
+    fn path(&self) -> String;
     /// The method this request should be sent with.
     const METHOD: &'static str;
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct CreatePlayer {
-    pub name: String,
-    pub password: Password,
-    pub info: Player,
+pub struct SignUp {
+    pub user: String,
+    pub pass: String,
 }
 
-impl Req for CreatePlayer {
+impl Req for SignUp {
     type Response = ();
 
-    const PATH: &'static str = "/api/create";
+    fn path(&self) -> String {
+        format!("/api/auth/signup")
+    }
 
     const METHOD: &'static str = "POST";
 }
@@ -62,7 +60,9 @@ pub struct SendChat(pub Chat);
 impl Req for SendChat {
     type Response = SystemTime;
 
-    const PATH: &'static str = "/api/chat";
+    fn path(&self) -> String {
+        format!("/api/chat")
+    }
 
     const METHOD: &'static str = "POST";
 }
@@ -85,70 +85,103 @@ pub struct RecvChat(pub SystemTime);
 impl Req for RecvChat {
     type Response = Vec<(String, Chat)>;
 
-    const PATH: &'static str = "/api/chat";
+    fn path(&self) -> String {
+        format!("/api/chat")
+    }
 
     const METHOD: &'static str = "GET";
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct GetPlayer();
+pub struct ListPlayer;
+
+impl Req for ListPlayer {
+    type Response = Vec<String>;
+
+    fn path(&self) -> String {
+        format!("/api/player")
+    }
+
+    const METHOD: &'static str = "GET";
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct GetPlayer(#[serde(skip)] pub String);
 
 impl Req for GetPlayer {
-    type Response = Vec<(String, Player)>;
+    type Response = Player;
 
-    const PATH: &'static str = "/api/player";
-
-    const METHOD: &'static str = "GET";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct GetPC();
-
-impl Req for GetPC {
-    type Response = Vec<(String, PC)>;
-
-    const PATH: &'static str = "/api/pc";
+    fn path(&self) -> String {
+        format!("/api/player/{}", self.0)
+    }
 
     const METHOD: &'static str = "GET";
 }
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Edit<T, Id = String> {
-    pub src: Id,
-    pub dst: Option<T>,
-}
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EditPlayer(#[serde(skip)] pub String, pub Player);
 
-impl Req for Edit<PC> {
+impl Req for EditPlayer {
     type Response = ();
 
-    const PATH: &'static str = "/api/pc";
+    fn path(&self) -> String {
+        format!("/api/player/{}", self.0)
+    }
+
+    const METHOD: &'static str = "POST";
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ListPC;
+
+impl Req for ListPC {
+    type Response = Vec<(String, PC)>;
+
+    fn path(&self) -> String {
+        format!("/api/pc")
+    }
+
+    const METHOD: &'static str = "GET";
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct GetPC(#[serde(skip)] pub String);
+
+impl Req for GetPC {
+    type Response = PC;
+
+    fn path(&self) -> String {
+        format!("/api/pc/{}", self.0)
+    }
+
+    const METHOD: &'static str = "GET";
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct EditPC(#[serde(skip)] pub String, pub Option<PC>);
+
+impl Req for EditPC {
+    type Response = ();
+
+    fn path(&self) -> String {
+        format!("/api/pc/{}", self.0)
+    }
 
     const METHOD: &'static str = "POST";
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct EditPass(pub Password);
+pub struct EditPass(pub String);
 
 impl Req for EditPass {
     type Response = ();
 
-    const PATH: &'static str = "/api/auth/pass";
-
-    const METHOD: &'static str = "POST";
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct EditPlayer(pub Player);
-
-impl Req for EditPlayer{
-    type Response = ();
-
-    const PATH: &'static str = "/api/player";
+    fn path(&self) -> String {
+        format!("/api/auth/pass")
+    }
 
     const METHOD: &'static str = "POST";
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Sync {}
-
-pub type Res<T> = Result<<T as Req>::Response, String>;

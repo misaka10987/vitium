@@ -12,10 +12,10 @@ pub mod dice;
 pub mod game;
 /// Process the input when running server.
 pub mod input;
+pub mod load;
 pub mod script;
 /// New server.
 pub mod server;
-pub mod load;
 
 pub use server::Server;
 

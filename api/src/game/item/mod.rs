@@ -7,7 +7,7 @@ pub mod ranged;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::def_regtab;
+use fe3o4::def_regtab;
 
 /// Basic information of an item is stored here.
 #[derive(Clone, Serialize, Deserialize)]

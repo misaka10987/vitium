@@ -88,27 +88,30 @@ impl Server {
 
     /// Consumes `self` and start the server.
     pub async fn run(self) -> Result<(), std::io::Error> {
-        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.cfg.port))
+        let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
             .await
             .expect("failed to bind TCP listener");
         let auth = Router::new()
             .route("/login", get(handler::login))
+            .route("/signup", post(handler::signup))
             .route("/pass", post(handler::edit_pass));
-        let app = Router::new()
+        let api = Router::new()
             .nest("/auth", auth)
             .route("/hello", get("Hello, world!"))
             .route("/chat", get(handler::recv_chat))
             .route("/chat", post(handler::send_chat))
-            .route("/player", get(handler::get_player))
-            .route("/player", post(handler::edit_player))
-            .route("/pc", get(handler::get_pc))
-            .route("/pc", post(handler::edit_pc))
+            .route("/player", get(handler::list_player))
+            .route("/player/*name", get(handler::get_player))
+            .route("/player/*name", post(handler::edit_player))
+            .route("/pc", get(handler::list_pc))
+            .route("/pc/*name", get(handler::get_pc))
+            .route("/pc/*name", post(handler::edit_pc))
             .route("/sync", get(handler::sync))
             .route("/cmd", post(handler::cmd));
         // .nest("/act", game::act_handler());
         let app = Router::new()
-            .nest("/api", app)
             .route("/", get(Redirect::to(&self.cfg.page_url)))
+            .nest("/api", api)
             .fallback(any(StatusCode::NOT_FOUND))
             .with_state(self)
             .layer(TraceLayer::new_for_http());

@@ -2,7 +2,9 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{game::Mat, Dice, Id};
+use fe3o4::Id;
+
+use crate::{game::Mat, Dice};
 
 /// Instance of armor.
 #[derive(Clone, Serialize, Deserialize)]
