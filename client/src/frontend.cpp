@@ -2,6 +2,7 @@
 #pragma once
 #include "libs/ncurses_utils.cpp"
 #include <iostream>
+#include "registry.cpp"
 #include "map.cpp"
 
 namespace frontend

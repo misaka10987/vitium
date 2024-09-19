@@ -18,6 +18,9 @@ else()
     message("This platform is still not supported. You may try to compile with pdcurses and link it manually.")
 endif()
 
+add_subdirectory(src/libs/Flecs)
+target_link_libraries(Vitium PRIVATE flecs)
+
 include(FetchContent)
 FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
                          GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8) # Replace with your desired git commit, we are using the ver 1.10.5
