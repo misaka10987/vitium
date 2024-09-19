@@ -1,4 +1,4 @@
-/// this file is meant to provide an interface and tools to show messeges on the screen, as well as maintain the vitium ui.
+/// @brief this file is meant to provide an interface and tools to show messeges on the screen, as well as maintain the vitium ui.
 #pragma once
 #include "libs/ncurses_utils.cpp"
 #include <iostream>
@@ -9,6 +9,16 @@ namespace frontend
 {
     volatile bool Exit_Flag = false; // only in keyboard event handler could this flag be set.
 
+    const int CHAT_HISTORY_SIZE = 50;
+
+    std::string chat_history[CHAT_HISTORY_SIZE];
+    volatile int chat_history_index = 0; // this is the counter for the chat history
+                                         // the most recent message is at chat_history[chat_history_index]
+                                         // the oldest message is at chat_history[(chat_history_index + 1) % CHAT_HISTORY_SIZE]
+
+    WINDOW *chat_window;
+    WINDOW *map_window;
+
     void curses_init()
     {
         initscr(); // Start curses mode
@@ -17,6 +27,28 @@ namespace frontend
         start_color();
         noecho();
     } // intialize the ncurses and configure a few of the display settings
+
+    void fresh_chat_win()
+    {
+        int line_count = 0;
+        for (int i = chat_history_index; i > chat_history_index - CHAT_HISTORY_SIZE; i--)
+        {
+            line_count += chat_history[i].size() / (COLS / 2 - 2) + 1;
+            if (line_count > LINES - 2)
+            {
+                line_count = i + 1; // now for the count of messages
+                break;
+            }
+        }
+        wmove(chat_window, 0, 0);
+        for (int i = chat_history_index - line_count + 1; i <= chat_history_index; i++)
+        {
+            wprintw(chat_window, chat_history[i].c_str());
+            wprintw(chat_window, "\n");
+        }
+
+        wrefresh(chat_window);
+    } // @todo
 
     void pop_up(int height, int width, std::string title, std::string message)
     {
@@ -54,6 +86,23 @@ namespace frontend
         wrefresh(pop_box_up);
         delwin(pop_box_up);
     }
+
+    void empty() // @brief clean the windows and recreate the base
+    {
+        erase();
+        WINDOW *chat_window_base = newwin(LINES - 1, COLS / 2, 1, 0);
+        chat_window = newwin(LINES - 3, COLS / 2 - 2, 2, 1);
+        WINDOW *map_window_base = newwin(LINES - 1, COLS - COLS / 2, 1, COLS / 2 + 1);
+        map_window = newwin(LINES - 3, COLS - COLS / 2 - 2, 2, COLS / 2 + 2);
+        box(chat_window_base, 0, 0);
+        box(map_window_base, 0, 0);
+    }
+
+    void fresh_all()
+    {
+        fresh_chat_win();
+        refresh();
+    } // @todo
 
     void hello_world() noexcept
     {

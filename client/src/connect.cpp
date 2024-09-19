@@ -8,13 +8,13 @@
 #include <string>
 #include <mutex>
 
-namespace connct
+namespace connect
 {
     struct Player
     {
         std::string display_name = "";
         bool is_root = false;
-        int64_t token = 0;
+        std::string token = 0;
         std::mutex token_lock;
         std::string user_name = "";
         std::string password = "";
@@ -34,13 +34,11 @@ namespace connct
     void token_get()
     {
         std::lock_guard<std::mutex> lock(main_player.token_lock);
-        nlohmann::json j;
-        j["username"] = main_player.user_name;
-        j["password"] = main_player.password;
-        auto r = cpr::Post(cpr::Url{"http://localhost:8080/api/auth/login"}, cpr::Body{j.dump()}, cpr::Header{{"content-type", "application/json"}});
+        auto r = cpr::Get(cpr::Url{server_address + "/api/auth/login"},
+                          cpr::Authentication{main_player.user_name, main_player.password, cpr::AuthMode::BASIC});
         if (r.status_code == 200)
         {
-            main_player.token = std::stoll(r.text);
+            main_player.token = r.header["Set-Cookie"];
         }
         else
         {
