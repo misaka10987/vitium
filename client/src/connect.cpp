@@ -8,13 +8,13 @@
 #include <string>
 #include <mutex>
 
-namespace connect
+namespace vconnect
 {
     struct Player
     {
         std::string display_name = "";
         bool is_root = false;
-        std::string token = 0;
+        std::string token = "";
         std::mutex token_lock;
         std::string user_name = "";
         std::string password = "";
@@ -33,7 +33,7 @@ namespace connect
 
     void token_get()
     {
-        std::lock_guard<std::mutex> lock(main_player.token_lock);
+        main_player.token_lock.lock();
         auto r = cpr::Get(cpr::Url{server_address + "/api/auth/login"},
                           cpr::Authentication{main_player.user_name, main_player.password, cpr::AuthMode::BASIC});
         if (r.status_code == 200)
@@ -44,5 +44,6 @@ namespace connect
         {
             std::cerr << "[Error] Failed to get token from server." << std::endl;
         }
+        main_player.token_lock.unlock();
     }
 }

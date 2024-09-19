@@ -10,9 +10,10 @@ int main()
     freopen("vitium_client.log", "w", stderr);
 
     /// here, we will fork out threads for the registry, the timer. The frontend should run under this main thread.
-    std::thread(keyboard::keyboard_event_listener);
+    std::thread(keyboard::keyboard_event_listener).detach();
 
     frontend::curses_init();
+    frontend::empty_base();
 
     while (!frontend::Exit_Flag) // main loop
     {

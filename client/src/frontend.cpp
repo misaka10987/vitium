@@ -2,12 +2,15 @@
 #pragma once
 #include "libs/ncurses_utils.cpp"
 #include <iostream>
+#include <thread>
 #include "registry.cpp"
 #include "map.cpp"
 
 namespace frontend
 {
     volatile bool Exit_Flag = false; // only in keyboard event handler could this flag be set.
+
+    volatile bool hot_window_chat = false; // this flag is true when the chat window is active
 
     const int CHAT_HISTORY_SIZE = 50;
 
@@ -17,7 +20,25 @@ namespace frontend
                                          // the oldest message is at chat_history[(chat_history_index + 1) % CHAT_HISTORY_SIZE]
 
     WINDOW *chat_window;
+    WINDOW *chat_window_base;
     WINDOW *map_window;
+    WINDOW *map_window_base;
+
+    auto switch_hotwindow() -> bool
+    {
+        if (hot_window_chat)
+        {
+            box(map_window_base, 0, 0);
+            werase(chat_window_base);
+        }
+        else
+        {
+            box(chat_window_base, 0, 0);
+            werase(map_window_base);
+        }
+        hot_window_chat = !hot_window_chat;
+        return hot_window_chat;
+    }
 
     void curses_init()
     {
@@ -34,7 +55,7 @@ namespace frontend
         for (int i = chat_history_index; i > chat_history_index - CHAT_HISTORY_SIZE; i--)
         {
             line_count += chat_history[i].size() / (COLS / 2 - 2) + 1;
-            if (line_count > LINES - 2)
+            if (line_count > LINES - 3)
             {
                 line_count = i + 1; // now for the count of messages
                 break;
@@ -48,7 +69,7 @@ namespace frontend
         }
 
         wrefresh(chat_window);
-    } // @todo
+    }
 
     void pop_up(int height, int width, std::string title, std::string message)
     {
@@ -85,17 +106,21 @@ namespace frontend
         }
         wrefresh(pop_box_up);
         delwin(pop_box_up);
-    }
+    } // you have to manually overwrite the whole screen to remove it...
 
-    void empty() // @brief clean the windows and recreate the base
+    void empty_base() // @brief clean the windows and recreate the base
     {
         erase();
-        WINDOW *chat_window_base = newwin(LINES - 1, COLS / 2, 1, 0);
-        chat_window = newwin(LINES - 3, COLS / 2 - 2, 2, 1);
-        WINDOW *map_window_base = newwin(LINES - 1, COLS - COLS / 2, 1, COLS / 2 + 1);
-        map_window = newwin(LINES - 3, COLS - COLS / 2 - 2, 2, COLS / 2 + 2);
-        box(chat_window_base, 0, 0);
+        chat_window_base = newwin(LINES - 2, COLS / 2, 1, 0);
+        chat_window = newwin(LINES - 4, COLS / 2 - 2, 2, 1);
+        map_window_base = newwin(LINES - 2, COLS - COLS / 2 - 1, 1, COLS / 2 + 1);
+        map_window = newwin(LINES - 4, COLS - COLS / 2 - 3, 2, COLS / 2 + 2);
         box(map_window_base, 0, 0);
+        hot_window_chat = 0;
+        wrefresh(chat_window_base);
+        wrefresh(chat_window);
+        wrefresh(map_window_base);
+        wrefresh(map_window);
     }
 
     void fresh_all()
@@ -106,9 +131,8 @@ namespace frontend
 
     void hello_world() noexcept
     {
-        printw("Hello World !!!");
+        mvprintw(0, 0, "Hello World !!!");
         refresh(); // Move the 'window' on to the screen
-        getch();
         pop_up(10, 30, "Hello World", "This is a pop up box.");
         refresh();
         getch();
