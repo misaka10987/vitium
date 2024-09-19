@@ -37,6 +37,29 @@ namespace frontend
             werase(map_window_base);
         }
         hot_window_chat = !hot_window_chat;
+        wrefresh(chat_window_base);
+        wrefresh(map_window_base);
+        wrefresh(chat_window);
+        wrefresh(map_window);
+        return hot_window_chat;
+    }
+
+    auto load_hotwindow() -> bool
+    {
+        if (hot_window_chat)
+        {
+            box(chat_window_base, 0, 0);
+            werase(map_window_base);
+        }
+        else
+        {
+            box(map_window_base, 0, 0);
+            werase(chat_window_base);
+        }
+        wrefresh(chat_window_base);
+        wrefresh(map_window_base);
+        wrefresh(chat_window);
+        wrefresh(map_window);
         return hot_window_chat;
     }
 
@@ -55,7 +78,7 @@ namespace frontend
         for (int i = chat_history_index; i > chat_history_index - CHAT_HISTORY_SIZE; i--)
         {
             line_count += chat_history[i].size() / (COLS / 2 - 2) + 1;
-            if (line_count > LINES - 3)
+            if (line_count > getmaxy(chat_window))
             {
                 line_count = i + 1; // now for the count of messages
                 break;
@@ -108,6 +131,13 @@ namespace frontend
         delwin(pop_box_up);
     } // you have to manually overwrite the whole screen to remove it...
 
+    void push_chat(std::string message)
+    {
+        chat_history_index = (chat_history_index + 1) % CHAT_HISTORY_SIZE;
+        chat_history[chat_history_index] = message;
+        fresh_chat_win();
+    }
+
     void empty_base() // @brief clean the windows and recreate the base
     {
         erase();
@@ -118,24 +148,20 @@ namespace frontend
         box(map_window_base, 0, 0);
         hot_window_chat = 0;
         wrefresh(chat_window_base);
-        wrefresh(chat_window);
         wrefresh(map_window_base);
-        wrefresh(map_window);
+        // refresh();
     }
 
     void fresh_all()
     {
-        fresh_chat_win();
         refresh();
+        load_hotwindow();
+        fresh_chat_win();
     } // @todo
 
     void hello_world() noexcept
     {
-        mvprintw(0, 0, "Hello World !!!");
-        refresh(); // Move the 'window' on to the screen
-        pop_up(10, 30, "Hello World", "This is a pop up box.");
-        refresh();
-        getch();
-        Exit_Flag = true;
+        fresh_all();
+        push_chat("Hello, World!");
     }
 } // namespace frontend

@@ -10,7 +10,7 @@ namespace keyboard
         {
             frontend::Exit_Flag = true;
         }
-        else if (key == 59) // semicolon
+        else if (key == (int)';') // semicolon
         {
             frontend::switch_hotwindow();
         }
@@ -46,6 +46,7 @@ namespace keyboard
         {
             // we should put it as an echo
         }
+        frontend::fresh_all();
     }
 
     void keyboard_event_listener() // This function should be run on a single thread
@@ -53,7 +54,7 @@ namespace keyboard
         while (!frontend::Exit_Flag)
         {
             int key = getch();
-            std::async(std::launch::async, keyboard_event_handler, key);
+            std::thread(keyboard_event_handler, key).detach();
         }
     }
 } // namespace keyboard

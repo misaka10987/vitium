@@ -15,9 +15,10 @@ int main()
     frontend::curses_init();
     frontend::empty_base();
 
+    frontend::hello_world();
+
     while (!frontend::Exit_Flag) // main loop
     {
-        frontend::hello_world();
     }
 
     endwin(); // end curses mode
