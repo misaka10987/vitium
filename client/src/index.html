@@ -9,10 +9,26 @@
   <script type="module" src="/main.js" defer></script>
 </head>
 
-<body>
-  <div class="m-4">
-    <h1 class="text-4xl text-purple-500">Hello, world!</h1>
+<body class="bg-stone-700 w-screen h-screen p-2">
+
+  <!-- server ip & login dialog -->
+  <div id="connect-dialog" class="flex min-h-full flex-col justify-center px-6 mx-auto w-full max-w-sm">
+    <img class="mx-auto h-24 w-auto" src="/assets/icon.svg" alt="Vitium">
+    <h2 class="text-purple-400 mt-6 text-center text-2xl font-bold leading-9 tracking-tight">Connect to a Vitium
+      Server</h2>
+
+    <form id="form-connect" class="mt-4">
+      <input id="input-ip" name="host" type="text" required class="block w-full rounded-md border-0 p-1 mt-4"
+        placeholder="Server Address">
+      <input id="input-user" name="user" type="text" autocomplete="username" required
+        class="block w-full rounded-md border-0 p-1 mt-4" placeholder="Username">
+      <input id="input-pass" name="pass" type="password" autocomplete="current-password" required
+        class="block w-full rounded-md border-0 p-1 mt-4" placeholder="Password">
+      <button type="submit"
+        class="mt-4 flex w-full justify-center rounded-md bg-purple-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white hover:bg-purple-400">Connect</button>
+    </form>
   </div>
+
 </body>
 
 </html>
