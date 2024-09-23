@@ -5,3 +5,4 @@
 /common-cfi/test
 **/test.exe
 **/a.out
+**node_modules
