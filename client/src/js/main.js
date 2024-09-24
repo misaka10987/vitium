@@ -2,6 +2,10 @@ const { invoke } = window.__TAURI__.tauri;
 
 const redirect = (url) => window.location.href = url;
 
-const hello = () => invoke("hello");
+const hello = async () => await invoke("hello");
 
-const connect = (server, user, pass) => invoke("connect", { server, user, pass });
+const login = async (server, user, pass) => await invoke("login", { server, user, pass });
+
+const user = async () => await invoke("user");
+
+const server_addr = async () => await invoke("server_addr");

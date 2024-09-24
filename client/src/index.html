@@ -17,7 +17,7 @@
 
     <!-- error box -->
     <div id="err-msg" class="mx-auto w-full max-w-sm mb-4" hidden>
-      <div class="bg-red-800 text-white border-none p-2 rounded items-center line-clamp-1" role="alert">
+      <div class="bg-red-800 text-white border-none p-2 rounded items-center truncate" role="alert">
         <span class="font-bold">ERROR</span>
         <span id="err-msg-content"></span>
       </div>
@@ -38,19 +38,21 @@
     </form>
   </div>
 
-  <script defer>
+  <script>
     $(() => {
-      $("#form-connect").on("submit", (e) => {
+      $("#form-connect").on("submit", async (e) => {
         e.preventDefault();
         const server = $("#input-server").val();
         const user = $("#input-user").val();
         const pass = $("#input-pass").val();
-        connect(server, user, pass)
-          .then(() => $("#err-msg").hide())
-          .catch((err) => {
-            $("#err-msg-content").html(err);
-            $("#err-msg").show();
-          });
+        try {
+          await login(server, user, pass);
+          redirect("/ui/hall");
+        }
+        catch (err) {
+          $("#err-msg-content").html(err);
+          $("#err-msg").show();
+        }
       })
     });
   </script>

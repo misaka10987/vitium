@@ -18,7 +18,7 @@ vitium-api = { path = "../api" }
 vitium-common = { path = "../common" }
 axum = "0.7.5"
 ndm = "0.9.10"
-tokio = { version = "1.40.0", features = ["full"] }
+tokio = { version = "1.40.0", features = ["tracing", "signal"] }
 serde = { version = "1.0.210", features = ["derive"] }
 tower-http = { version = "0.6.1", features = ["trace"] }
 tracing-subscriber = "0.3.18"
