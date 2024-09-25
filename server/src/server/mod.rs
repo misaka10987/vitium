@@ -1,3 +1,4 @@
+mod chat;
 mod handler;
 
 use axum::{
@@ -7,24 +8,25 @@ use axum::{
     Router,
 };
 use axum_extra::extract::CookieJar;
+use chat::ChatSto;
 use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    io,
+    collections::{HashMap, HashSet},
     ops::{Deref, DerefMut},
     path::PathBuf,
     sync::Arc,
-    time::SystemTime,
 };
 use tokio::{
+    io::{stdin, AsyncBufReadExt, BufReader},
     net::TcpListener,
     signal, spawn,
-    sync::{oneshot, RwLock},
+    sync::RwLock,
+    task::JoinHandle,
 };
 use tower_http::trace::TraceLayer;
 use tracing::trace;
-use vitium_api::{game::PC, net::Chat, player::Player};
+use vitium_api::{game::PC, player::Player};
 
 use crate::input::proc;
 
@@ -36,7 +38,7 @@ pub struct ServerInst {
     safe: SafeBox,
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
-    chat: RwLock<VecDeque<Chat>>,
+    pub chat: ChatSto,
     // pub game: RwLock<Game>,
 }
 
@@ -68,13 +70,14 @@ impl DerefMut for Server {
 impl Server {
     /// Create a server with specified configuration.
     pub async fn new(cfg: ServerConfig) -> Self {
+        let chat = ChatSto::new(cfg.chat_cap);
         Self(Arc::new(ServerInst {
             cfg,
             player: RwLock::new(HashMap::new()),
             safe: SafeBox::new("./password.db").await.unwrap(),
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
-            chat: RwLock::new(VecDeque::new()),
+            chat,
             // game: RwLock::new(Game::new()),
         }))
     }
@@ -92,15 +95,6 @@ impl Server {
             }
         }
         None
-    }
-
-    pub async fn push_chat(&self, chat: Chat) -> SystemTime {
-        let chat = chat.received();
-        let t = chat.recv_time;
-        let mut w = self.chat.write().await;
-        w.push_front(chat);
-        w.truncate(self.cfg.chat_cap);
-        t
     }
 
     /// Consumes `self` and start the server.
@@ -137,19 +131,17 @@ impl Server {
             .await
     }
 
-    pub fn input(&self) -> oneshot::Sender<()> {
-        let (s, mut r) = oneshot::channel();
+    pub fn input(&self) -> JoinHandle<()> {
         let server = self.clone();
+        let stdin = BufReader::new(stdin());
+        let mut line = stdin.lines();
         spawn(async move {
-            while let Err(_) = r.try_recv() {
-                let mut buf = String::new();
-                io::stdin().read_line(&mut buf).unwrap();
-                if let Err(e) = proc(&buf, &server).await {
-                    eprintln!("  !! {}", e)
+            while let Ok(Some(line)) = line.next_line().await {
+                if let Err(e) = proc(&line, &server).await {
+                    eprintln!("{e}")
                 }
             }
-        });
-        s
+        })
     }
 }
 

@@ -84,13 +84,13 @@ pub async fn recv_chat(
     State(s): State<Server>,
     Json(net::RecvChat(time)): Json<net::RecvChat>,
 ) -> Responce<net::RecvChat> {
-    let data = s.chat.read().await;
-    let res = data
-        .iter()
-        .filter(|chat| chat.recv_time > time)
-        .cloned()
-        .collect();
-    Ok(Json(res))
+    Ok(Json(
+        s.chat
+            .pull(time)
+            .await
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }
 
 pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {
@@ -157,7 +157,7 @@ pub async fn send_chat(
     Json(SendChat(chat)): Json<net::SendChat>,
 ) -> Responce<net::SendChat> {
     match s.auth(&jar) {
-        Some(user) if user == chat.sender => Ok(Json(s.push_chat(chat).await)),
+        Some(user) if user == chat.sender => Ok(Json(s.chat.push(chat).await)),
         _ => Err(StatusCode::FORBIDDEN),
     }
 }

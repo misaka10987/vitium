@@ -39,7 +39,7 @@ fn main() -> anyhow::Result<()> {
             let server = Server::new(cfg).await;
             let input = server.input();
             server.run().await?;
-            input.send(()).expect("failed to shutdown input thread");
+            input.abort();
             Ok(())
         })
 }

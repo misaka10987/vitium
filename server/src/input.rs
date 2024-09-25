@@ -1,3 +1,5 @@
+use anyhow::bail;
+use chrono::{DateTime, Utc};
 use clearscreen::clear;
 use std::process::{id as pid, Command};
 use std::{collections::VecDeque, process::exit};
@@ -6,13 +8,12 @@ use vitium_api::net::Chat;
 use crate::Server;
 
 #[cfg(unix)]
-fn term() -> ! {
+fn term() {
     Command::new("kill")
         .arg("-INT")
         .arg(pid().to_string())
         .status()
         .unwrap();
-    panic!("never")
 }
 
 fn resolve(cmd: &str) -> (&str, Vec<&str>) {
@@ -20,18 +21,23 @@ fn resolve(cmd: &str) -> (&str, Vec<&str>) {
     (token.pop_front().unwrap(), token.into())
 }
 
-pub async fn proc(cmd: &str, server: &Server) -> Result<(), String> {
+pub async fn proc(cmd: &str, server: &Server) -> anyhow::Result<()> {
     let (cmd, arg) = resolve(cmd);
     match cmd {
         #[cfg(unix)]
-        "exit" => term(),
-        "help" => Err("TODO".to_string()),
-        "clear" => clear().map_err(|e| e.to_string()),
-        "kill" => exit(-1),
-        "say" => {
-            server.push_chat(Chat::new("".into(), arg.join(" "))).await;
+        "exit" => {
+            term();
             Ok(())
         }
-        _ => Err(format!("{} not found", cmd)),
+        "help" => bail!("  TODO"),
+        "clear" => Ok(clear()?),
+        "kill" => exit(-1),
+        "say" => {
+            let t = server.chat.push(Chat::new("".into(), arg.join(" "))).await;
+            let t = DateTime::<Utc>::from(t);
+            eprintln!("  said at {}", t);
+            Ok(())
+        }
+        _ => bail!("  {} not found", cmd),
     }
 }
