@@ -55,6 +55,16 @@ impl Chat {
             recv_time: SystemTime::UNIX_EPOCH,
         }
     }
+
+    /// Receive the message, with current time as `.recv_time`.
+    pub fn received(self) -> Chat {
+        Chat {
+            sender: self.sender,
+            msg: self.msg,
+            send_time: self.send_time,
+            recv_time: SystemTime::now(),
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -68,24 +78,6 @@ impl Req for SendChat {
     }
 
     const METHOD: &'static str = "POST";
-}
-
-impl SendChat {
-    /// Receive the message, with current time as `.recv_time`.
-    pub fn received(self) -> Chat {
-        let Self(Chat {
-            sender,
-            msg,
-            send_time,
-            ..
-        }) = self;
-        Chat {
-            sender,
-            msg,
-            send_time,
-            recv_time: SystemTime::now(),
-        }
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
