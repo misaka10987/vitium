@@ -1,29 +1,18 @@
 use clearscreen::clear;
-use std::io;
-use std::process::{id as pid, Command, ExitStatus};
-use std::thread::spawn;
+use std::process::{id as pid, Command};
 use std::{collections::VecDeque, process::exit};
-use tokio::sync::oneshot;
+use vitium_api::net::Chat;
 
-pub fn input() -> oneshot::Sender<()> {
-    let (s, mut r) = oneshot::channel();
-    spawn(move || {
-        while let Err(_) = r.try_recv() {
-            let mut buf = String::new();
-            io::stdin().read_line(&mut buf).unwrap();
-            if let Err(e) = proc(&buf) {
-                eprintln!("  !! {}", e)
-            }
-        }
-    });
-    s
-}
+use crate::Server;
 
-fn term() -> io::Result<ExitStatus> {
+#[cfg(unix)]
+fn term() -> ! {
     Command::new("kill")
         .arg("-INT")
         .arg(pid().to_string())
         .status()
+        .unwrap();
+    panic!("never")
 }
 
 fn resolve(cmd: &str) -> (&str, Vec<&str>) {
@@ -31,13 +20,18 @@ fn resolve(cmd: &str) -> (&str, Vec<&str>) {
     (token.pop_front().unwrap(), token.into())
 }
 
-fn proc(cmd: &str) -> Result<(), String> {
-    let (cmd, _) = resolve(cmd);
+pub async fn proc(cmd: &str, server: &Server) -> Result<(), String> {
+    let (cmd, arg) = resolve(cmd);
     match cmd {
-        "exit" => term().map_err(|e| e.to_string()).map(|_| ()),
+        #[cfg(unix)]
+        "exit" => term(),
         "help" => Err("TODO".to_string()),
         "clear" => clear().map_err(|e| e.to_string()),
         "kill" => exit(-1),
+        "say" => {
+            server.push_chat(Chat::new("".into(), arg.join(" "))).await;
+            Ok(())
+        }
         _ => Err(format!("{} not found", cmd)),
     }
 }

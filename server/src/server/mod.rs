@@ -11,14 +11,22 @@ use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    io,
     ops::{Deref, DerefMut},
     path::PathBuf,
     sync::Arc,
+    time::SystemTime,
 };
-use tokio::{net::TcpListener, signal, sync::RwLock};
+use tokio::{
+    net::TcpListener,
+    signal, spawn,
+    sync::{oneshot, RwLock},
+};
 use tower_http::trace::TraceLayer;
 use tracing::trace;
 use vitium_api::{game::PC, net::Chat, player::Player};
+
+use crate::input::proc;
 
 // use crate::game::{self, Game};
 
@@ -28,7 +36,7 @@ pub struct ServerInst {
     safe: SafeBox,
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
-    chat: RwLock<VecDeque<(String, Chat)>>,
+    chat: RwLock<VecDeque<Chat>>,
     // pub game: RwLock<Game>,
 }
 
@@ -86,6 +94,15 @@ impl Server {
         None
     }
 
+    pub async fn push_chat(&self, chat: Chat) -> SystemTime {
+        let chat = chat.received();
+        let t = chat.recv_time;
+        let mut w = self.chat.write().await;
+        w.push_front(chat);
+        w.truncate(self.cfg.chat_cap);
+        t
+    }
+
     /// Consumes `self` and start the server.
     pub async fn run(self) -> Result<(), std::io::Error> {
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
@@ -118,6 +135,21 @@ impl Server {
         axum::serve(listener, app)
             .with_graceful_shutdown(sig_shut())
             .await
+    }
+
+    pub fn input(&self) -> oneshot::Sender<()> {
+        let (s, mut r) = oneshot::channel();
+        let server = self.clone();
+        spawn(async move {
+            while let Err(_) = r.try_recv() {
+                let mut buf = String::new();
+                io::stdin().read_line(&mut buf).unwrap();
+                if let Err(e) = proc(&buf, &server).await {
+                    eprintln!("  !! {}", e)
+                }
+            }
+        });
+        s
     }
 }
 
@@ -156,6 +188,8 @@ pub struct ServerConfig {
     pub port: u16,
     pub chat_cap: usize,
     pub page_url: String,
+    #[serde(default)]
+    pub motd: String,
 }
 
 impl Default for ServerConfig {
@@ -164,7 +198,8 @@ impl Default for ServerConfig {
             host_dir: PathBuf::from("."),
             port: 10987,
             chat_cap: 255,
-            page_url: "https://github.com/misaka10987/vitium".to_string(),
+            page_url: "https://github.com/misaka10987/vitium".into(),
+            motd: String::new(),
         }
     }
 }

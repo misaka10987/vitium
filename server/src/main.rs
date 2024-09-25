@@ -1,10 +1,9 @@
-use std::{error::Error, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Parser;
 use load::try_load_toml;
+use tokio::runtime;
 use tracing::{info, Level};
-
-use crate::input::input;
 
 /// Dice implementation using `ndm`.
 pub mod dice;
@@ -26,16 +25,21 @@ struct Args {
     pub config: PathBuf,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt()
-        .with_max_level(Level::TRACE)
-        .init();
-    let arg = Args::parse();
-    info!("running with {:?}", arg);
-    let cfg = try_load_toml(arg.config).await;
-    let input = input();
-    Server::new(cfg).await.run().await?;
-    input.send(()).expect("failed to shutdown input thread");
-    Ok(())
+fn main() -> anyhow::Result<()> {
+    runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(async {
+            tracing_subscriber::fmt()
+                .with_max_level(Level::TRACE)
+                .init();
+            let arg = Args::parse();
+            info!("running with {:?}", arg);
+            let cfg = try_load_toml(arg.config).await;
+            let server = Server::new(cfg).await;
+            let input = server.input();
+            server.run().await?;
+            input.send(()).expect("failed to shutdown input thread");
+            Ok(())
+        })
 }
