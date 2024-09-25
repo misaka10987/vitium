@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::anyhow;
 use once_cell::sync::Lazy;
 use reqwest::StatusCode;
-use tauri::{async_runtime::spawn, App, AppHandle, Manager};
+use tauri::{async_runtime::spawn, AppHandle, Manager};
 use tokio::{sync::RwLock, time::sleep};
 use tracing::{trace, warn};
 
@@ -28,6 +28,7 @@ async fn refresh_token() -> anyhow::Result<()> {
             SERVER_ADDR.read().await
         ))
         .basic_auth(USER.read().await, Some(PASS.read().await))
+        .timeout(Duration::from_secs(30))
         .send()
         .await?;
     match res.status() {
