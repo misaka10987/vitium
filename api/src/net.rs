@@ -1,4 +1,4 @@
-pub use crate::{cmd::Cmd, game::Action};
+pub use crate::game::Action;
 use crate::{game::PC, player::Player};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::time::SystemTime;
@@ -25,16 +25,16 @@ impl Req for SignUp {
     type Response = ();
 
     fn path(&self) -> String {
-        format!("/api/auth/signup")
+        "/api/auth/signup".into()
     }
 
     const METHOD: &'static str = "POST";
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Enroll(pub String);
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Chat {
     /// The user who sends the message.
     pub sender: String,
@@ -74,7 +74,7 @@ impl Req for SendChat {
     type Response = SystemTime;
 
     fn path(&self) -> String {
-        format!("/api/chat")
+        "/api/chat".into()
     }
 
     const METHOD: &'static str = "POST";
@@ -87,7 +87,7 @@ impl Req for RecvChat {
     type Response = Vec<Chat>;
 
     fn path(&self) -> String {
-        format!("/api/chat")
+        "/api/chat".into()
     }
 
     const METHOD: &'static str = "GET";
@@ -100,7 +100,7 @@ impl Req for ListPlayer {
     type Response = Vec<String>;
 
     fn path(&self) -> String {
-        format!("/api/player")
+        "/api/player".into()
     }
 
     const METHOD: &'static str = "GET";
@@ -119,7 +119,7 @@ impl Req for GetPlayer {
     const METHOD: &'static str = "GET";
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct EditPlayer(#[serde(skip)] pub String, pub Player);
 
 impl Req for EditPlayer {
@@ -139,7 +139,7 @@ impl Req for ListPC {
     type Response = Vec<(String, PC)>;
 
     fn path(&self) -> String {
-        format!("/api/pc")
+        "/api/pc".into()
     }
 
     const METHOD: &'static str = "GET";
@@ -171,14 +171,14 @@ impl Req for EditPC {
     const METHOD: &'static str = "POST";
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct EditPass(pub String);
 
 impl Req for EditPass {
     type Response = ();
 
     fn path(&self) -> String {
-        format!("/api/auth/pass")
+        "/api/auth/pass".into()
     }
 
     const METHOD: &'static str = "POST";
