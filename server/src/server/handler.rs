@@ -84,13 +84,13 @@ pub async fn recv_chat(
     State(s): State<Server>,
     Json(net::RecvChat(time)): Json<net::RecvChat>,
 ) -> Responce<net::RecvChat> {
-    Ok(Json(
+    Ok(Json({
         s.chat
             .pull(time)
             .await
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
-    ))
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    }))
 }
 
 pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {

@@ -1,43 +1,48 @@
 use anyhow::bail;
 use chrono::{DateTime, Utc};
 use clearscreen::clear;
-use std::process::{id as pid, Command};
-use std::{collections::VecDeque, process::exit};
+use std::process::exit;
+use tokio::{
+    io::{stdin, AsyncBufReadExt, BufReader},
+    spawn,
+    task::JoinHandle,
+};
 use vitium_api::net::Chat;
 
-use crate::Server;
-
-#[cfg(unix)]
-fn term() {
-    Command::new("kill")
-        .arg("-INT")
-        .arg(pid().to_string())
-        .status()
-        .unwrap();
-}
+use crate::{shutdown, Server};
 
 fn resolve(cmd: &str) -> (&str, Vec<&str>) {
-    let mut token: VecDeque<_> = cmd.trim().split(' ').collect();
-    (token.pop_front().unwrap(), token.into())
+    let mut token = cmd.trim().split(' ');
+    (token.next().unwrap(), token.collect())
 }
 
-pub async fn proc(cmd: &str, server: &Server) -> anyhow::Result<()> {
-    let (cmd, arg) = resolve(cmd);
-    match cmd {
-        #[cfg(unix)]
-        "exit" => {
-            term();
-            Ok(())
+impl Server {
+    pub fn input(&self) -> JoinHandle<()> {
+        let server = self.clone();
+        let stdin = BufReader::new(stdin());
+        let mut line = stdin.lines();
+        spawn(async move {
+            while let Ok(Some(line)) = line.next_line().await {
+                if let Err(e) = server.proc(&line).await {
+                    eprintln!("{e}")
+                }
+            }
+        })
+    }
+    pub async fn proc(&self, cmd: &str) -> anyhow::Result<()> {
+        let (cmd, arg) = resolve(cmd);
+        match cmd {
+            "exit" | "stop" | "shutdown" => Ok(shutdown()),
+            "help" => bail!("  TODO"),
+            "clear" => Ok(clear()?),
+            "kill" => exit(-1),
+            "say" => {
+                let t = self.chat.push(Chat::new("".into(), arg.join(" "))).await;
+                let t = DateTime::<Utc>::from(t);
+                eprintln!("  said at {}", t);
+                Ok(())
+            }
+            _ => bail!("  {} not found", cmd),
         }
-        "help" => bail!("  TODO"),
-        "clear" => Ok(clear()?),
-        "kill" => exit(-1),
-        "say" => {
-            let t = server.chat.push(Chat::new("".into(), arg.join(" "))).await;
-            let t = DateTime::<Utc>::from(t);
-            eprintln!("  said at {}", t);
-            Ok(())
-        }
-        _ => bail!("  {} not found", cmd),
     }
 }

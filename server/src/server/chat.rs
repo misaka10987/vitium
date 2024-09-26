@@ -1,7 +1,4 @@
-use std::{
-    collections::VecDeque,
-    time::SystemTime,
-};
+use std::{collections::VecDeque, time::SystemTime};
 
 use tokio::sync::{oneshot, Mutex, RwLock};
 use vitium_api::net::Chat;

@@ -18,17 +18,13 @@ use std::{
     sync::Arc,
 };
 use tokio::{
-    io::{stdin, AsyncBufReadExt, BufReader},
     net::TcpListener,
-    signal, spawn,
     sync::RwLock,
-    task::JoinHandle,
 };
-use tower_http::trace::TraceLayer;
 use tracing::trace;
 use vitium_api::{game::PC, player::Player};
 
-use crate::input::proc;
+use crate::recv_shutdown;
 
 // use crate::game::{self, Game};
 
@@ -98,7 +94,7 @@ impl Server {
     }
 
     /// Consumes `self` and start the server.
-    pub async fn run(self) -> Result<(), std::io::Error> {
+    pub async fn run(self) -> anyhow::Result<()> {
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
             .await
             .expect("failed to bind TCP listener");
@@ -124,24 +120,11 @@ impl Server {
             .route("/", get(Redirect::to(&self.cfg.page_url)))
             .nest("/api", api)
             .fallback(any(StatusCode::NOT_FOUND))
-            .with_state(self)
-            .layer(TraceLayer::new_for_http());
-        axum::serve(listener, app)
-            .with_graceful_shutdown(sig_shut())
-            .await
-    }
-
-    pub fn input(&self) -> JoinHandle<()> {
-        let server = self.clone();
-        let stdin = BufReader::new(stdin());
-        let mut line = stdin.lines();
-        spawn(async move {
-            while let Ok(Some(line)) = line.next_line().await {
-                if let Err(e) = proc(&line, &server).await {
-                    eprintln!("{e}")
-                }
-            }
-        })
+            .with_state(self);
+        let res = axum::serve(listener, app)
+            .with_graceful_shutdown(recv_shutdown())
+            .await;
+        Ok(res?)
     }
 }
 
@@ -149,27 +132,6 @@ impl Server {
 pub mod exec {
     pub fn hello() -> String {
         "Hello, world!".to_string()
-    }
-}
-
-async fn sig_shut() {
-    let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-    #[cfg(unix)]
-    let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
     }
 }
 
