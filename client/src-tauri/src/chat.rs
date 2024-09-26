@@ -30,9 +30,7 @@ pub async fn recv_chat() -> Result<(), String> {
     let mut last = LAST_UPDATE.lock().await;
     let req = RecvChat(*last);
     *pending = true;
-    warn!("pending");
     let res = send(req).await;
-    warn!("done");
     *pending = false;
     *last = SystemTime::now();
     let res = res.map_err(|e| e.to_string())?;
@@ -79,8 +77,8 @@ fn render(chat: Chat, user: &str) -> String {
         .as_secs();
     let send_time = DateTime::<Local>::from(send_time).format("%H:%M:%S %m/%d");
     let esc = html_escape::encode_safe(&msg);
-    let s = if sender == user || sender.is_empty() {
-        format!(
+    let s = match &sender {
+        _ if sender == user => format!(
             r###"
         <p>
         <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
@@ -95,9 +93,15 @@ fn render(chat: Chat, user: &str) -> String {
         </div>
         </p>
         "###
-        )
-    } else {
-        format!(
+        ),
+        _ if sender.is_empty() => format!(
+            r###"
+        <p>
+            <div class="w-full mb-2 select-text">[SERVER] {msg}</div>
+        </p>
+        "###
+        ),
+        _ => format!(
             r###"
         <p>
         <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
@@ -112,7 +116,7 @@ fn render(chat: Chat, user: &str) -> String {
         </div>
         </p>
         "###
-        )
+        ),
     };
     s
 }
