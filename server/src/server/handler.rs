@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use axum::{
     extract::{Path, State},
     http::{header::AUTHORIZATION, HeaderMap, StatusCode},
@@ -8,10 +10,7 @@ use http_auth_basic::Credentials;
 
 use safe_box::err::SafeBoxError;
 use tracing::{error, trace};
-use vitium_api::{
-    cmd::Echo,
-    net::{self, Req, SendChat},
-};
+use vitium_api::net::{self, Req, SendChat};
 
 use super::Server;
 
@@ -157,7 +156,24 @@ pub async fn send_chat(
     Json(SendChat(chat)): Json<net::SendChat>,
 ) -> Responce<net::SendChat> {
     match s.auth(&jar) {
-        Some(user) if user == chat.sender => Ok(Json(s.chat.push(chat).await)),
+        Some(user) if user == chat.sender => {
+            if chat.msg.chars().nth(0) == Some('/') {
+                let res = if s.is_op(&user).await {
+                    s.op_cmd(&chat.msg[1..]).await
+                } else {
+                    s.cmd(&chat.msg[1..]).await
+                };
+                let res = match res {
+                    Ok(o) => o,
+                    Err(e) => e.to_string(),
+                };
+                s.chat
+                    .broadcast(format!("{user} {} -- {res}", chat.msg))
+                    .await;
+                return Ok(Json(SystemTime::now()));
+            }
+            Ok(Json(s.chat.push(chat).await))
+        }
         _ => Err(StatusCode::FORBIDDEN),
     }
 }
@@ -195,27 +211,4 @@ pub async fn edit_pc(
 pub async fn sync(State(s): State<Server>, jar: CookieJar) -> StatusCode {
     if let Some(_) = s.auth(&jar) {};
     todo!()
-}
-
-pub async fn cmd(
-    State(s): State<Server>,
-    jar: CookieJar,
-    Json(_): Json<net::Cmd>,
-) -> (StatusCode, Json<Option<Echo>>) {
-    if let Some(_) = s.auth(&jar) {
-        // let g = s.game.read().await;
-        // let _ = req;
-        // if g.stat.host == name {
-        //     let err = UnimplError("command".to_owned());
-        //     return (
-        //         StatusCode::NOT_IMPLEMENTED,
-        //         Json(Some(Err(err.to_string()))),
-        //     );
-        // };
-        return (
-            StatusCode::NOT_IMPLEMENTED,
-            Json(Some(Err("not implemented".to_string()))),
-        );
-    }
-    (StatusCode::FORBIDDEN, Json(None))
 }

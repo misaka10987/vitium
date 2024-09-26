@@ -10,8 +10,6 @@ use tracing::{info, Level};
 pub mod dice;
 /// Specific game logics goes here.
 pub mod game;
-/// Process the input when running server.
-pub mod input;
 pub mod load;
 pub mod script;
 /// New server.

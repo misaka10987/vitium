@@ -48,4 +48,15 @@ impl ChatSto {
         list.truncate(self.cap);
         t
     }
+
+    pub async fn broadcast(&self, msg: String) {
+        let t = SystemTime::now();
+        let chat = Chat {
+            sender: "".to_string(),
+            msg,
+            send_time: t,
+            recv_time: t,
+        };
+        self.push(chat).await;
+    }
 }

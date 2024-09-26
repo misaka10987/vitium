@@ -1,6 +1,8 @@
 mod chat;
+mod cmd;
 mod handler;
 
+use anyhow::bail;
 use axum::{
     http::StatusCode,
     response::Redirect,
@@ -66,7 +68,13 @@ impl Server {
         let chat = ChatSto::new(cfg.chat_cap);
         Self(Arc::new(ServerInst {
             cfg,
-            player: RwLock::new(HashMap::new()),
+            player: RwLock::new(HashMap::from([(
+                "foo".into(),
+                Player {
+                    display_name: "Foo".into(),
+                    profile: None,
+                },
+            )])),
             safe: SafeBox::new("./password.db").await.unwrap(),
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
@@ -85,6 +93,25 @@ impl Server {
             }
         }
         None
+    }
+
+    pub async fn is_op(&self, user: &str) -> bool {
+        self.op.read().await.contains(user)
+    }
+
+    pub async fn op(&self, user: &str) -> anyhow::Result<()> {
+        if !self.player.read().await.contains_key(user) {
+            bail!("user '{user}' does not exist")
+        }
+        self.op.write().await.insert(user.into());
+        Ok(())
+    }
+
+    pub async fn deop(&self, user: &str) -> anyhow::Result<()> {
+        if !self.op.write().await.remove(user) {
+            bail!("user '{user}' is not operator yet")
+        }
+        Ok(())
     }
 
     /// Consumes `self` and start the server.
@@ -107,8 +134,7 @@ impl Server {
             .route("/pc", get(handler::list_pc))
             .route("/pc/*name", get(handler::get_pc))
             .route("/pc/*name", post(handler::edit_pc))
-            .route("/sync", get(handler::sync))
-            .route("/cmd", post(handler::cmd));
+            .route("/sync", get(handler::sync));
         // .nest("/act", game::act_handler());
         let app = Router::new()
             .route("/", get(Redirect::to(&self.cfg.page_url)))
