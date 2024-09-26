@@ -1,10 +1,10 @@
-use std::{error::Error, path::PathBuf};
+use std::{path::PathBuf, time::Duration};
 
 use clap::Parser;
 use load::try_load_toml;
+use once_cell::sync::Lazy;
+use tokio::{runtime, sync::broadcast};
 use tracing::{info, Level};
-
-use crate::input::input;
 
 /// Dice implementation using `ndm`.
 pub mod dice;
@@ -26,16 +26,34 @@ struct Args {
     pub config: PathBuf,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+static ARG: Lazy<Args> = Lazy::new(Args::parse);
+
+static SHUTDOWN: Lazy<broadcast::Sender<()>> = Lazy::new(|| broadcast::channel(1).0);
+
+fn shutdown() {
+    let _ = SHUTDOWN.send(());
+}
+
+async fn recv_shutdown() {
+    SHUTDOWN.subscribe().recv().await.unwrap()
+}
+
+fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_max_level(Level::TRACE)
         .init();
-    let arg = Args::parse();
-    info!("running with {:?}", arg);
-    let cfg = try_load_toml(arg.config).await;
-    let input = input();
-    Server::new(cfg).await.run().await?;
-    input.send(()).expect("failed to shutdown input thread");
+    info!("running with {:?}", *ARG);
+    ctrlc::set_handler(|| shutdown())?;
+    let run = runtime::Builder::new_multi_thread().enable_all().build()?;
+    run.spawn(async {
+        let cfg = try_load_toml(&ARG.config).await;
+        let server = Server::new(cfg).await;
+        let input = server.input();
+        server.run().await.unwrap();
+        input.abort();
+    });
+    run.block_on(recv_shutdown());
+    info!("shutting down in 30s");
+    run.shutdown_timeout(Duration::from_secs(30));
     Ok(())
 }

@@ -10,7 +10,7 @@ use safe_box::err::SafeBoxError;
 use tracing::{error, trace};
 use vitium_api::{
     cmd::Echo,
-    net::{self, Req},
+    net::{self, Req, SendChat},
 };
 
 use super::Server;
@@ -18,23 +18,23 @@ use super::Server;
 type Responce<T> = Result<Json<<T as Req>::Response>, StatusCode>;
 
 pub async fn login(State(s): State<Server>, head: HeaderMap) -> Result<CookieJar, StatusCode> {
-    if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
-        if let Ok(b) = Credentials::from_header(h.to_string()) {
-            let res = s.safe.verify(&b.user_id, &b.password).await;
-            return match res {
-                Ok(token) => Ok(CookieJar::new().add(Cookie::new("token", token))),
-                Err(e) => {
-                    if let SafeBoxError::BadPass { user, pass } = e {
-                        trace!("bad password {pass} for user {user}");
-                        Err(StatusCode::FORBIDDEN)
-                    } else {
-                        Err(StatusCode::INTERNAL_SERVER_ERROR)
-                    }
-                }
-            };
+    if let Some(Ok(Ok(cred))) = head.get(AUTHORIZATION).map(|token| {
+        token
+            .to_str()
+            .map(|b| Credentials::from_header(b.to_owned()))
+    }) {
+        let res = s.safe.verify(&cred.user_id, &cred.password).await;
+        match res {
+            Ok(token) => Ok(CookieJar::new().add(Cookie::new("token", token))),
+            Err(SafeBoxError::BadPass { user, .. }) | Err(SafeBoxError::UserNotExist(user)) => {
+                trace!("failed attempt to login '{user}'");
+                Err(StatusCode::FORBIDDEN)
+            }
+            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
         }
+    } else {
+        Err(StatusCode::BAD_REQUEST)
     }
-    Err(StatusCode::BAD_REQUEST)
 }
 
 pub async fn signup(
@@ -58,35 +58,39 @@ pub async fn signup(
 pub async fn edit_pass(
     State(s): State<Server>,
     head: HeaderMap,
-    Json(net::EditPass(pswd)): Json<net::EditPass>,
+    Json(net::EditPass(pass)): Json<net::EditPass>,
 ) -> Responce<net::EditPass> {
-    if let Some(Ok(h)) = head.get(AUTHORIZATION).map(|token| token.to_str()) {
-        if let Ok(b) = Credentials::from_header(h.to_string()) {
-            let res = s.safe.update(&b.user_id, &b.password, &pswd).await;
-            if let Err(e) = res {
-                if let SafeBoxError::BadPass { user, pass } = e {
-                    trace!("bad password {pass} for user {user}");
-                    return Err(StatusCode::FORBIDDEN);
-                }
-                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    if let Some(Ok(Ok(cred))) = head.get(AUTHORIZATION).map(|token| {
+        token
+            .to_str()
+            .map(|b| Credentials::from_header(b.to_owned()))
+    }) {
+        let res = s.safe.update(&cred.user_id, &cred.password, &pass).await;
+        match res {
+            Ok(_) => Ok(Json(())),
+            Err(SafeBoxError::BadPass { user, .. }) => {
+                trace!("failed attempt to change password for '{user}'");
+                Err(StatusCode::FORBIDDEN)
             }
-            return Ok(Json(()));
+            Err(SafeBoxError::UserNotExist(_)) => Err(StatusCode::NOT_FOUND),
+            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
         }
+    } else {
+        Err(StatusCode::UNAUTHORIZED)
     }
-    Err(StatusCode::UNAUTHORIZED)
 }
 
 pub async fn recv_chat(
     State(s): State<Server>,
     Json(net::RecvChat(time)): Json<net::RecvChat>,
 ) -> Responce<net::RecvChat> {
-    let data = s.chat.read().await;
-    let res = data
-        .iter()
-        .filter(|(_, chat)| chat.recv_time > time)
-        .cloned()
-        .collect();
-    Ok(Json(res))
+    Ok(Json({
+        s.chat
+            .pull(time)
+            .await
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    }))
 }
 
 pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {
@@ -150,19 +154,11 @@ pub async fn get_pc(State(s): State<Server>, Path(name): Path<String>) -> Respon
 pub async fn send_chat(
     State(s): State<Server>,
     jar: CookieJar,
-    Json(req): Json<net::SendChat>,
+    Json(SendChat(chat)): Json<net::SendChat>,
 ) -> Responce<net::SendChat> {
-    if let Some(user) = s.auth(&jar) {
-        let mut list = s.chat.write().await;
-        while list.len() >= s.cfg.chat_cap {
-            list.pop_front();
-        }
-        let chat = req.received();
-        let t = chat.recv_time;
-        list.push_back((user, chat));
-        Ok(Json(t))
-    } else {
-        Err(StatusCode::FORBIDDEN)
+    match s.auth(&jar) {
+        Some(user) if user == chat.sender => Ok(Json(s.chat.push(chat).await)),
+        _ => Err(StatusCode::FORBIDDEN),
     }
 }
 

@@ -36,6 +36,8 @@ pub struct Enroll(pub String);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Chat {
+    /// The user who sends the message.
+    pub sender: String,
     /// The chat message.
     pub msg: String,
     /// The time message is sent.
@@ -45,11 +47,22 @@ pub struct Chat {
 }
 
 impl Chat {
-    pub fn new(msg: &str) -> Self {
+    pub fn new(sender: String, msg: String) -> Self {
         Self {
-            msg: msg.to_string(),
+            sender,
+            msg,
             send_time: SystemTime::now(),
             recv_time: SystemTime::UNIX_EPOCH,
+        }
+    }
+
+    /// Receive the message, with current time as `.recv_time`.
+    pub fn received(self) -> Chat {
+        Chat {
+            sender: self.sender,
+            msg: self.msg,
+            send_time: self.send_time,
+            recv_time: SystemTime::now(),
         }
     }
 }
@@ -67,23 +80,11 @@ impl Req for SendChat {
     const METHOD: &'static str = "POST";
 }
 
-impl SendChat {
-    /// Receive the message, with current time as `.recv_time`.
-    pub fn received(self) -> Chat {
-        let Self(Chat { msg, send_time, .. }) = self;
-        Chat {
-            msg,
-            send_time,
-            recv_time: SystemTime::now(),
-        }
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RecvChat(pub SystemTime);
 
 impl Req for RecvChat {
-    type Response = Vec<(String, Chat)>;
+    type Response = Vec<Chat>;
 
     fn path(&self) -> String {
         format!("/api/chat")

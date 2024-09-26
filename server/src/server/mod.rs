@@ -1,3 +1,4 @@
+mod chat;
 mod handler;
 
 use axum::{
@@ -7,18 +8,20 @@ use axum::{
     Router,
 };
 use axum_extra::extract::CookieJar;
+use chat::ChatSto;
 use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashMap, HashSet},
     ops::{Deref, DerefMut},
     path::PathBuf,
     sync::Arc,
 };
-use tokio::{net::TcpListener, signal, sync::RwLock};
-use tower_http::trace::TraceLayer;
+use tokio::{net::TcpListener, sync::RwLock};
 use tracing::trace;
-use vitium_api::{game::PC, net::Chat, player::Player};
+use vitium_api::{game::PC, player::Player};
+
+use crate::recv_shutdown;
 
 // use crate::game::{self, Game};
 
@@ -28,7 +31,7 @@ pub struct ServerInst {
     safe: SafeBox,
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
-    chat: RwLock<VecDeque<(String, Chat)>>,
+    pub chat: ChatSto,
     // pub game: RwLock<Game>,
 }
 
@@ -60,13 +63,14 @@ impl DerefMut for Server {
 impl Server {
     /// Create a server with specified configuration.
     pub async fn new(cfg: ServerConfig) -> Self {
+        let chat = ChatSto::new(cfg.chat_cap);
         Self(Arc::new(ServerInst {
             cfg,
             player: RwLock::new(HashMap::new()),
             safe: SafeBox::new("./password.db").await.unwrap(),
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
-            chat: RwLock::new(VecDeque::new()),
+            chat,
             // game: RwLock::new(Game::new()),
         }))
     }
@@ -76,10 +80,7 @@ impl Server {
         if let Some(token) = jar.get("token") {
             let token = token.value();
             match self.safe.verify_token(token) {
-                Ok(user) => {
-                    trace!("authorized {user} by token");
-                    return Some(user);
-                }
+                Ok(user) => return Some(user),
                 Err(e) => trace!("failed to authorize with token {token}: {e}"),
             }
         }
@@ -87,7 +88,7 @@ impl Server {
     }
 
     /// Consumes `self` and start the server.
-    pub async fn run(self) -> Result<(), std::io::Error> {
+    pub async fn run(self) -> anyhow::Result<()> {
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
             .await
             .expect("failed to bind TCP listener");
@@ -113,11 +114,11 @@ impl Server {
             .route("/", get(Redirect::to(&self.cfg.page_url)))
             .nest("/api", api)
             .fallback(any(StatusCode::NOT_FOUND))
-            .with_state(self)
-            .layer(TraceLayer::new_for_http());
-        axum::serve(listener, app)
-            .with_graceful_shutdown(sig_shut())
-            .await
+            .with_state(self);
+        let res = axum::serve(listener, app)
+            .with_graceful_shutdown(recv_shutdown())
+            .await;
+        Ok(res?)
     }
 }
 
@@ -128,27 +129,6 @@ pub mod exec {
     }
 }
 
-async fn sig_shut() {
-    let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-    #[cfg(unix)]
-    let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
-}
-
 /// Server configuration.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ServerConfig {
@@ -156,6 +136,8 @@ pub struct ServerConfig {
     pub port: u16,
     pub chat_cap: usize,
     pub page_url: String,
+    #[serde(default)]
+    pub motd: String,
 }
 
 impl Default for ServerConfig {
@@ -164,7 +146,8 @@ impl Default for ServerConfig {
             host_dir: PathBuf::from("."),
             port: 10987,
             chat_cap: 255,
-            page_url: "https://github.com/misaka10987/vitium".to_string(),
+            page_url: "https://github.com/misaka10987/vitium".into(),
+            motd: String::new(),
         }
     }
 }

@@ -1,0 +1,31 @@
+[package]
+name = "vitium-client"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+[workspace]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[dependencies]
+vitium-api = { path = "../../api" }
+tauri = { version = "1", features = ["shell-open"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0.128"
+reqwest = { version = "0.12.7", features = ["cookies", "json"] }
+once_cell = "1.19.0"
+tracing-subscriber = "0.3.18"
+tracing = "0.1.40"
+tokio = "1.40.0"
+anyhow = "1.0.89"
+html-escape = "0.2.13"
+chrono = "0.4.38"
+
+[features]
+# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
