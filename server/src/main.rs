@@ -42,7 +42,7 @@ fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_max_level(Level::TRACE)
         .init();
-    info!("running with {:?}", ARG);
+    info!("running with {:?}", *ARG);
     ctrlc::set_handler(|| shutdown())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
     run.spawn(async {

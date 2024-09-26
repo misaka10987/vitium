@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, time::SystemTime};
 
 use tokio::sync::{oneshot, Mutex, RwLock};
+use tracing::info;
 use vitium_api::net::Chat;
 
 pub struct ChatSto {
@@ -37,6 +38,7 @@ impl ChatSto {
 
     pub async fn push(&self, chat: Chat) -> SystemTime {
         let chat = chat.received();
+        info!("<{}> {}", chat.sender, chat.msg);
         let t = chat.recv_time;
         for i in self.watch.lock().await.drain(..) {
             let _ = i.send(vec![chat.clone()]);

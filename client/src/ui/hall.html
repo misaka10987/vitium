@@ -3,8 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- <link rel="stylesheet" href="/assets/style.css" /> -->
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <link rel="stylesheet" href="/assets/style.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vitium</title>
   <script src="/js/jquery.js"></script>
@@ -15,6 +15,7 @@
 
   <div class="absolute p-2 top-0 left-0 w-72 h-screen bg-stone-800">
     <article id="chat-col" class="text-white text-left text-balance break-words overflow-scroll h-screen pb-14">
+      <!-- for tailwindcss to detect classes used -->
       <div hidden>
         <p>
         <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
@@ -70,13 +71,16 @@
         catch (e) { console.log(e); }
         if (await chat_modified()) $("#chat-col").html(await render_chat());
       };
-      await refresh_chat();
+      // trick: run a task on a new thread
+      setTimeout(refresh_chat, 0);
       setInterval(refresh_chat, 10000);
-      $("#form-send-chat").on("submit", async () => {
+      $("#form-send-chat").on("submit", async (e) => {
+        console.log("333");
+        e.preventDefault();
         const msg = $("#input-msg").val();
         try {
           await send_chat(msg);
-          await refresh_chat();
+          // await refresh_chat();
         }
         catch (e) { console.log(e); }
       });

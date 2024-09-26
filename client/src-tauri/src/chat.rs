@@ -2,7 +2,7 @@ use std::time::{Duration, SystemTime};
 
 use chrono::{DateTime, Local};
 use tokio::sync::Mutex;
-use tracing::trace;
+use tracing::{trace, warn};
 use vitium_api::net::{Chat, RecvChat, SendChat};
 
 use crate::{net::send, USER};
@@ -30,7 +30,9 @@ pub async fn recv_chat() -> Result<(), String> {
     let mut last = LAST_UPDATE.lock().await;
     let req = RecvChat(*last);
     *pending = true;
+    warn!("pending");
     let res = send(req).await;
+    warn!("done");
     *pending = false;
     *last = SystemTime::now();
     let res = res.map_err(|e| e.to_string())?;
@@ -44,8 +46,10 @@ pub async fn recv_chat() -> Result<(), String> {
 
 #[tauri::command]
 pub async fn send_chat(msg: String) -> Result<SystemTime, String> {
+    *MODIFIED.lock().await = true;
     let chat = Chat::new(USER.read().await.clone(), msg);
     let req = SendChat(chat);
+    warn!("sending");
     send(req).await.map_err(|e| e.to_string())
 }
 
@@ -75,12 +79,12 @@ fn render(chat: Chat, user: &str) -> String {
         .as_secs();
     let send_time = DateTime::<Local>::from(send_time).format("%H:%M:%S %m/%d");
     let esc = html_escape::encode_safe(&msg);
-    let s = if sender != user {
+    let s = if sender == user || sender.is_empty() {
         format!(
             r###"
         <p>
         <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
-          <h3 class="bg-emerald-600 py-1 px-2">
+          <h3 class="bg-purple-600 py-1 px-2">
             <span class="font-semibold font-mono">{sender}</span>
             <span class="text-sm">{send_time}</span>
             <span class="text-sm">({latency}s)</span>
@@ -97,7 +101,7 @@ fn render(chat: Chat, user: &str) -> String {
             r###"
         <p>
         <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
-          <h3 class="bg-purple-600 py-1 px-2">
+          <h3 class="bg-emerald-600 py-1 px-2">
             <span class="font-semibold font-mono">{sender}</span>
             <span class="text-sm">{send_time}</span>
             <span class="text-sm">({latency}s)</span>

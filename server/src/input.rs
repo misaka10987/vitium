@@ -1,5 +1,4 @@
 use anyhow::bail;
-use chrono::{DateTime, Utc};
 use clearscreen::clear;
 use std::process::exit;
 use tokio::{
@@ -27,6 +26,7 @@ impl Server {
                     eprintln!("{e}")
                 }
             }
+            shutdown();
         })
     }
     pub async fn proc(&self, cmd: &str) -> anyhow::Result<()> {
@@ -36,10 +36,8 @@ impl Server {
             "help" => bail!("  TODO"),
             "clear" => Ok(clear()?),
             "kill" => exit(-1),
-            "say" => {
-                let t = self.chat.push(Chat::new("".into(), arg.join(" "))).await;
-                let t = DateTime::<Utc>::from(t);
-                eprintln!("  said at {}", t);
+            "broadcast" => {
+                self.chat.push(Chat::new("".into(), arg.join(" "))).await;
                 Ok(())
             }
             _ => bail!("  {} not found", cmd),

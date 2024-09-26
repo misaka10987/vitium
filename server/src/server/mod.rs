@@ -17,10 +17,7 @@ use std::{
     path::PathBuf,
     sync::Arc,
 };
-use tokio::{
-    net::TcpListener,
-    sync::RwLock,
-};
+use tokio::{net::TcpListener, sync::RwLock};
 use tracing::trace;
 use vitium_api::{game::PC, player::Player};
 
@@ -83,10 +80,7 @@ impl Server {
         if let Some(token) = jar.get("token") {
             let token = token.value();
             match self.safe.verify_token(token) {
-                Ok(user) => {
-                    trace!("authorized {user} by token");
-                    return Some(user);
-                }
+                Ok(user) => return Some(user),
                 Err(e) => trace!("failed to authorize with token {token}: {e}"),
             }
         }
