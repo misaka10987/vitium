@@ -29,6 +29,11 @@
           </div>
         </div>
         </p>
+
+        <p>
+          <div class="w-full mb-2 select-text">{msg}</div>
+        </p>
+
         <p>
         <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
           <h3 class="bg-purple-600 py-1 px-2">
@@ -78,9 +83,10 @@
         console.log("333");
         e.preventDefault();
         const msg = $("#input-msg").val();
+        $("#input-msg").val("");
         try {
           await send_chat(msg);
-          // await refresh_chat();
+          await refresh_chat();
         }
         catch (e) { console.log(e); }
       });
