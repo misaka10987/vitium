@@ -6,16 +6,15 @@ mod chat;
 mod err;
 mod net;
 
-
 use reqwest::Client;
 use tokio::sync::RwLock;
 
 use once_cell::sync::Lazy;
 use tracing::{trace, Level};
 
-static SERVER_ADDR: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
+static SERVER_ADDR: RwLock<String> = RwLock::const_new(String::new());
 
-pub(crate) static USER: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
+pub(crate) static USER: RwLock<String> = RwLock::const_new(String::new());
 
 static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 
@@ -52,6 +51,9 @@ fn main() {
             server_stat,
             auth::login,
             chat::recv_chat,
+            chat::send_chat,
+            chat::render_chat,
+            chat::chat_modified,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

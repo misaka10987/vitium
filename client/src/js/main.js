@@ -15,3 +15,5 @@ const recv_chat = async () => await invoke("recv_chat");
 const send_chat = async (msg) => await invoke("send_chat", { msg });
 
 const render_chat = async () => await invoke("render_chat");
+
+const chat_modified = async () => await invoke("chat_modified");

@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::bail;
 use reqwest::header::COOKIE;
 use vitium_api::net::Req;
 
@@ -14,7 +14,7 @@ pub async fn send<T: Req>(req: T) -> anyhow::Result<<T as Req>::Response> {
         "PUT" => CLIENT.put(url),
         "DELETE" => CLIENT.delete(url),
         "PATCH" => CLIENT.patch(url),
-        _ => return Err(anyhow!("invalid method")),
+        _ => bail!("invalid method"),
     };
     let res = builder
         .json(&req)
@@ -22,7 +22,7 @@ pub async fn send<T: Req>(req: T) -> anyhow::Result<<T as Req>::Response> {
         .send()
         .await?;
     if !res.status().is_success() {
-        return Err(anyhow!("HTTP {}", res.status()));
+        bail!("HTTP {}", res.status());
     }
     let body = res.json().await?;
     Ok(body)
