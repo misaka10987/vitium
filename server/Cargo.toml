@@ -38,7 +38,6 @@ safe-box = "0.1.3"
 thiserror = "1.0.63"
 axum-extra = { version = "0.9.3", features = ["cookie"] }
 anyhow = "1.0.89"
-inquire = "0.7.5"
 chrono = "0.4.38"
 ctrlc = "3.4.5"
 once_cell = "1.19.0"
