@@ -3,7 +3,6 @@ use std::time::{Duration, SystemTime};
 use askama::Template;
 use chrono::{DateTime, Local};
 use tokio::sync::Mutex;
-use tracing::{trace, warn};
 use vitium_api::net::{Chat, RecvChat, SendChat};
 
 use crate::{net::send, USER};
@@ -11,8 +10,6 @@ use crate::{net::send, USER};
 static CHAT: Mutex<Vec<Chat>> = Mutex::const_new(Vec::new());
 
 static LAST_UPDATE: Mutex<SystemTime> = Mutex::const_new(SystemTime::UNIX_EPOCH);
-
-static PENDING: Mutex<bool> = Mutex::const_new(false);
 
 static MODIFIED: Mutex<bool> = Mutex::const_new(false);
 
@@ -23,16 +20,9 @@ pub async fn chat_modified() -> bool {
 
 #[tauri::command]
 pub async fn recv_chat() -> Result<(), String> {
-    let mut pending = PENDING.lock().await;
-    if *pending {
-        trace!("recv_chat() exited as nothing to do");
-        return Ok(());
-    }
     let mut last = LAST_UPDATE.lock().await;
     let req = RecvChat(*last);
-    *pending = true;
     let res = send(req).await;
-    *pending = false;
     *last = SystemTime::now();
     let res = res.map_err(|e| e.to_string())?;
     *MODIFIED.lock().await = true;
@@ -48,7 +38,6 @@ pub async fn send_chat(msg: String) -> Result<SystemTime, String> {
     *MODIFIED.lock().await = true;
     let chat = Chat::new(USER.read().await.clone(), msg);
     let req = SendChat(chat);
-    warn!("sending");
     send(req).await.map_err(|e| e.to_string())
 }
 

@@ -23,8 +23,8 @@ tracing-subscriber = "0.3.18"
 tracing = "0.1.40"
 tokio = "1.40.0"
 anyhow = "1.0.89"
-html-escape = "0.2.13"
 chrono = "0.4.38"
+askama = "0.12.1"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

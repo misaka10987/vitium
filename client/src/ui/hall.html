@@ -9,6 +9,7 @@
   <title>Vitium</title>
   <script src="/js/jquery.js"></script>
   <script src="/js/main.js"></script>
+  <script src="/js/util.js"></script>
 </head>
 
 <body class="bg-stone-700 w-screen h-screen p-2 select-none overflow-hidden">
@@ -31,7 +32,7 @@
         </p>
 
         <p>
-          <div class="w-full mb-2 select-text">{msg}</div>
+        <div class="w-full mb-2 select-text">{msg}</div>
         </p>
 
         <p>
@@ -73,22 +74,19 @@
     $(async () => {
       const refresh_chat = async () => {
         try { await recv_chat(); }
-        catch (e) { console.log(e); }
+        catch (e) {
+          console.error("chat sync failed: " + e + ", retrying in 10s");
+          await sleep(10000);
+        }
         if (await chat_modified()) $("#chat-col").html(await render_chat());
       };
-      // trick: run a task on a new thread
-      setTimeout(refresh_chat, 0);
-      setInterval(refresh_chat, 10000);
+      spawn(async () => { while (true) await refresh_chat(); });
       $("#form-send-chat").on("submit", async (e) => {
-        console.log("333");
         e.preventDefault();
         const msg = $("#input-msg").val();
         $("#input-msg").val("");
-        try {
-          await send_chat(msg);
-          await refresh_chat();
-        }
-        catch (e) { console.log(e); }
+        try { await send_chat(msg); }
+        catch (e) { console.error("send chat failed: " + e); }
       });
     });
   </script>
