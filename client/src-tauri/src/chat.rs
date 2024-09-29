@@ -49,7 +49,7 @@ pub async fn render_chat() -> String {
         .await
         .iter()
         .rev()
-        .map(|c| render(c.clone(), &user))
+        .map(|c| render(c, &user))
         .collect::<Vec<_>>()
         .join("")
 }
@@ -64,7 +64,7 @@ struct ChatHTML<'a> {
     msg: &'a str,
 }
 
-fn render(chat: Chat, user: &str) -> String {
+fn render(chat: &Chat, user: &str) -> String {
     let Chat {
         sender,
         msg,
@@ -72,16 +72,16 @@ fn render(chat: Chat, user: &str) -> String {
         recv_time,
     } = chat;
     let latency = recv_time
-        .duration_since(send_time)
+        .duration_since(*send_time)
         .unwrap_or(Duration::from_secs(0))
         .as_secs();
-    let send_time = DateTime::<Local>::from(send_time).format("%H:%M:%S %m/%d");
+    let send_time = DateTime::<Local>::from(*send_time).format("%H:%M:%S %m/%d");
     let html = ChatHTML {
         user,
-        sender: &sender,
+        sender,
         send_time: &format!("{send_time}"),
         latency,
-        msg: &msg,
+        msg,
     };
     html.render().unwrap()
 }
