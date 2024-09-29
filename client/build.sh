@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-npm install -D tailwindcss
+# npm install -D tailwindcss
 ./build-tailwind.sh
 cargo install tauri-cli
 cargo tauri build
