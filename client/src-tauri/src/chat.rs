@@ -1,5 +1,6 @@
 use std::time::{Duration, SystemTime};
 
+use askama::Template;
 use chrono::{DateTime, Local};
 use tokio::sync::Mutex;
 use tracing::{trace, warn};
@@ -64,6 +65,16 @@ pub async fn render_chat() -> String {
         .join("")
 }
 
+#[derive(Template)]
+#[template(path = "chat.html")]
+struct ChatHTML<'a> {
+    user: &'a str,
+    sender: &'a str,
+    send_time: &'a str,
+    latency: u64,
+    msg: &'a str,
+}
+
 fn render(chat: Chat, user: &str) -> String {
     let Chat {
         sender,
@@ -76,47 +87,12 @@ fn render(chat: Chat, user: &str) -> String {
         .unwrap_or(Duration::from_secs(0))
         .as_secs();
     let send_time = DateTime::<Local>::from(send_time).format("%H:%M:%S %m/%d");
-    let esc = html_escape::encode_safe(&msg);
-    let s = match &sender {
-        _ if sender == user => format!(
-            r###"
-        <p>
-        <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
-          <h3 class="bg-purple-600 py-1 px-2">
-            <span class="font-semibold font-mono">{sender}</span>
-            <span class="text-sm">{send_time}</span>
-            <span class="text-sm">({latency}s)</span>
-          </h3>
-          <div class="bg-stone-600 p-1.5 pt-1">
-            {esc}
-          </div>
-        </div>
-        </p>
-        "###
-        ),
-        _ if sender.is_empty() => format!(
-            r###"
-        <p>
-            <div class="w-full mb-2 select-text">[SERVER] {msg}</div>
-        </p>
-        "###
-        ),
-        _ => format!(
-            r###"
-        <p>
-        <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
-          <h3 class="bg-emerald-600 py-1 px-2">
-            <span class="font-semibold font-mono">{sender}</span>
-            <span class="text-sm">{send_time}</span>
-            <span class="text-sm">({latency}s)</span>
-          </h3>
-          <div class="bg-stone-600 p-1.5 pt-1">
-            {esc}
-          </div>
-        </div>
-        </p>
-        "###
-        ),
+    let html = ChatHTML {
+        user,
+        sender: &sender,
+        send_time: &format!("{send_time}"),
+        latency,
+        msg: &msg,
     };
-    s
+    html.render().unwrap()
 }
