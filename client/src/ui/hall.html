@@ -7,47 +7,16 @@
   <link rel="stylesheet" href="/assets/style.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vitium</title>
-  <script src="/assets/jquery.js"></script>
-  <script src="/assets/js/cmd.js"></script>
-  <script src="/assets/js/util.js"></script>
+  <script src="/assets/jquery.js" defer></script>
+  <script src="/assets/js/cmd.js" defer></script>
+  <script src="/assets/js/util.js" defer></script>
+  <script src="/assets/js/ui/hall.html.js" defer></script>
 </head>
 
 <body class="bg-stone-700 w-screen h-screen p-2 select-none overflow-hidden">
 
   <div class="absolute p-2 top-0 left-0 w-72 h-screen bg-stone-800">
     <article id="chat-col" class="text-white text-left text-balance break-words overflow-scroll h-screen pb-14">
-      <!-- for tailwindcss to detect classes used -->
-      <div hidden>
-        <p>
-        <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
-          <h3 class="bg-emerald-600 py-1 px-2">
-            <span class="font-semibold font-mono">{sender}</span>
-            <span class="text-sm">{send_time}</span>
-            <span class="text-sm">({latency})</span>
-          </h3>
-          <div class="bg-stone-600 p-1.5 pt-1">
-            {esc}
-          </div>
-        </div>
-        </p>
-
-        <p>
-        <div class="w-full mb-2 select-text">{msg}</div>
-        </p>
-
-        <p>
-        <div class="transform overflow-hidden rounded-lg shadow-xl transition-all w-full mb-2 select-text">
-          <h3 class="bg-purple-600 py-1 px-2">
-            <span class="font-semibold font-mono">{sender}</span>
-            <span class="text-sm">{send_time}</span>
-            <span class="text-sm">({latency})</span>
-          </h3>
-          <div class="bg-stone-600 p-1.5 pt-1">
-            {esc}
-          </div>
-        </div>
-        </p>
-      </div>
       No Chat.
     </article>
 
@@ -83,27 +52,6 @@
       <div class="aspect-square p-0 m-0">🟢</div>
     </div>
   </div>
-
-  <script>
-    $(async () => {
-      const refresh_chat = async () => {
-        try { await recv_chat(); }
-        catch (e) {
-          console.error("chat sync failed: " + e + ", retrying in 10s");
-          await sleep(10000);
-        }
-        if (await chat_modified()) $("#chat-col").html(await render_chat());
-      };
-      spawn(async () => { while (true) await refresh_chat(); });
-      $("#form-send-chat").on("submit", async (e) => {
-        e.preventDefault();
-        const msg = $("#input-msg").val();
-        $("#input-msg").val("");
-        try { await send_chat(msg); }
-        catch (e) { console.error("send chat failed: " + e); }
-      });
-    });
-  </script>
 
 </body>
 
