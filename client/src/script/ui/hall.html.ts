@@ -1,4 +1,6 @@
 $(async () => {
+    const server = await server_addr()
+    set_window_title(server+" — Vitium")
     const refresh_chat = async () => {
         try { await recv_chat() }
         catch (e) {

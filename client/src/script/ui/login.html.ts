@@ -1,4 +1,5 @@
 $(() => {
+    set_window_title("Connect — Vitium")
     $("#form-connect").on("submit", async (e) => {
         e.preventDefault()
         const server = $("#input-server").val() as string
