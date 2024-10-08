@@ -1,9 +1,21 @@
 {
+  "name": "vitium-client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc",
+    "build": "tsc",
+    "tauri": "tauri"
+  },
   "dependencies": {
-    "@tauri-apps/api": "^1.6.0"
+    "@tauri-apps/api": ">=2.0.0",
+    "@tauri-apps/plugin-shell": ">=2.0.0"
   },
   "devDependencies": {
+    "@tauri-apps/cli": ">=2.0.0",
     "@types/jquery": "^3.5.31",
-    "tailwindcss": "^3.4.13"
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.2.2"
   }
 }

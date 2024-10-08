@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::bail;
 use reqwest::StatusCode;
-use tauri::{async_runtime::spawn, AppHandle, Manager};
+use tauri::{async_runtime::spawn, AppHandle, Emitter};
 use tokio::{sync::RwLock, time::sleep};
 use tracing::warn;
 
@@ -53,9 +53,8 @@ async fn timed_refresh(hand: AppHandle) {
         sleep(Duration::from_secs(240)).await;
         if refresh_token().await.is_err() {
             warn!("failed to refresh token, redirect to login page");
-            for (_, win) in hand.windows() {
-                win.eval("window.location.href='/'").unwrap();
-            }
+            hand.emit("token-refresh-fail", ()).unwrap();
+            break;
         }
     }
 }

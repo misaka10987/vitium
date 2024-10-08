@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
-npx tailwindcss -i ./src/style.css -O ./src/assets/style.css > /dev/null
+pnpx tailwindcss -i ./src/style.css -o ./src/assets/style.css
 tsc
 cargo tauri dev

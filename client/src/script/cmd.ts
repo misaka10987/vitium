@@ -1,7 +1,3 @@
-// fool the type checker for injection to work
-const win: any = window
-const invoke = win.__TAURI__.invoke
-
 const hello: () => Promise<void> = async () => await invoke("hello")
 
 const set_window_title: (title: string) => Promise<void> = async (title) => await invoke("set_window_title", { title })

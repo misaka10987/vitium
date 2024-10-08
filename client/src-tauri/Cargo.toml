@@ -9,23 +9,27 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "vitium_client_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { version = "2.0.1", features = ["config-toml"] }
 
 [dependencies]
-vitium-api = { path = "../../api" }
-tauri = { version = "1", features = ["shell-open"] }
-serde = { version = "1", features = ["derive"] }
+tauri = { version = "2.0.2", features = ["config-toml"] }
+tauri-plugin-shell = "2.0.1"
+serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
-reqwest = { version = "0.12.7", features = ["cookies", "json"] }
-once_cell = "1.19.0"
+reqwest = { version = "0.12.8", features = ["cookies", "json"] }
+once_cell = "1.20.2"
 tracing-subscriber = "0.3.18"
 tracing = "0.1.40"
 tokio = "1.40.0"
 anyhow = "1.0.89"
 chrono = "0.4.38"
 askama = "0.12.1"
-
-[features]
-# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
-custom-protocol = ["tauri/custom-protocol"]
+vitium-api = { path = "../../api" }

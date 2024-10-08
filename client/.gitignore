@@ -1,3 +1,6 @@
+src/assets/js
+src/assets/style.css
+
 # Logs
 logs
 *.log
@@ -22,5 +25,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-src/assets/style.css
