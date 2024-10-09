@@ -1,15 +1,15 @@
 const titlebar = `
-<div data-tauri-drag-region class="bg-stone-800 h-6 select-none fixed top-0 left-0 right-0 flex justify-end">
+<div data-tauri-drag-region class="bg-stone-800 h-6 select-none absolute top-0 left-0 right-0 flex justify-end overflow-hidden">
 <div data-tauri-drag-region id="title"
-  class="fixed top-0 left-0 right-0 h-6 justify-center text-white text-center align-middle z-40">Vitium</div>
-<div class="titlebar-button p-1 hover:bg-zinc-500 z-50 justify-center" id="titlebar-minimize">
-  <img src="/assets/svg/win-min.svg" alt="minimize">
+  class="absolute top-0 left-0 right-0 h-6 justify-center text-white text-center align-middle truncate">Vitium</div>
+<div class="titlebar-button hover:bg-zinc-500 z-50 justify-center max-h-6 h-6" id="titlebar-minimize">
+  <img class="max-h-6 h-6 p-1" src="/assets/svg/win-min.svg" alt="minimize">
 </div>
-<div class="titlebar-button p-1 hover:bg-zinc-500 z-50 justify-center" id="titlebar-maximize">
-  <img src="/assets/svg/win-max.svg" alt="maximize">
+<div class="titlebar-button hover:bg-zinc-500 z-50 justify-center max-h-6 h-6" id="titlebar-maximize">
+  <img class="max-h-6 h-6 p-1" src="/assets/svg/win-max.svg" alt="maximize">
 </div>
-<div class="titlebar-button p-1 hover:bg-rose-600 z-50 justify-center" id="titlebar-close">
-  <img src="/assets/svg/win-close.svg" alt="close">
+<div class="titlebar-button hover:bg-rose-600 z-50 justify-center max-h-6 h-6" id="titlebar-close">
+  <img class="max-h-6 h-6 p-1" src="/assets/svg/win-close.svg" alt="close">
 </div>
 </div>
 `
