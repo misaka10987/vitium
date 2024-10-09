@@ -1,4 +1,3 @@
-
 const titlebar = `
 <div data-tauri-drag-region class="bg-stone-800 h-6 select-none fixed top-0 left-0 right-0 flex justify-end">
 <div data-tauri-drag-region id="title"
@@ -14,6 +13,8 @@ const titlebar = `
 </div>
 </div>
 `
+
+const set_title = (title: string) => $("#title").text(title)
 
 $(() => {
   $("body").prepend(titlebar)

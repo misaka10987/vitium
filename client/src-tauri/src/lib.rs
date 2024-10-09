@@ -4,7 +4,7 @@ mod err;
 mod net;
 
 use reqwest::Client;
-use tauri::{generate_handler, Window};
+use tauri::generate_handler;
 use tokio::sync::RwLock;
 
 use once_cell::sync::Lazy;
@@ -19,11 +19,6 @@ static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 #[tauri::command]
 fn hello() -> &'static str {
     "Hello, world!"
-}
-
-#[tauri::command]
-fn set_window_title(win: Window, title: &str) -> tauri::Result<()> {
-    win.set_title(title)
 }
 
 #[tauri::command]
@@ -54,7 +49,6 @@ pub fn run() {
             user,
             server_addr,
             server_stat,
-            set_window_title,
             auth::login,
             chat::recv_chat,
             chat::send_chat,

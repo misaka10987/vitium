@@ -1,7 +1,5 @@
 const hello: () => Promise<void> = async () => await invoke("hello")
 
-const set_window_title: (title: string) => Promise<void> = async (title) => await invoke("set_window_title", { title })
-
 const login: (server: string, user: string, pass: string) => Promise<void>
    = async (server, user, pass) => await invoke("login", { server, user, pass })
 
