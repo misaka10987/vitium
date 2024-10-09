@@ -15,11 +15,13 @@ title = "Vitium"
 width = 800
 height = 600
 decorations = false
+minWidth = 400
+minHeight = 300
 
 [app.security]
 
 [bundle]
-active = true
+active = false
 # targets = "none"
 icon = [
   "icons/32x32.png",
