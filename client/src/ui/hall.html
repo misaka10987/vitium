@@ -1,61 +1,57 @@
 <!doctype html>
-<html lang="en">
+<html lang='en'>
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="/assets/style.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset='UTF-8' />
+  <link rel='stylesheet' href='/assets/style.css' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
   <title>Vitium</title>
-  <script src="/assets/jquery.js" defer></script>
-  <script src="/assets/js/tauri-api.js" defer></script>
-  <script src="/assets/js/base.js" defer></script>
-  <script src="/assets/js/cmd.js" defer></script>
-  <script src="/assets/js/util.js" defer></script>
-  <script src="/assets/js/ui/hall.html.js" defer></script>
+  <script src='/assets/jquery.js' defer></script>
+  <script src='/assets/js/tauri-api.js' defer></script>
+  <script src='/assets/js/base.js' defer></script>
+  <script src='/assets/js/cmd.js' defer></script>
+  <script src='/assets/js/util.js' defer></script>
+  <script src='/assets/js/ui/hall.html.js' defer></script>
 </head>
 
-<body class="bg-stone-700 w-screen h-screen p-2 select-none overflow-hidden">
+<body class='bg-stone-700 w-screen h-screen p-2 select-none overflow-hidden'>
 
-  <div class="fixed top-6 left-0 right-0 bottom-0">
+  <div class='absolute p-2 top-0 left-0 w-72 bottom-0 bg-stone-800'>
+    <article id='chat-col' class='text-white text-left text-balance break-words overflow-scroll h-screen pb-14'>
+      No Chat.
+    </article>
 
-    <div class="absolute p-2 top-0 left-0 w-72 bottom-0 bg-stone-800">
-      <article id="chat-col" class="text-white text-left text-balance break-words overflow-scroll h-screen pb-14">
-        No Chat.
-      </article>
-
-      <div class="absolute flex items-center left-0 bottom-0 text-white min-h-10 w-72 p-2 bg-stone-900">
-        <form id="form-send-chat" class="flex items-center justify-center w-full space-x-2 ">
-          <input id="input-msg"
-            class="flex min-h-10 h-fit w-full rounded-md border text-sm focus:ring-2 text-stone-950 px-2"
-            placeholder="Message" required>
-          <button
-            class="inline-flex h-10 items-center justify-center rounded-md bg-purple-600 hover:bg-purple-400 p-2 px-3 right-0">
-            <span class="text-sm font-bold">Send</span>
-          </button>
-        </form>
-      </div>
-
+    <div class='absolute flex items-center left-0 bottom-0 text-white min-h-10 w-72 p-2 bg-stone-900'>
+      <form id='form-send-chat' class='flex items-center justify-center w-full space-x-2 '>
+        <input id='input-msg'
+          class='flex min-h-10 h-fit w-full rounded-md border text-sm focus:ring-2 text-stone-950 px-2'
+          placeholder='Message' required>
+        <button
+          class='inline-flex h-10 items-center justify-center rounded-md bg-purple-600 hover:bg-purple-400 p-2 px-3 right-0'>
+          <span class='text-sm font-bold'>Send</span>
+        </button>
+      </form>
     </div>
 
-    <div class="absolute p-2 top-0 left-72 right-0 h-screen">
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Recusandae aperiam sapiente tenetur. Aliquid voluptas
-      deserunt soluta iusto nam modi ea ullam debitis et id quae, nesciunt alias reiciendis. Eius, fuga.
-      <div class="flex text-2xl font-mono space-x-0">
-        <div class="aspect-square p-0 m-0">🟢</div>
-        <div class="aspect-square p-0 m-0">🟢</div>
-        <br>
-        <div class="aspect-square p-0 m-0">🟢</div>
-        <div class="aspect-square p-0 m-0">🟢</div>
-      </div>
-      <div class="flex text-2xl font-mono space-x-0">
-        <div class="aspect-square p-0 m-0">🟢</div>
-        <div class="aspect-square p-0 m-0">🟢</div>
-        <br>
-        <div class="aspect-square p-0 m-0">🟢</div>
-        <div class="aspect-square p-0 m-0">🟢</div>
-      </div>
+  </div>
+
+  <div class='absolute p-2 top-0 left-72 right-0 h-screen'>
+    Lorem ipsum dolor sit amet consectetur adipisicing elit. Recusandae aperiam sapiente tenetur. Aliquid voluptas
+    deserunt soluta iusto nam modi ea ullam debitis et id quae, nesciunt alias reiciendis. Eius, fuga.
+    <div class='flex text-2xl font-mono space-x-0'>
+      <div class='aspect-square p-0 m-0'>🟢</div>
+      <div class='aspect-square p-0 m-0'>🟢</div>
+      <br>
+      <div class='aspect-square p-0 m-0'>🟢</div>
+      <div class='aspect-square p-0 m-0'>🟢</div>
     </div>
-    
+    <div class='flex text-2xl font-mono space-x-0'>
+      <div class='aspect-square p-0 m-0'>🟢</div>
+      <div class='aspect-square p-0 m-0'>🟢</div>
+      <br>
+      <div class='aspect-square p-0 m-0'>🟢</div>
+      <div class='aspect-square p-0 m-0'>🟢</div>
+    </div>
   </div>
 
 </body>

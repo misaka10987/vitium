@@ -1,48 +1,45 @@
 <!doctype html>
-<html lang="en">
+<html lang='en'>
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="/assets/style.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset='UTF-8' />
+  <link rel='stylesheet' href='/assets/style.css' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
   <title>Vitium</title>
-  <script src="/assets/jquery.js" defer></script>
-  <script src="/assets/js/tauri-api.js" defer></script>
-  <script src="/assets/js/base.js" defer></script>
-  <script src="/assets/js/cmd.js" defer></script>
-  <script src="/assets/js/util.js" defer></script>
-  <script src="/assets/js/ui/login.html.js" defer></script>
+  <script src='/assets/jquery.js' defer></script>
+  <script src='/assets/js/tauri-api.js' defer></script>
+  <script src='/assets/js/base.js' defer></script>
+  <script src='/assets/js/cmd.js' defer></script>
+  <script src='/assets/js/util.js' defer></script>
+  <script src='/assets/js/ui/login.html.js' defer></script>
 </head>
 
-<body class="bg-stone-700 w-screen h-screen p-2 select-none overflow-hidden">
+<body class='bg-stone-700 w-screen h-screen p-2 select-none overflow-hidden'>
 
-  <div class="fixed top-6 left-0 right-0 bottom-0">
+  <!-- server ip & login dialog -->
+  <div id='connect-dialog' class='flex min-h-full flex-col justify-center px-6 mx-auto w-full max-w-sm'>
 
-    <!-- server ip & login dialog -->
-    <div id="connect-dialog" class="flex min-h-full flex-col justify-center px-6 mx-auto w-full max-w-sm">
-
-      <!-- error box -->
-      <div id="err-msg" class="mx-auto w-full max-w-sm mb-4" hidden>
-        <div class="bg-red-800 text-white border-none p-2 rounded items-center truncate select-text" role="alert">
-          <span class="font-bold">ERROR</span>
-          <span id="err-msg-content"></span>
-        </div>
+    <!-- error box -->
+    <div id='err-msg' class='mx-auto w-full max-w-sm mb-4' hidden>
+      <div class='bg-red-800 text-white border-none p-2 rounded items-center truncate select-text' role='alert'>
+        <span class='font-bold'>ERROR</span>
+        <span id='err-msg-content'></span>
       </div>
-
-      <img class="mx-auto h-24 w-auto" src="/assets/icon.svg" alt="Vitium">
-      <h2 class="text-purple-400 mt-6 text-center text-2xl font-bold">Connect to a Vitium Server</h2>
-
-      <form id="form-connect" class="mt-4">
-        <input id="input-server" name="server" type="text" required
-          class="block w-full rounded-md border-0 p-1 mt-4 px-2" placeholder="Server Address">
-        <input id="input-user" name="user" type="text" autocomplete="username" required
-          class="block w-full rounded-md border-0 p-1 mt-4 px-2" placeholder="Username">
-        <input id="input-pass" name="pass" type="password" autocomplete="current-password" required
-          class="block w-full rounded-md border-0 p-1 mt-4 px-2" placeholder="Password">
-        <button type="submit"
-          class="mt-4 flex w-full justify-center rounded-md bg-purple-600 p-2 text-sm font-semibold text-white hover:bg-purple-400">Connect</button>
-      </form>
     </div>
+
+    <img class='mx-auto h-24 w-auto' src='/assets/icon.svg' alt='Vitium'>
+    <h2 class='text-purple-400 mt-6 text-center text-2xl font-bold'>Connect to a Vitium Server</h2>
+
+    <form id='form-connect' class='mt-4'>
+      <input id='input-server' name='server' type='text' required class='block w-full rounded-md border-0 p-1 mt-4 px-2'
+        placeholder='Server Address'>
+      <input id='input-user' name='user' type='text' autocomplete='username' required
+        class='block w-full rounded-md border-0 p-1 mt-4 px-2' placeholder='Username'>
+      <input id='input-pass' name='pass' type='password' autocomplete='current-password' required
+        class='block w-full rounded-md border-0 p-1 mt-4 px-2' placeholder='Password'>
+      <button type='submit'
+        class='mt-4 flex w-full justify-center rounded-md bg-purple-600 p-2 text-sm font-semibold text-white hover:bg-purple-400'>Connect</button>
+    </form>
 
   </div>
 
