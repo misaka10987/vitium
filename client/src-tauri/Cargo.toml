@@ -20,7 +20,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.0.1", features = ["config-toml"] }
 
 [dependencies]
-tauri = { version = "2.0.2", features = [ "protocol-asset", "config-toml"] }
+tauri = { version = "2.0.2", features = ["protocol-asset", "config-toml"] }
 tauri-plugin-shell = "2.0.1"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
@@ -33,3 +33,5 @@ anyhow = "1.0.89"
 chrono = "0.4.38"
 askama = "0.12.1"
 vitium-api = { path = "../../api" }
+clap = { version = "4.5.20", features = ["derive", "string"] }
+dirs = "5.0.1"
