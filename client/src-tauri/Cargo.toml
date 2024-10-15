@@ -1,8 +1,8 @@
 [package]
 name = "vitium-client"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Client for the Vitium TRPG framework."
+authors = ["misaka10987 <misaka10987@outlook.com>"]
 edition = "2021"
 
 [workspace]
@@ -35,3 +35,4 @@ askama = "0.12.1"
 vitium-api = { path = "../../api" }
 clap = { version = "4.5.20", features = ["derive", "string"] }
 dirs = "5.0.1"
+toml = "0.8.19"
