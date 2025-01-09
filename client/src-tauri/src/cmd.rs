@@ -1,35 +1,36 @@
-use reqwest::Client;
-use tokio::runtime;
+use std::time::Duration;
+
+use reqwest::ClientBuilder;
 use vitium_api::net::{EditPass, Req, SignUp};
 
-pub fn signup(user: &str, pass: &str, server: &str) -> anyhow::Result<()> {
+#[tokio::main]
+pub async fn signup(user: &str, pass: &str, server: &str) -> anyhow::Result<()> {
     let req = SignUp {
         user: user.into(),
         pass: pass.into(),
     };
     let path = req.path();
     let url = format!("http://{server}{path}");
-    let client = Client::new();
-    let run = runtime::Builder::new_current_thread()
-        .enable_all()
+    let client = ClientBuilder::new()
+        .timeout(Duration::from_secs(30))
         .build()?;
-    run.block_on(client.post(url).json(&req).send())?;
+    client.post(url).json(&req).send().await?;
     Ok(())
 }
 
-pub fn chpass(user: &str, old: &str, new: &str, server: &str) -> anyhow::Result<()> {
+#[tokio::main]
+pub async fn chpass(user: &str, old: &str, new: &str, server: &str) -> anyhow::Result<()> {
     let req = EditPass(new.into());
     let path = req.path();
     let url = format!("http://{server}{path}");
-    let client = Client::new();
-    let run = runtime::Builder::new_current_thread()
-        .enable_all()
+    let client = ClientBuilder::new()
+        .timeout(Duration::from_secs(30))
         .build()?;
-    let future = client
+    client
         .post(url)
         .json(&req)
         .basic_auth(user, Some(old))
-        .send();
-    run.block_on(future)?;
+        .send()
+        .await?;
     Ok(())
 }

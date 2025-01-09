@@ -3,18 +3,20 @@ mod chat;
 mod cmd;
 mod err;
 mod net;
+mod respack;
 // mod respack;
 
-use std::path::PathBuf;
+use std::{fs::File, io::Read, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 use dirs::config_dir;
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 use tauri::{generate_context, generate_handler};
 use tokio::sync::RwLock;
 
 use once_cell::sync::Lazy;
-use tracing::{info, Level};
+use tracing::{info, warn, Level};
 
 #[derive(Parser, Debug)]
 #[command(about, version)]
@@ -41,9 +43,8 @@ enum Commands {
         #[arg(value_name = "SERVER")]
         server: String,
     },
-    #[clap(name = "chpass")]
-
     /// Change password for specified user on server.
+    #[clap(name = "chpass")]
     ChPass {
         #[arg(short, long)]
         /// Username.
@@ -62,9 +63,44 @@ enum Commands {
 
 static ARG: Lazy<Args> = Lazy::new(Args::parse);
 
+#[derive(Clone, Serialize, Deserialize)]
+struct Config {
+    pub respack: Vec<PathBuf>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            respack: Default::default(),
+        }
+    }
+}
+
+fn load_cfg() -> anyhow::Result<Config> {
+    let path = &ARG.config;
+    let mut buf = String::new();
+    File::open(path)?.read_to_string(&mut buf)?;
+    Ok(toml::from_str(&buf)?)
+}
+
+fn try_load_cfg() -> Config {
+    match load_cfg() {
+        Ok(c) => c,
+        Err(e) => {
+            warn!(
+                "failed to load {}: {e}, using default",
+                ARG.config.display()
+            );
+            Config::default()
+        }
+    }
+}
+
+static CFG: Lazy<Config> = Lazy::new(try_load_cfg);
+
 static SERVER_ADDR: RwLock<String> = RwLock::const_new(String::new());
 
-pub(crate) static USER: RwLock<String> = RwLock::const_new(String::new());
+static USER: RwLock<String> = RwLock::const_new(String::new());
 
 static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 

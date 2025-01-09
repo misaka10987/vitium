@@ -7,7 +7,7 @@ use axum::{
     http::StatusCode,
     response::Redirect,
     routing::{any, get, post},
-    Router,
+    Json, Router,
 };
 use axum_extra::extract::CookieJar;
 use chat::ChatSto;
@@ -18,6 +18,7 @@ use std::{
     ops::{Deref, DerefMut},
     path::PathBuf,
     sync::Arc,
+    time::SystemTime,
 };
 use tokio::{net::TcpListener, sync::RwLock};
 use tracing::trace;
@@ -138,6 +139,7 @@ impl Server {
         // .nest("/act", game::act_handler());
         let app = Router::new()
             .route("/", get(Redirect::to(&self.cfg.page_url)))
+            .route("/ping", get(|| async { Json(SystemTime::now()) }))
             .nest("/api", api)
             .fallback(any(StatusCode::NOT_FOUND))
             .with_state(self);
