@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-thiserror = "1.0.63"
+thiserror = "2.0.11"
 serde = { version = "1.0.210", features = ["derive"] }
-fe3o4 = { path = "../../fe3o4" }
+fe3o4 = "0.2.0"
 static_init = "1.0.3"
