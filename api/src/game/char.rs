@@ -5,9 +5,13 @@ use std::{
     collections::{HashMap, HashSet},
     ops::{Deref, DerefMut},
 };
+use tsify_next::Tsify;
+use wasm_bindgen::prelude::wasm_bindgen;
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Cha {
+/// Defines a character.
+#[derive(Clone, Serialize, Deserialize, Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct Char {
     pub name: String,
     pub descr: String,
     pub pos: Pos,
@@ -27,11 +31,11 @@ pub struct PC {
     pub player: String,
     pub story: String,
     pub mods: HashSet<String>,
-    cha: Cha,
+    cha: Char,
 }
 
 impl Deref for PC {
-    type Target = Cha;
+    type Target = Char;
 
     fn deref(&self) -> &Self::Target {
         &self.cha
@@ -44,13 +48,14 @@ impl DerefMut for PC {
     }
 }
 
-impl AsRef<Cha> for PC {
-    fn as_ref(&self) -> &Cha {
+impl AsRef<Char> for PC {
+    fn as_ref(&self) -> &Char {
         self.deref()
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize, Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Pos {
     pub scena: usize,
     pub coord: (f32, f32),
