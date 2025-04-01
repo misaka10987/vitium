@@ -9,8 +9,13 @@ use std::collections::HashSet;
 
 use fe3o4::def_regtab;
 
+#[cfg(target_family = "wasm")]
+use {tsify_next::Tsify, wasm_bindgen::prelude::wasm_bindgen};
+
 /// Basic information of an item is stored here.
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Item {
     pub name: String,
     pub descr: String,

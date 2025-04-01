@@ -5,8 +5,13 @@ use fe3o4::{def_regtab, Id};
 
 use super::{Attr, Item, Mart, Spell};
 
+#[cfg(target_family = "wasm")]
+use {tsify_next::Tsify, wasm_bindgen::prelude::wasm_bindgen};
+
 /// Profession.
 #[derive(Serialize, Deserialize, Clone)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Prof {
     /// Coefficient of money for an initial character, timed by level.
     pub credit: u16,

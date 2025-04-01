@@ -6,15 +6,25 @@ pub mod prelude;
 pub mod uid;
 
 pub use prelude::*;
-use wasm_bindgen::prelude::wasm_bindgen;
 
 pub type Dice = String;
 
+#[cfg(target_family = "wasm")]
+use wasm_bindgen::prelude::wasm_bindgen;
+
 /// This is some documentation.
-#[wasm_bindgen]
+#[cfg_attr(target_family = "wasm", wasm_bindgen)]
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
+
+#[cfg_attr(target_family = "wasm", wasm_bindgen(typescript_custom_section))]
+const _TS_APPEND_CONTENT: &'static str = r#"export type Id<T> = string;"#;
+
+// #[cfg_attr(target_family = "wasm", wasm_bindgen)]
+// pub fn _fool_wasm_pack() -> Id<Item> {
+//     panic!()
+// }
 
 #[cfg(test)]
 mod tests {

@@ -5,12 +5,14 @@ use std::{
     collections::{HashMap, HashSet},
     ops::{Deref, DerefMut},
 };
-use tsify_next::Tsify;
-use wasm_bindgen::prelude::wasm_bindgen;
+
+#[cfg(target_family = "wasm")]
+use {tsify_next::Tsify, wasm_bindgen::prelude::wasm_bindgen};
 
 /// Defines a character.
-#[derive(Clone, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Char {
     pub name: String,
     pub descr: String,
@@ -54,8 +56,9 @@ impl AsRef<Char> for PC {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Pos {
     pub scena: usize,
     pub coord: (f32, f32),
