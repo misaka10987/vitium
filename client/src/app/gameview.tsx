@@ -1,4 +1,4 @@
-export function gameview({ username }: { username: string }) {
+export function GameView({ username }: { username: string }) {
   return (
     <div className="game-container">
       <div className="welcome-banner">

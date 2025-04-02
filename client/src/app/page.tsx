@@ -1,7 +1,7 @@
 "use client"
 import { useState } from 'react';
 import { add } from 'vitium-api';
-import { gameview as GameView } from './gameview';
+import { GameView } from './gameview';
 import { PlayerLoginPage } from './playerlogin';
 
 export default function Home() {
