@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { add } from 'vitium-api';
 import { popup } from './popup';
 import { login } from './login';
+import { GamePage } from './gamepage';
 import IconSvg from './icon.svg'; // Import the SVG
 
 export default function Page() {
@@ -26,9 +27,8 @@ export default function Page() {
           alt="Vitium Logo"
           className="relative flex items-center pointer-events-none opacity-80 w-[12vw] h-auto"
         />
-        
+
         <h1 className="text-4xl font-bold mb-8 z-10">Welcome to Vitium</h1>
-        <div className='py-1'></div>
         <p className="text-base mb-4 text-gray-400 z-10">Version - Dev rolling</p>
         <div className="py-3"></div>
         <button
@@ -53,4 +53,8 @@ export default function Page() {
       </div>
     ) // show the login page when not logged in
   }
+
+  return (
+    <GamePage />
+  )
 }
