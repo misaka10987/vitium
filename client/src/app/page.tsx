@@ -4,7 +4,7 @@ import { add } from 'vitium-api';
 import { GameView } from './gameview';
 import { PlayerLoginPage } from './playerlogin';
 
-export default function Home() {
+export default function Page() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
 
@@ -12,10 +12,10 @@ export default function Home() {
   if (isLoggedIn) {
     return <GameView username={username} />;
   }
-  
+
   // If not logged in, render login page
   return (
-    <PlayerLoginPage 
+    <PlayerLoginPage
       setIsLoggedIn={setIsLoggedIn}
       setUsername={setUsername}
     />
