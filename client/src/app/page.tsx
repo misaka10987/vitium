@@ -12,15 +12,20 @@ export default function Page() {
   if (!LoginState) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4 relative">
-        {/* Background Icon */}
-        <div className="absolute left-16 h-full flex items-center overflow-visible pointer-events-none opacity-20">
+        {/* <div className="absolute left-16 h-full flex items-center overflow-visible pointer-events-none opacity-20">
           <img 
             src={IconSvg.src || IconSvg} 
             alt="" 
             className="w-[50vw] h-auto -ml-[10vw]" 
             style={{ transform: 'scaleY(2.2) scaleX(1.6)' }}
           />
-        </div>
+        </div> */}
+
+        <img
+          src={IconSvg.src || IconSvg}
+          alt="Vitium Logo"
+          className="relative flex items-center pointer-events-none opacity-80 w-[12vw] h-auto"
+        />
         
         <h1 className="text-4xl font-bold mb-8 z-10">Welcome to Vitium</h1>
         <div className='py-1'></div>
