@@ -1,23 +1,51 @@
 "use client"
 import { useState } from 'react';
 import { add } from 'vitium-api';
-import { GameView } from './gameview';
-import { PlayerLoginPage } from './playerlogin';
+import { popup } from './popup';
+import { login } from './login';
+import IconSvg from './icon.svg'; // Import the SVG
 
 export default function Page() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
+  const [LoginState, setLoginState] = useState(false);
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
 
-  // If logged in, render game view with the username
-  if (isLoggedIn) {
-    return <GameView username={username} />;
+  if (!LoginState) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4 relative">
+        {/* Background Icon */}
+        <div className="absolute left-16 h-full flex items-center overflow-visible pointer-events-none opacity-20">
+          <img 
+            src={IconSvg.src || IconSvg} 
+            alt="" 
+            className="w-[50vw] h-auto -ml-[10vw]" 
+            style={{ transform: 'scaleY(2.2) scaleX(1.6)' }}
+          />
+        </div>
+        
+        <h1 className="text-4xl font-bold mb-8 z-10">Welcome to Vitium</h1>
+        <div className='py-1'></div>
+        <p className="text-base mb-4 text-gray-400 z-10">Version - Dev rolling</p>
+        <div className="py-3"></div>
+        <button
+          onClick={async () => {
+            try {
+              const loginResult = await login();
+              if (loginResult) {
+                setCredentials(loginResult);
+                console.log("Login successful:");
+                setLoginState(true);
+              }
+              else {
+                console.log("Login cancelled or failed.");
+              }
+            } catch (error) {
+              console.error("Unexpected error during login", error);
+            }
+          }}
+          className="px-6 py-2 bg-purple-600 hover:bg-purple-300 text-white font-semibold rounded-md transition duration-200 ease-in-out z-10">
+          Login
+        </button>
+      </div>
+    ) // show the login page when not logged in
   }
-
-  // If not logged in, render login page
-  return (
-    <PlayerLoginPage
-      setIsLoggedIn={setIsLoggedIn}
-      setUsername={setUsername}
-    />
-  );
 }
