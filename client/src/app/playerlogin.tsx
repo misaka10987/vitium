@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import IconSvg from './icon.svg'; // Import the SVG icon
 
 // Add setUsername to props
 export function PlayerLoginPage({ 
@@ -39,10 +40,15 @@ export function PlayerLoginPage({
   }
 
   return (
-    <div className="welcome-page flex flex-col items-center justify-center min-h-screen bg-black p-4">
+    <div className="welcome-page flex flex-col items-center justify-center min-h-screen bg-black p-4 relative">
+      <div className="absolute right-2 bottom-2 w-16 h-16 opacity-50">
+        <img src={IconSvg.src} alt="Vitium Logo" />
+      </div>
+      
       <h1 className="text-4xl font-bold mb-8 text-center">
         Welcome to Vitium
       </h1>
+      
       <p style={{ color: 'gray' }}>
         Version - Development-rolling
       </p>
