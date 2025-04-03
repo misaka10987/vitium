@@ -1,6 +1,6 @@
 pub use super::act::{Act, Action};
 pub use super::attr::Attr;
-pub use super::char::{Char, PC};
+pub use super::char::{Char, PlayerChar};
 pub use super::fight::DmgType;
 pub use super::item::Item;
 pub use super::level::Level;

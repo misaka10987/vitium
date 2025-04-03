@@ -28,7 +28,7 @@ use std::collections::HashSet;
 pub enum Obj {
     Item(UId<Item>),
     Char(UId<Char>),
-    PC(UId<PC>),
+    PC(UId<PlayerChar>),
     Scena(usize),
     Vehicle(UId<Vehicle>),
 }

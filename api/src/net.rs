@@ -1,5 +1,5 @@
 pub use crate::game::Action;
-use crate::{game::PC, user::User};
+use crate::game::PlayerChar;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// Describes a request.
@@ -14,8 +14,12 @@ pub trait Req: Serialize + DeserializeOwned {
     const METHOD: &'static str;
 }
 
-pub trait REST {
-
+/// Denotes a payload that is accessed with a REST API.
+pub trait REST: Serialize + DeserializeOwned {
+    /// The index type that identifies individual resource from collection, e.g. username for users.
+    type Index;
+    /// The path on the server to send request to.
+    fn path() -> String;
 }
 
 #[cfg(target_family = "wasm")]
@@ -57,55 +61,10 @@ pub struct Chat {
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(target_family = "wasm", derive(Tsify))]
 #[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct ListPlayer;
-
-impl Req for ListPlayer {
-    type Response = Vec<String>;
-
-    fn path(&self) -> String {
-        "/api/player".into()
-    }
-
-    const METHOD: &'static str = "GET";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct GetPlayer(#[serde(skip)] pub String);
-
-impl Req for GetPlayer {
-    type Response = User;
-
-    fn path(&self) -> String {
-        format!("/api/player/{}", self.0)
-    }
-
-    const METHOD: &'static str = "GET";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct EditPlayer(#[serde(skip)] pub String, pub User);
-
-impl Req for EditPlayer {
-    type Response = ();
-
-    fn path(&self) -> String {
-        format!("/api/player/{}", self.0)
-    }
-
-    const METHOD: &'static str = "POST";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ListPC;
 
 impl Req for ListPC {
-    type Response = Vec<(String, PC)>;
+    type Response = Vec<(String, PlayerChar)>;
 
     fn path(&self) -> String {
         "/api/pc".into()
@@ -120,7 +79,7 @@ impl Req for ListPC {
 pub struct GetPC(#[serde(skip)] pub String);
 
 impl Req for GetPC {
-    type Response = PC;
+    type Response = PlayerChar;
 
     fn path(&self) -> String {
         format!("/api/pc/{}", self.0)
@@ -132,7 +91,7 @@ impl Req for GetPC {
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(target_family = "wasm", derive(Tsify))]
 #[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct EditPC(#[serde(skip)] pub String, pub Option<PC>);
+pub struct EditPC(#[serde(skip)] pub String, pub Option<PlayerChar>);
 
 impl Req for EditPC {
     type Response = ();
