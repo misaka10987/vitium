@@ -1,14 +1,13 @@
 mod auth;
 mod chat;
 mod cmd;
-mod handler;
 mod profile;
 
 use anyhow::bail;
 use axum::{
     http::StatusCode,
     response::Redirect,
-    routing::{any, get, post},
+    routing::{any, get},
     Json, Router,
 };
 
@@ -109,10 +108,6 @@ impl Server {
             .route("/hello", get("Hello, world!"))
             .nest("/profile", profile::rest())
             .nest("/chat", chat::rest())
-            .route("/pc", get(handler::list_pc))
-            .route("/pc/{name}", get(handler::get_pc))
-            .route("/pc/{name}", post(handler::edit_pc))
-            .route("/sync", get(handler::sync))
             .fallback(any(StatusCode::NOT_FOUND))
             .with_state(self);
         let res = axum::serve(listener, app)
