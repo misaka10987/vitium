@@ -6,12 +6,12 @@ use anyhow::bail;
 use axum::{
     http::StatusCode,
     response::Redirect,
-    routing::{any, get, post},
+    routing::{any, get, post, put},
     Json, Router,
 };
 
 use axum_pass::safe::Safe;
-use chat::ChatSto;
+use chat::ChatStore;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -21,7 +21,7 @@ use std::{
     time::SystemTime,
 };
 use tokio::{net::TcpListener, sync::RwLock};
-use vitium_api::{game::PC, player::Player};
+use vitium_api::{game::PC, user::User};
 
 use crate::recv_shutdown;
 
@@ -29,22 +29,15 @@ use crate::recv_shutdown;
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
-    player: RwLock<HashMap<String, Player>>,
+    player: RwLock<HashMap<String, User>>,
     safe: Safe,
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
-    pub chat: ChatSto,
+    pub chat: ChatStore,
     // pub game: RwLock<Game>,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
-/// ```
-/// use crate::server::Server;
-/// Server::default()
-///     .run()
-///     .await
-///     .expect("internal server error");
-/// ```
 #[derive(Clone)]
 pub struct Server(Arc<ServerInst>);
 
@@ -65,16 +58,10 @@ impl DerefMut for Server {
 impl Server {
     /// Create a server with specified configuration.
     pub async fn new(cfg: ServerConfig) -> Self {
-        let chat = ChatSto::new(cfg.chat_cap);
+        let chat = ChatStore::new(cfg.chat_cap);
         Self(Arc::new(ServerInst {
             cfg,
-            player: RwLock::new(HashMap::from([(
-                "foo".into(),
-                Player {
-                    display_name: "Foo".into(),
-                    profile: None,
-                },
-            )])),
+            player: RwLock::new(HashMap::new()),
             safe: Safe::new("./password.db").await.unwrap(),
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
@@ -111,9 +98,7 @@ impl Server {
     pub async fn run(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
-        let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
-            .await
-            .expect("failed to bind TCP listener");
+        let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port)).await?;
         let auth = Router::new()
             .route("/login", get(handler::login))
             .route("/signup", post(handler::signup))
@@ -121,14 +106,14 @@ impl Server {
         let api = Router::new()
             .nest("/auth", auth)
             .route("/hello", get("Hello, world!"))
-            .route("/chat", get(handler::recv_chat))
-            .route("/chat", post(handler::send_chat))
-            .route("/player", get(handler::list_player))
-            .route("/player/{*name}", get(handler::get_player))
-            .route("/player/{*name}", post(handler::edit_player))
+            .route("/chat", get(handler::read_chat))
+            .route("/chat", post(handler::create_chat))
+            .route("/user", get(handler::list_user))
+            .route("/user/{name}", get(handler::read_user))
+            .route("/user/{name}", put(handler::update_user))
             .route("/pc", get(handler::list_pc))
-            .route("/pc/{*name}", get(handler::get_pc))
-            .route("/pc/{*name}", post(handler::edit_pc))
+            .route("/pc/{name}", get(handler::get_pc))
+            .route("/pc/{name}", post(handler::edit_pc))
             .route("/sync", get(handler::sync));
         // .nest("/act", game::act_handler());
         let app = Router::new()

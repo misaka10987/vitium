@@ -1,9 +1,9 @@
 pub mod err;
 pub mod game;
 pub mod net;
-pub mod player;
 pub mod prelude;
 pub mod uid;
+pub mod user;
 
 pub use prelude::*;
 

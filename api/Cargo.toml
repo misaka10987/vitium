@@ -11,6 +11,7 @@ thiserror = "2.0.11"
 serde = { version = "1.0.210", features = ["derive"] }
 fe3o4 = "0.2.1"
 static_init = { version = "1.0.3", optional = true }
+bevy_ecs = "0.15.3"
 
 [target.'cfg(target_family="wasm")'.dependencies]
 wasm-bindgen = { version = "0.2.100" }

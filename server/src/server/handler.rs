@@ -9,7 +9,7 @@ use axum_extra::extract::{cookie::Cookie, CookieJar};
 use axum_pass::{safe, Password, Token};
 
 use tracing::error;
-use vitium_api::net::{self, Req, SendChat};
+use vitium_api::net::{self, Req};
 
 use super::Server;
 
@@ -49,20 +49,20 @@ pub async fn edit_pass(
     }
 }
 
-pub async fn recv_chat(
+pub async fn read_chat(
     State(s): State<Server>,
-    Json(net::RecvChat(time)): Json<net::RecvChat>,
-) -> Responce<net::RecvChat> {
+    Form(after): Form<SystemTime>,
+) -> Result<Json<Vec<(SystemTime, net::Chat)>>, StatusCode> {
     Ok(Json({
         s.chat
-            .pull(time)
+            .pull(after)
             .await
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
     }))
 }
 
-pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {
+pub async fn list_user(State(s): State<Server>) -> Responce<net::ListPlayer> {
     let res = s
         .player
         .read()
@@ -73,7 +73,7 @@ pub async fn list_player(State(s): State<Server>) -> Responce<net::ListPlayer> {
     Ok(Json(res))
 }
 
-pub async fn get_player(
+pub async fn read_user(
     State(s): State<Server>,
     Path(name): Path<String>,
 ) -> Responce<net::GetPlayer> {
@@ -85,7 +85,7 @@ pub async fn get_player(
     }
 }
 
-pub async fn edit_player(
+pub async fn update_user(
     State(s): State<Server>,
     Path(name): Path<String>,
     Token(user): Token,
@@ -118,11 +118,11 @@ pub async fn get_pc(State(s): State<Server>, Path(name): Path<String>) -> Respon
     }
 }
 
-pub async fn send_chat(
+pub async fn create_chat(
     State(s): State<Server>,
     Token(user): Token,
-    Json(SendChat(chat)): Json<net::SendChat>,
-) -> Responce<net::SendChat> {
+    Json(chat): Json<net::Chat>,
+) -> Result<Json<SystemTime>, StatusCode> {
     if user != chat.sender {
         return Err(StatusCode::FORBIDDEN);
     }

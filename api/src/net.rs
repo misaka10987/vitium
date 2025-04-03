@@ -1,7 +1,6 @@
 pub use crate::game::Action;
-use crate::{game::PC, player::Player};
+use crate::{game::PC, user::User};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::time::SystemTime;
 
 /// Describes a request.
 /// Any type that implements `Req` should be correctly handled
@@ -15,7 +14,16 @@ pub trait Req: Serialize + DeserializeOwned {
     const METHOD: &'static str;
 }
 
+pub trait REST {
+
+}
+
+#[cfg(target_family = "wasm")]
+use {tsify_next::Tsify, wasm_bindgen::prelude::wasm_bindgen};
+
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct SignUp {
     pub user: String,
     pub pass: String,
@@ -32,68 +40,23 @@ impl Req for SignUp {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Enroll(pub String);
 
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Chat {
     /// The user who sends the message.
     pub sender: String,
     /// The chat message.
     pub msg: String,
-    /// The time message is sent.
-    pub send_time: SystemTime,
-    /// The time message is received by server.
-    pub recv_time: SystemTime,
-}
-
-impl Chat {
-    pub fn new(sender: String, msg: String) -> Self {
-        Self {
-            sender,
-            msg,
-            send_time: SystemTime::now(),
-            recv_time: SystemTime::UNIX_EPOCH,
-        }
-    }
-
-    /// Receive the message, with current time as `.recv_time`.
-    pub fn received(self) -> Chat {
-        Chat {
-            sender: self.sender,
-            msg: self.msg,
-            send_time: self.send_time,
-            recv_time: SystemTime::now(),
-        }
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct SendChat(pub Chat);
-
-impl Req for SendChat {
-    type Response = SystemTime;
-
-    fn path(&self) -> String {
-        "/api/chat".into()
-    }
-
-    const METHOD: &'static str = "POST";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct RecvChat(pub SystemTime);
-
-impl Req for RecvChat {
-    type Response = Vec<Chat>;
-
-    fn path(&self) -> String {
-        "/api/chat".into()
-    }
-
-    const METHOD: &'static str = "GET";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ListPlayer;
 
 impl Req for ListPlayer {
@@ -107,10 +70,12 @@ impl Req for ListPlayer {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct GetPlayer(#[serde(skip)] pub String);
 
 impl Req for GetPlayer {
-    type Response = Player;
+    type Response = User;
 
     fn path(&self) -> String {
         format!("/api/player/{}", self.0)
@@ -120,7 +85,9 @@ impl Req for GetPlayer {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct EditPlayer(#[serde(skip)] pub String, pub Player);
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+pub struct EditPlayer(#[serde(skip)] pub String, pub User);
 
 impl Req for EditPlayer {
     type Response = ();
@@ -133,6 +100,8 @@ impl Req for EditPlayer {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ListPC;
 
 impl Req for ListPC {
@@ -146,6 +115,8 @@ impl Req for ListPC {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct GetPC(#[serde(skip)] pub String);
 
 impl Req for GetPC {
@@ -159,6 +130,8 @@ impl Req for GetPC {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct EditPC(#[serde(skip)] pub String, pub Option<PC>);
 
 impl Req for EditPC {
@@ -172,6 +145,8 @@ impl Req for EditPC {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct EditPass(pub String);
 
 impl Req for EditPass {
@@ -185,4 +160,6 @@ impl Req for EditPass {
 }
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Sync {}
