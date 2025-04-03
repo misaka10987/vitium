@@ -1,8 +1,4 @@
 **/.vscode
-**/target
-**/Cargo.lock
-**/build
-/common-cfi/test
-**/test.exe
-**/a.out
+target
+Cargo.lock
 **node_modules
