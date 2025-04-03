@@ -5,98 +5,25 @@ use axum::{
     http::StatusCode,
     Form, Json,
 };
-use axum_extra::extract::{cookie::Cookie, CookieJar};
-use axum_pass::{safe, Password, Token};
+use axum_pass::Token;
 
-use tracing::error;
 use vitium_api::net::{self, Req};
 
 use super::Server;
 
 type Responce<T> = Result<Json<<T as Req>::Response>, StatusCode>;
 
-pub async fn login(State(s): State<Server>, Password(user): Password) -> CookieJar {
-    let token = s.safe.issue_token(&user);
-    let cookie = CookieJar::new().add(Cookie::new("token", token));
-    cookie
-}
-
-pub async fn signup(State(s): State<Server>, Form(form): Form<net::SignUp>) -> StatusCode {
-    let res = s.safe.create(&form.user, &form.pass).await;
-    match res {
-        Ok(_) => StatusCode::OK,
-        Err(safe::Error::UserAlreadyExist(_)) => StatusCode::CONFLICT,
-        Err(e) => {
-            error!("{e}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
-}
-
-pub async fn edit_pass(
-    State(s): State<Server>,
-    Password(user): Password,
-    Form(net::EditPass(pass)): Form<net::EditPass>,
-) -> StatusCode {
-    let res = s.safe.update(&user, &pass).await;
-    match res {
-        Ok(_) => StatusCode::OK,
-        Err(safe::Error::UserNotExist(_)) => StatusCode::NOT_FOUND,
-        Err(e) => {
-            error!("{e}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
-}
-
 pub async fn read_chat(
     State(s): State<Server>,
     Form(after): Form<SystemTime>,
 ) -> Result<Json<Vec<(SystemTime, net::Chat)>>, StatusCode> {
-    Ok(Json({
+    Ok(Json(
         s.chat
             .pull(after)
             .await
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
-    }))
-}
-
-pub async fn list_user(State(s): State<Server>) -> Responce<net::ListPlayer> {
-    let res = s
-        .player
-        .read()
-        .await
-        .iter()
-        .map(|(k, _)| k.clone())
-        .collect();
-    Ok(Json(res))
-}
-
-pub async fn read_user(
-    State(s): State<Server>,
-    Path(name): Path<String>,
-) -> Responce<net::GetPlayer> {
-    let res = s.player.read().await.get(&name).cloned();
-    if let Some(p) = res {
-        Ok(Json(p))
-    } else {
-        Err(StatusCode::NOT_FOUND)
-    }
-}
-
-pub async fn update_user(
-    State(s): State<Server>,
-    Path(name): Path<String>,
-    Token(user): Token,
-    Json(net::EditPlayer(_, player)): Json<net::EditPlayer>,
-) -> Responce<net::EditPlayer> {
-    if user == name {
-        let mut tab = s.player.write().await;
-        tab.insert(user, player);
-        return Ok(Json(()));
-    }
-    Err(StatusCode::FORBIDDEN)
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+    ))
 }
 
 pub async fn list_pc(State(s): State<Server>) -> Responce<net::ListPC> {
@@ -153,7 +80,7 @@ pub async fn edit_pc(
 ) -> Responce<net::EditPC> {
     let mut tab = s.pc.write().await;
     if let Some(c) = tab.get(&name) {
-        if user != c.player {
+        if user != c.user {
             return Err(StatusCode::FORBIDDEN);
         }
     }

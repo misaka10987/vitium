@@ -1,12 +1,14 @@
+mod auth;
 mod chat;
 mod cmd;
 mod handler;
+mod profile;
 
 use anyhow::bail;
 use axum::{
     http::StatusCode,
     response::Redirect,
-    routing::{any, get, post, put},
+    routing::{any, get, post},
     Json, Router,
 };
 
@@ -21,7 +23,7 @@ use std::{
     time::SystemTime,
 };
 use tokio::{net::TcpListener, sync::RwLock};
-use vitium_api::{game::PC, user::User};
+use vitium_api::{game::PlayerChar, user::UserProfile};
 
 use crate::recv_shutdown;
 
@@ -29,9 +31,9 @@ use crate::recv_shutdown;
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
-    player: RwLock<HashMap<String, User>>,
+    player: RwLock<HashMap<String, UserProfile>>,
     safe: Safe,
-    pc: RwLock<HashMap<String, PC>>,
+    pc: RwLock<HashMap<String, PlayerChar>>,
     op: RwLock<HashSet<String>>,
     pub chat: ChatStore,
     // pub game: RwLock<Game>,
@@ -99,18 +101,12 @@ impl Server {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port)).await?;
-        let auth = Router::new()
-            .route("/login", get(handler::login))
-            .route("/signup", post(handler::signup))
-            .route("/pass", post(handler::edit_pass));
         let api = Router::new()
-            .nest("/auth", auth)
+            .nest("/auth", auth::rest())
             .route("/hello", get("Hello, world!"))
+            .nest("/profile", profile::rest())
             .route("/chat", get(handler::read_chat))
             .route("/chat", post(handler::create_chat))
-            .route("/user", get(handler::list_user))
-            .route("/user/{name}", get(handler::read_user))
-            .route("/user/{name}", put(handler::update_user))
             .route("/pc", get(handler::list_pc))
             .route("/pc/{name}", get(handler::get_pc))
             .route("/pc/{name}", post(handler::edit_pc))
