@@ -124,11 +124,11 @@ impl Server {
             .route("/chat", get(handler::recv_chat))
             .route("/chat", post(handler::send_chat))
             .route("/player", get(handler::list_player))
-            .route("/player/*name", get(handler::get_player))
-            .route("/player/*name", post(handler::edit_player))
+            .route("/player/{*name}", get(handler::get_player))
+            .route("/player/{*name}", post(handler::edit_player))
             .route("/pc", get(handler::list_pc))
-            .route("/pc/*name", get(handler::get_pc))
-            .route("/pc/*name", post(handler::edit_pc))
+            .route("/pc/{*name}", get(handler::get_pc))
+            .route("/pc/{*name}", post(handler::edit_pc))
             .route("/sync", get(handler::sync));
         // .nest("/act", game::act_handler());
         let app = Router::new()
