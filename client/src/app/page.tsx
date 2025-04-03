@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { GamePage } from './gamepage/page';
 import IconSvg from './icon.svg'; // Import the SVG
 
 export default function Page() {
@@ -9,20 +8,26 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
+    // Only set 'isLoggedIn' to 'false' if it doesn't exist
+    if (sessionStorage.getItem('isLoggedIn') === null) {
+      sessionStorage.setItem('isLoggedIn', 'false');
+    }
+    
+    const loggedInStatus = sessionStorage.getItem('isLoggedIn') === 'true';
+    
     // Check if user is logged in
     const checkLoginState = () => {
       // Here you would typically check for authentication token
-      // For now, we're assuming not logged in
-      const isAuthenticated = false;
       setIsLoading(false);
-      
-      if (!isAuthenticated) {
+      if (!loggedInStatus) {
         router.push('/login');
       }
+      else {
+        router.push('/gamepage');
+      }
     };
-    
     checkLoginState();
-  }, [router]);
+  }, [router]);// prepare stuff, after this the 'loading' would disappear
 
   if (isLoading) {
     return (
@@ -36,6 +41,4 @@ export default function Page() {
       </div>
     );
   }
-
-  return <GamePage />;
 }

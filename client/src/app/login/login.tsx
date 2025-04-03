@@ -13,7 +13,7 @@ export function login(): Promise<boolean> {
       const [isOpen, setIsOpen] = useState(true)
       const [username, setUsername] = useState('')
       const [password, setPassword] = useState('')
-      const [serverAddress, setServerAddress] = useState('localhost:3000')
+      const [serverAddress, setServerAddress] = useState('')
       const [error, setError] = useState<string | null>(null)
       const [isLoading, setIsLoading] = useState(false)
 
@@ -28,7 +28,7 @@ export function login(): Promise<boolean> {
           // Create Basic Auth header
           const authHeader = 'Basic ' + btoa(`${username}:${password}`)
           
-          const response = await fetch(`${serverUrl}/auth`, {
+          const response = await fetch(`${serverUrl}/api/auth/login`, {
             method: 'GET',
             headers: {
               'Authorization': authHeader,
