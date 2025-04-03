@@ -101,21 +101,18 @@ impl Server {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port)).await?;
-        let api = Router::new()
-            .nest("/auth", auth::rest())
-            .route("/hello", get("Hello, world!"))
-            .nest("/profile", profile::rest())
-            .route("/chat", get(handler::read_chat))
-            .route("/chat", post(handler::create_chat))
-            .route("/pc", get(handler::list_pc))
-            .route("/pc/{name}", get(handler::get_pc))
-            .route("/pc/{name}", post(handler::edit_pc))
-            .route("/sync", get(handler::sync));
         // .nest("/act", game::act_handler());
         let app = Router::new()
             .route("/", get(Redirect::to(&self.cfg.page_url)))
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
-            .nest("/api", api)
+            .nest("/auth", auth::rest())
+            .route("/hello", get("Hello, world!"))
+            .nest("/profile", profile::rest())
+            .nest("/chat", chat::rest())
+            .route("/pc", get(handler::list_pc))
+            .route("/pc/{name}", get(handler::get_pc))
+            .route("/pc/{name}", post(handler::edit_pc))
+            .route("/sync", get(handler::sync))
             .fallback(any(StatusCode::NOT_FOUND))
             .with_state(self);
         let res = axum::serve(listener, app)
