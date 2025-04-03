@@ -15,7 +15,6 @@ license = "GPL-3.0-only"
 
 [dependencies]
 vitium-api = { path = "../api" }
-vitium-common = { path = "../common" }
 axum-pass = "0.1.0"
 axum = { version = "0.8.3", features = ["macros"] }
 tokio = { version = "1.40.0", features = [
