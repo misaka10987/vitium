@@ -102,8 +102,15 @@ impl Server {
         Ok(())
     }
 
+    #[cfg(debug_assertions)]
+    async fn dev_hooks(&self) {
+        let _ = self.safe.create("dev", "dev");
+    }
+
     /// Consumes `self` and start the server.
     pub async fn run(self) -> anyhow::Result<()> {
+        #[cfg(debug_assertions)]
+        self.dev_hooks().await;
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
             .await
             .expect("failed to bind TCP listener");
