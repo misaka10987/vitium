@@ -104,7 +104,7 @@ impl Server {
 
     #[cfg(debug_assertions)]
     async fn dev_hooks(&self) {
-        let _ = self.safe.create("dev", "dev");
+        let _ = self.safe.create("dev", "dev").await;
     }
 
     /// Consumes `self` and start the server.
