@@ -8,12 +8,6 @@ export default function LoginPage() {
     const router = useRouter();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-    // Use useEffect to safely access browser APIs
-    useEffect(() => {
-        // This will only run in the browser after the component mounts
-        setIsLoggingIn(sessionStorage.getItem('isLoggedIn') === 'true');
-    }, []);
-
     const handleLoginClick = async () => {
         setIsLoggingIn(true);
         try {
