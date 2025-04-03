@@ -2,80 +2,50 @@ use std::time::SystemTime;
 
 use axum::{
     extract::{Path, State},
-    http::{header::AUTHORIZATION, HeaderMap, StatusCode},
-    Json,
+    http::StatusCode,
+    Form, Json,
 };
 use axum_extra::extract::{cookie::Cookie, CookieJar};
-use http_auth_basic::Credentials;
+use axum_pass::{safe, Password, Token};
 
-use safe_box::err::SafeBoxError;
-use tracing::{error, trace};
+use tracing::error;
 use vitium_api::net::{self, Req, SendChat};
 
 use super::Server;
 
 type Responce<T> = Result<Json<<T as Req>::Response>, StatusCode>;
 
-pub async fn login(State(s): State<Server>, head: HeaderMap) -> Result<CookieJar, StatusCode> {
-    if let Some(Ok(Ok(cred))) = head.get(AUTHORIZATION).map(|token| {
-        token
-            .to_str()
-            .map(|b| Credentials::from_header(b.to_owned()))
-    }) {
-        let res = s.safe.verify(&cred.user_id, &cred.password).await;
-        match res {
-            Ok(token) => Ok(CookieJar::new().add(Cookie::new("token", token))),
-            Err(SafeBoxError::BadPass { user, .. }) | Err(SafeBoxError::UserNotExist(user)) => {
-                trace!("failed attempt to login '{user}'");
-                Err(StatusCode::FORBIDDEN)
-            }
-            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
-        }
-    } else {
-        Err(StatusCode::BAD_REQUEST)
-    }
+pub async fn login(State(s): State<Server>, Password(user): Password) -> CookieJar {
+    let token = s.safe.issue_token(&user);
+    let cookie = CookieJar::new().add(Cookie::new("token", token));
+    cookie
 }
 
-pub async fn signup(
-    State(s): State<Server>,
-    Json(req): Json<net::SignUp>,
-) -> Responce<net::SignUp> {
-    let res = s.safe.create(&req.user, &req.pass).await;
-    if let Err(e) = res {
-        match e {
-            SafeBoxError::UserAlreadyExist(_) => Err(StatusCode::CONFLICT),
-            e => {
-                error!("{e}");
-                Err(StatusCode::INTERNAL_SERVER_ERROR)
-            }
+pub async fn signup(State(s): State<Server>, Form(form): Form<net::SignUp>) -> StatusCode {
+    let res = s.safe.create(&form.user, &form.pass).await;
+    match res {
+        Ok(_) => StatusCode::OK,
+        Err(safe::Error::UserAlreadyExist(_)) => StatusCode::CONFLICT,
+        Err(e) => {
+            error!("{e}");
+            StatusCode::INTERNAL_SERVER_ERROR
         }
-    } else {
-        Ok(Json(()))
     }
 }
 
 pub async fn edit_pass(
     State(s): State<Server>,
-    head: HeaderMap,
-    Json(net::EditPass(pass)): Json<net::EditPass>,
-) -> Responce<net::EditPass> {
-    if let Some(Ok(Ok(cred))) = head.get(AUTHORIZATION).map(|token| {
-        token
-            .to_str()
-            .map(|b| Credentials::from_header(b.to_owned()))
-    }) {
-        let res = s.safe.update(&cred.user_id, &cred.password, &pass).await;
-        match res {
-            Ok(_) => Ok(Json(())),
-            Err(SafeBoxError::BadPass { user, .. }) => {
-                trace!("failed attempt to change password for '{user}'");
-                Err(StatusCode::FORBIDDEN)
-            }
-            Err(SafeBoxError::UserNotExist(_)) => Err(StatusCode::NOT_FOUND),
-            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    Password(user): Password,
+    Form(net::EditPass(pass)): Form<net::EditPass>,
+) -> StatusCode {
+    let res = s.safe.update(&user, &pass).await;
+    match res {
+        Ok(_) => StatusCode::OK,
+        Err(safe::Error::UserNotExist(_)) => StatusCode::NOT_FOUND,
+        Err(e) => {
+            error!("{e}");
+            StatusCode::INTERNAL_SERVER_ERROR
         }
-    } else {
-        Err(StatusCode::UNAUTHORIZED)
     }
 }
 
@@ -118,15 +88,13 @@ pub async fn get_player(
 pub async fn edit_player(
     State(s): State<Server>,
     Path(name): Path<String>,
-    jar: CookieJar,
+    Token(user): Token,
     Json(net::EditPlayer(_, player)): Json<net::EditPlayer>,
 ) -> Responce<net::EditPlayer> {
-    if let Some(user) = s.auth(&jar) {
-        if user == name {
-            let mut tab = s.player.write().await;
-            tab.insert(user, player);
-            return Ok(Json(()));
-        }
+    if user == name {
+        let mut tab = s.player.write().await;
+        tab.insert(user, player);
+        return Ok(Json(()));
     }
     Err(StatusCode::FORBIDDEN)
 }
@@ -152,63 +120,56 @@ pub async fn get_pc(State(s): State<Server>, Path(name): Path<String>) -> Respon
 
 pub async fn send_chat(
     State(s): State<Server>,
-    jar: CookieJar,
+    Token(user): Token,
     Json(SendChat(chat)): Json<net::SendChat>,
 ) -> Responce<net::SendChat> {
-    match s.auth(&jar) {
-        Some(user) if user == chat.sender => {
-            if chat.msg.chars().nth(0) == Some('/') {
-                let res = if s.is_op(&user).await {
-                    s.op_cmd(&chat.msg[1..]).await
-                } else {
-                    s.cmd(&chat.msg[1..]).await
-                };
-                let res = match res {
-                    Ok(o) => o,
-                    Err(e) => e.to_string(),
-                };
-                s.chat
-                    .broadcast(format!("{user} {} -- {res}", chat.msg))
-                    .await;
-                return Ok(Json(SystemTime::now()));
-            }
-            Ok(Json(s.chat.push(chat).await))
-        }
-        _ => Err(StatusCode::FORBIDDEN),
+    if user != chat.sender {
+        return Err(StatusCode::FORBIDDEN);
     }
+    if chat.msg.chars().nth(0) == Some('/') {
+        let res = if s.is_op(&user).await {
+            s.op_cmd(&chat.msg[1..]).await
+        } else {
+            s.cmd(&chat.msg[1..]).await
+        };
+        let res = match res {
+            Ok(o) => o,
+            Err(e) => e.to_string(),
+        };
+        s.chat
+            .broadcast(format!("{user} {} -- {res}", chat.msg))
+            .await;
+        return Ok(Json(SystemTime::now()));
+    }
+    Ok(Json(s.chat.push(chat).await))
 }
 
 /// Handler for `POST /chara`.
 pub async fn edit_pc(
     State(s): State<Server>,
     Path(name): Path<String>,
-    jar: CookieJar,
+    Token(user): Token,
     Json(net::EditPC(_, new)): Json<net::EditPC>,
 ) -> Responce<net::EditPC> {
-    if let Some(user) = s.auth(&jar) {
-        let mut tab = s.pc.write().await;
-        if let Some(c) = tab.get(&name) {
-            if user != c.player {
-                return Err(StatusCode::FORBIDDEN);
-            }
+    let mut tab = s.pc.write().await;
+    if let Some(c) = tab.get(&name) {
+        if user != c.player {
+            return Err(StatusCode::FORBIDDEN);
         }
-        match (tab.contains_key(&name), new) {
-            (true, None) => {
-                tab.remove(&name);
-                Ok(Json(()))
-            }
-            (_, Some(c)) => {
-                tab.insert(name, c);
-                Ok(Json(()))
-            }
-            (false, None) => Err(StatusCode::NOT_FOUND),
+    }
+    match (tab.contains_key(&name), new) {
+        (true, None) => {
+            tab.remove(&name);
+            Ok(Json(()))
         }
-    } else {
-        Err(StatusCode::FORBIDDEN)
+        (_, Some(c)) => {
+            tab.insert(name, c);
+            Ok(Json(()))
+        }
+        (false, None) => Err(StatusCode::NOT_FOUND),
     }
 }
 
-pub async fn sync(State(s): State<Server>, jar: CookieJar) -> StatusCode {
-    if let Some(_) = s.auth(&jar) {};
+pub async fn sync(State(_): State<Server>, Token(_): Token) -> StatusCode {
     todo!()
 }

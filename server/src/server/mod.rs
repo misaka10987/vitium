@@ -9,9 +9,9 @@ use axum::{
     routing::{any, get, post},
     Json, Router,
 };
-use axum_extra::extract::CookieJar;
+
+use axum_pass::safe::Safe;
 use chat::ChatSto;
-use safe_box::SafeBox;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -21,7 +21,6 @@ use std::{
     time::SystemTime,
 };
 use tokio::{net::TcpListener, sync::RwLock};
-use tracing::trace;
 use vitium_api::{game::PC, player::Player};
 
 use crate::recv_shutdown;
@@ -31,7 +30,7 @@ use crate::recv_shutdown;
 pub struct ServerInst {
     pub cfg: ServerConfig,
     player: RwLock<HashMap<String, Player>>,
-    safe: SafeBox,
+    safe: Safe,
     pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
     pub chat: ChatSto,
@@ -76,24 +75,12 @@ impl Server {
                     profile: None,
                 },
             )])),
-            safe: SafeBox::new("./password.db").await.unwrap(),
+            safe: Safe::new("./password.db").await.unwrap(),
             pc: RwLock::new(HashMap::new()),
             op: RwLock::new(HashSet::new()),
             chat,
             // game: RwLock::new(Game::new()),
         }))
-    }
-
-    /// Reads from the header and get authentication info.
-    pub fn auth(&self, jar: &CookieJar) -> Option<String> {
-        if let Some(token) = jar.get("token") {
-            let token = token.value();
-            match self.safe.verify_token(token) {
-                Ok(user) => return Some(user),
-                Err(e) => trace!("failed to authorize with token {token}: {e}"),
-            }
-        }
-        None
     }
 
     pub async fn is_op(&self, user: &str) -> bool {
@@ -147,6 +134,12 @@ impl Server {
             .with_graceful_shutdown(recv_shutdown())
             .await;
         Ok(res?)
+    }
+}
+
+impl AsRef<Safe> for Server {
+    fn as_ref(&self) -> &Safe {
+        &self.safe
     }
 }
 
