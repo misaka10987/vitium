@@ -1,7 +1,9 @@
 "use client"
 
+import { Username } from "@/components/user"
+
 const Login = () => {
-    return <div></div>
+    return <div><Username /></div>
 }
 
 export default Login
