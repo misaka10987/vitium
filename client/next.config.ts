@@ -7,36 +7,36 @@ const nextConfig: NextConfig = {
     config.experiments.asyncWebAssembly = true
     // walkaround for wasm loading
     // https://github.com/vercel/next.js/issues/25852#issuecomment-1057059000
-    config.plugins.push(
-      new (class {
-        apply(compiler: any) {
-          compiler.hooks.afterEmit.tapPromise(
-            'SymlinkWebpackPlugin',
-            async (compiler: any) => {
-              if (isServer) {
-                const from = join(compiler.options.output.path, '../static')
-                const to = join(compiler.options.output.path, 'static')
+    // config.plugins.push(
+    //   new (class {
+    //     apply(compiler: any) {
+    //       compiler.hooks.afterEmit.tapPromise(
+    //         'SymlinkWebpackPlugin',
+    //         async (compiler: any) => {
+    //           if (isServer) {
+    //             const from = join(compiler.options.output.path, '../static')
+    //             const to = join(compiler.options.output.path, 'static')
 
-                try {
-                  await access(from)
-                  console.log(`${from} already exists`)
-                  return
-                } catch (error: any) {
-                  if (error.code === 'ENOENT') {
-                    // No link exists
-                  } else {
-                    throw error
-                  }
-                }
+    //             try {
+    //               await access(from)
+    //               console.log(`${from} already exists`)
+    //               return
+    //             } catch (error: any) {
+    //               if (error.code === 'ENOENT') {
+    //                 // No link exists
+    //               } else {
+    //                 throw error
+    //               }
+    //             }
 
-                await symlink(to, from, 'junction')
-                console.log(`created symlink ${from} -> ${to}`)
-              }
-            },
-          )
-        }
-      })(),
-    )
+    //             await symlink(to, from, 'junction')
+    //             console.log(`created symlink ${from} -> ${to}`)
+    //           }
+    //         },
+    //       )
+    //     }
+    //   })(),
+    // )
     return config
   },
 }

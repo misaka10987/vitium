@@ -1,4 +1,3 @@
-pub mod err;
 pub mod game;
 pub mod net;
 pub mod prelude;
