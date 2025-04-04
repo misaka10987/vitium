@@ -1,3 +1,5 @@
+/* tslint:disable */
+/* eslint-disable */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -116,7 +118,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+body {
+  height: 100vh;
+  width: 100vw;
 }
