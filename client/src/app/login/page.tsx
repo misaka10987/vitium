@@ -2,8 +2,6 @@
 
 import { Username } from "@/components/user"
 
-const Login = () => {
+export default function () {
     return <div><Username /></div>
 }
-
-export default Login

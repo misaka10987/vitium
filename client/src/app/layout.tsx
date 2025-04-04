@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: "Vitium Web Client",
 }
 
-export default function RootLayout({
+export default function ({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -35,8 +35,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* <NavBar />
-          {children} */}
           <div className="fixed top-0 bottom-0 left-0 right-0 flex flex-col">
             <div className="relative top-0">
               <NavBar />

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import { DarkModeSwitch } from "@/components/dark-mode-switch"
 
-export function NavBar() {
+export const NavBar = () => {
   return (
     <NavigationMenu className="p-1">
       <NavigationMenuList>

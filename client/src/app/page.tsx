@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { add } from "vitium-api"
 
-export default function Home() {
+export default function () {
   if (typeof (window) != 'undefined') {
     console.log('WASM load test: 2+3=' + add(2, 3))
   }
