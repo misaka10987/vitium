@@ -2,6 +2,6 @@
 
 import { Username } from "@/components/user"
 
-export default function () {
+export default function Page() {
     return <div><Username /></div>
 }

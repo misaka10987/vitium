@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: "Vitium Web Client",
 }
 
-export default function ({
+export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode
