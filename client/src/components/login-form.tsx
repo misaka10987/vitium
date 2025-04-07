@@ -25,7 +25,7 @@ export function LoginForm({
         <CardHeader>
           <CardTitle>Login to: <Host /></CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Login to the above game server with your username and password
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -43,7 +43,7 @@ export function LoginForm({
                 <div className="flex items-center">
                   <Label htmlFor={passInputId}>Password</Label>
                   <Link
-                    href="#"
+                    href="mailto:mail@example.com"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
@@ -59,7 +59,7 @@ export function LoginForm({
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
-              <Link href="#" className="underline underline-offset-4">
+              <Link href="/signup" className="underline underline-offset-4">
                 Sign up
               </Link>
             </div>

@@ -11,22 +11,34 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
+import { persist } from 'zustand/middleware'
 
 export const useHostStore = create<{
   hostname?: string
   setHostname: (name: string) => void
-}>()((set) => ({
-  setHostname: (name) => set(() => ({ hostname: name })),
-}))
+}>()(persist(
+  (set) => ({
+    setHostname: (name) => set(() => ({ hostname: name })),
+  }),
+  {
+    name: "game-server",
+  }
+))
 
 export const Host = () => {
   const { hostname, setHostname } = useHostStore()
-  const [open, setOpen] = useState(hostname == undefined)
+  const [open, setOpen] = useState(false)
   const [input, setInput] = useState<string>('')
   const formId = useId()
   const inputId = useId()
-  // if (hostname != undefined) return <Button variant='link' onClick={() => setOpen(true)}>{hostname}</Button>
+
+  // wait 100ms for loading state from local storage
+  useEffect(() => {
+    const timer = setTimeout(() => { if (hostname == undefined) setOpen(true) }, 100)
+    return () => clearTimeout(timer)
+  }, [hostname])
+
   return <Dialog open={open} onOpenChange={setOpen}>
     <DialogTrigger asChild>
       <Button variant="link">{hostname}</Button>
