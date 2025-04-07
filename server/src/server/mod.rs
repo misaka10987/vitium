@@ -2,6 +2,8 @@ mod auth;
 mod chat;
 mod cmd;
 mod profile;
+#[cfg(debug_assertions)]
+mod test;
 
 use anyhow::bail;
 use axum::{
@@ -101,13 +103,16 @@ impl Server {
         self.dev_hooks().await;
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port)).await?;
         // .nest("/act", game::act_handler());
-        let app = Router::new()
+        let app = Router::new();
+        #[cfg(debug_assertions)]
+        let app = app.nest("/test", test::router());
+        let app = app
             .route("/", get(Redirect::to(&self.cfg.page_url)))
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
-            .nest("/auth", auth::rest())
             .route("/hello", get("Hello, world!"))
-            .nest("/profile", profile::rest())
+            .nest("/auth", auth::rest())
             .nest("/chat", chat::rest())
+            .nest("/profile", profile::rest())
             .fallback(any(StatusCode::NOT_FOUND))
             .with_state(self);
         let res = axum::serve(listener, app)
