@@ -12,8 +12,6 @@ import { Label } from "@/components/ui/label"
 import { Host } from '@/components/host'
 import { useId } from 'react'
 import Link from 'next/link'
-import { useForm } from 'react-hook-form'
-import { register } from 'module'
 import { grabToken } from '@/lib/auth'
 
 export function LoginForm({
