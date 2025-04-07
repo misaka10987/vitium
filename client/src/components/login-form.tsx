@@ -12,6 +12,9 @@ import { Label } from "@/components/ui/label"
 import { Host } from '@/components/host'
 import { useId } from 'react'
 import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { register } from 'module'
+import { grabToken } from '@/lib/auth'
 
 export function LoginForm({
   className,
@@ -19,6 +22,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const userInputId = useId()
   const passInputId = useId()
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -29,12 +33,20 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={async e => {
+            e.preventDefault()
+            const data = new FormData(e.currentTarget)
+            const user = data.get('user')?.toString()
+            const pass = data.get('pass')?.toString()
+            if (user == undefined || pass == undefined) throw new Error('impossible')
+            grabToken(user, pass)
+          }}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
                 <Label htmlFor={userInputId}>Username</Label>
                 <Input
                   id={userInputId}
+                  name='user'
                   placeholder="username"
                   required
                 />
@@ -49,7 +61,7 @@ export function LoginForm({
                     Forgot your password?
                   </Link>
                 </div>
-                <Input id={passInputId} type="password" required />
+                <Input id={passInputId} name='pass' type="password" required />
               </div>
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">

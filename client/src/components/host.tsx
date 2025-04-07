@@ -26,6 +26,8 @@ export const useHostStore = create<{
   }
 ))
 
+export const hostStore = useHostStore
+
 export const Host = () => {
   const { hostname, setHostname } = useHostStore()
   const [open, setOpen] = useState(false)
