@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useId, useState } from 'react'
-import Link from 'next/link'
 
 export const useHostStore = create<{
   hostname?: string
@@ -20,8 +19,6 @@ export const useHostStore = create<{
 }>()((set) => ({
   setHostname: (name) => set(() => ({ hostname: name })),
 }))
-
-const PromptHost = () => { }
 
 export const Host = () => {
   const { hostname, setHostname } = useHostStore()

@@ -1,6 +1,5 @@
 "use client"
 
-import { Host } from '@/components/host'
 import { LoginForm } from '@/components/login-form'
 
 export default function Page() {
