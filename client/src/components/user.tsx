@@ -1,4 +1,4 @@
-import { create } from "zustand"
+import { create } from 'zustand'
 
 export const username = create<{
   name?: string
@@ -8,6 +8,6 @@ export const username = create<{
 }))
 
 export const Username = () => {
-  const name = username(state => state.name)
+  const name = username((state) => state.name)
   return name
 }

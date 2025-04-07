@@ -1,11 +1,11 @@
-import type { Metadata } from "next"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { NavBar } from "@/components/navbar"
+import type { Metadata } from 'next'
+import './globals.css'
+import { ThemeProvider } from '@/components/theme-provider'
+import { NavBar } from '@/components/navbar'
 
 export const metadata: Metadata = {
-  title: "Vitium",
-  description: "Vitium Web Client",
+  title: 'Vitium',
+  description: 'Vitium Web Client',
 }
 
 export default function Layout({
@@ -15,7 +15,7 @@ export default function Layout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className='antialiased'>
+      <body className="antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -26,9 +26,7 @@ export default function Layout({
             <div className="relative top-0">
               <NavBar />
             </div>
-            <div className="flex-1 flex-grow">
-              {children}
-            </div>
+            <div className="flex-1 flex-grow">{children}</div>
           </div>
         </ThemeProvider>
       </body>
