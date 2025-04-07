@@ -1,8 +1,7 @@
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf, sync::LazyLock, time::Duration};
 
 use clap::Parser;
 use load::try_load_toml;
-use once_cell::sync::Lazy;
 use tokio::{runtime, sync::broadcast};
 use tracing::{info, Level};
 
@@ -24,9 +23,9 @@ struct Args {
     pub config: PathBuf,
 }
 
-static ARG: Lazy<Args> = Lazy::new(Args::parse);
+static ARG: LazyLock<Args> = LazyLock::new(Args::parse);
 
-static SHUTDOWN: Lazy<broadcast::Sender<()>> = Lazy::new(|| broadcast::channel(1).0);
+static SHUTDOWN: LazyLock<broadcast::Sender<()>> = LazyLock::new(|| broadcast::channel(1).0);
 
 fn shutdown() {
     let _ = SHUTDOWN.send(());
