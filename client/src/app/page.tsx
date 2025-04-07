@@ -1,13 +1,12 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { log } from "@/lib/log"
 import Image from "next/image"
 import Link from "next/link"
 import { add } from "vitium-api"
 
 export default function Page() {
-  log.debug(`WASM initialized: 2+3=${add(2, 3)}`)
+  console.debug(`WASM initialized: 2+3=${add(2, 3)}`)
   return <div className='flex h-full justify-center items-center'>
     <div className="mb-32">
       <div className='mb-16'>
