@@ -51,11 +51,15 @@ pub struct Enroll(pub String);
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(target_family = "wasm", derive(Tsify))]
 #[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct Chat {
+pub struct Message {
+    /// Milisecond timestamp the message is sent.
+    pub time: u64,
     /// The user who sends the message.
     pub sender: String,
     /// The chat message.
-    pub msg: String,
+    pub content: String,
+    /// Where to enable HTML support in message body.
+    pub html: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

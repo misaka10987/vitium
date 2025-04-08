@@ -14,8 +14,9 @@ use axum::{
 };
 
 use axum_pass::safe::Safe;
-use chat::ChatStore;
+use chat::ChatServer;
 use serde::{Deserialize, Serialize};
+use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
     collections::{HashMap, HashSet},
     ops::{Deref, DerefMut},
@@ -24,20 +25,30 @@ use std::{
     time::SystemTime,
 };
 use tokio::{net::TcpListener, sync::RwLock};
-use vitium_api::{game::PlayerChar, user::UserProfile};
+use vitium_api::user::UserProfile;
 
 use crate::recv_shutdown;
 
 // use crate::game::{self, Game};
 
+const DB_INIT_QUERY: &'static str = r#"
+CREATE TABLE IF NOT EXISTS chat (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time INTEGER UNSIGNED,
+    sender TEXT NOT NULL,
+    content TEXT NOT NULL,
+    html BOOLEAN NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_chat_time ON chat(time);
+"#;
+
 pub struct ServerInst {
     pub cfg: ServerConfig,
+    db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
     safe: Safe,
-    pc: RwLock<HashMap<String, PlayerChar>>,
     op: RwLock<HashSet<String>>,
-    pub chat: ChatStore,
-    // pub game: RwLock<Game>,
+    pub chat: ChatServer,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -60,17 +71,21 @@ impl DerefMut for Server {
 
 impl Server {
     /// Create a server with specified configuration.
-    pub async fn new(cfg: ServerConfig) -> Self {
-        let chat = ChatStore::new(cfg.chat_cap);
-        Self(Arc::new(ServerInst {
+    pub async fn new(cfg: ServerConfig) -> anyhow::Result<Self> {
+        let conn_opt = SqliteConnectOptions::new()
+            .filename("./server.db")
+            .create_if_missing(true);
+        let pool = SqlitePool::connect_with(conn_opt).await?;
+        query(DB_INIT_QUERY).execute(&pool).await?;
+        let value = Self(Arc::new(ServerInst {
             cfg,
-            player: RwLock::new(HashMap::new()),
-            safe: Safe::new("./password.db").await.unwrap(),
-            pc: RwLock::new(HashMap::new()),
-            op: RwLock::new(HashSet::new()),
-            chat,
-            // game: RwLock::new(Game::new()),
-        }))
+            db: pool.clone(),
+            player: RwLock::const_new(HashMap::new()),
+            safe: Safe::new("./password.db").await?,
+            op: RwLock::const_new(HashSet::new()),
+            chat: ChatServer::new(pool.clone()),
+        }));
+        Ok(value)
     }
 
     pub async fn is_op(&self, user: &str) -> bool {
@@ -102,7 +117,6 @@ impl Server {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
         let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port)).await?;
-        // .nest("/act", game::act_handler());
         let app = Router::new();
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());

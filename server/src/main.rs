@@ -44,7 +44,7 @@ fn main() -> anyhow::Result<()> {
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
     run.spawn(async {
         let cfg = try_load_toml(&ARG.config).await;
-        let server = Server::new(cfg).await;
+        let server = Server::new(cfg).await.unwrap();
         let input = server.input();
         server.run().await.unwrap();
         input.abort();

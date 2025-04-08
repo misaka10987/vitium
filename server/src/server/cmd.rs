@@ -58,8 +58,8 @@ impl Server {
             "exit" | "stop" | "shutdown" => Ok(shutdown()),
             "clear" => Ok(clear()?),
             "kill" => exit(-1),
-            "broadcast" => Ok(self.chat.broadcast(arg.into()).await),
-            _ => Ok(self.chat.broadcast(self.op_cmd(cmd).await?).await),
+            "broadcast" => Ok(self.chat.server_msg(arg.into()).await),
+            _ => Ok(self.chat.server_msg(self.op_cmd(cmd).await?).await),
         }
     }
 }

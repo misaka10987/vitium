@@ -1,76 +1,92 @@
-use std::{
-    collections::BTreeMap,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::{
     extract::{Path, State},
     http::StatusCode,
+    response::{sse::Event, Sse},
     routing::get,
     Json, Router,
 };
 use axum_pass::Token;
-use tokio::sync::{oneshot, Mutex, RwLock};
-use tracing::info;
-use vitium_api::net::{self, Chat};
+use sqlx::{query, Row, SqlitePool};
+use tokio::sync::watch;
+use tokio_stream::{Stream, StreamExt};
+use tracing::error;
+use vitium_api::net::{self, Message};
 
 use super::Server;
 
-/// Storage for [`Chat`] messages.
-pub struct ChatStore {
-    /// Message capacity.
-    cap: usize,
-    /// List of messages, with the latest at the first.
-    list: RwLock<BTreeMap<SystemTime, Chat>>,
-    /// Subscribers to update.
-    watch: Mutex<Vec<oneshot::Sender<Vec<(SystemTime, Chat)>>>>,
+fn mili_timestamp(time: SystemTime) -> u64 {
+    time.duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
 }
 
-impl ChatStore {
-    /// Create a chat storage with specified capacity.
-    pub const fn new(cap: usize) -> Self {
-        Self {
-            cap,
-            list: RwLock::const_new(BTreeMap::new()),
-            watch: Mutex::const_new(Vec::new()),
-        }
-    }
+pub struct ChatServer {
+    db: SqlitePool,
+    send: watch::Sender<Message>,
+}
 
-    pub async fn pull(&self, after: SystemTime) -> oneshot::Receiver<Vec<(SystemTime, Chat)>> {
-        let (s, r) = oneshot::channel();
-        let list = self.list.read().await;
-        let res = list
-            .range(after..)
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect::<Vec<_>>();
-        if res.len() > 0 {
-            let _ = s.send(res);
-        } else {
-            let mut watch = self.watch.lock().await;
-            watch.push(s);
-        }
-        r
-    }
-
-    pub async fn push(&self, chat: Chat) -> SystemTime {
-        info!("<{}> {}", chat.sender, chat.msg);
-        let time = SystemTime::now();
-        for i in self.watch.lock().await.drain(..) {
-            let _ = i.send(vec![(time, chat.clone())]);
-        }
-        let mut list = self.list.write().await;
-        list.insert(time, chat);
-        // list.push_front(chat);
-        // list.truncate(self.cap);
-        time
-    }
-
-    pub async fn broadcast(&self, msg: String) {
-        let chat = Chat {
+impl ChatServer {
+    pub fn new(db: SqlitePool) -> Self {
+        let (send, _) = watch::channel(Message {
+            time: mili_timestamp(SystemTime::now()),
             sender: "".into(),
-            msg,
-        };
-        self.push(chat).await;
+            content: "".into(),
+            html: false,
+        });
+        Self { send, db }
+    }
+
+    pub async fn msg_after(&self, setpoint: u64) -> anyhow::Result<Vec<Message>> {
+        let row = query("SELECT * FROM chat WHERE time > ? ORDER BY time")
+            .bind(setpoint as i64)
+            .fetch_all(&self.db)
+            .await?;
+        let mut msg = vec![];
+        for row in row {
+            msg.push(Message {
+                time: row.try_get("time")?,
+                sender: row.try_get("sender")?,
+                content: row.try_get("content")?,
+                html: row.try_get("html")?,
+            });
+        }
+        Ok(msg)
+    }
+
+    pub fn subscribe(&self) -> watch::Receiver<Message> {
+        self.send.subscribe()
+    }
+
+    pub async fn handle(&self, msg: Message) -> anyhow::Result<()> {
+        let query = query("INSERT INTO chat (time, sender, content, html) VALUES (?, ?, ?, ?);")
+            .bind(msg.time as i64)
+            .bind(&msg.sender)
+            .bind(&msg.content)
+            .bind(msg.html);
+        query.execute(&self.db).await?;
+        self.send.send_replace(msg);
+        Ok(())
+    }
+
+    pub async fn server_msg(&self, content: String) {
+        let res = self
+            .handle(Message {
+                time: mili_timestamp(SystemTime::now()),
+                sender: "".into(),
+                content,
+                html: false,
+            })
+            .await;
+        if let Err(e) = res {
+            error!("{e}");
+        }
+    }
+
+    pub async fn wait_new(&self) -> anyhow::Result<Message> {
+        let mut recv = self.send.subscribe();
+        recv.changed().await?;
+        let value = recv.borrow_and_update().clone();
+        Ok(value)
     }
 }
 
@@ -81,51 +97,55 @@ pub fn rest() -> Router<Server> {
         .route("/{time}", get(read))
 }
 
-async fn list(State(s): State<Server>) -> Result<Json<Vec<(SystemTime, net::Chat)>>, StatusCode> {
-    Ok(Json(
-        s.chat
-            .pull(UNIX_EPOCH)
-            .await
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
-    ))
+async fn list(State(s): State<Server>) -> Sse<impl Stream<Item = anyhow::Result<Event>>> {
+    let wait = move |_| {
+        let s = s.clone();
+        async move {
+            let value = s.chat.wait_new().await?;
+            let event = Event::default().json_data(value)?;
+            Ok(event)
+        }
+    };
+    let stream = tokio_stream::iter(0..).then(wait);
+    Sse::new(stream)
 }
 
 async fn read(
     State(s): State<Server>,
-    Path(after): Path<SystemTime>,
-) -> Result<Json<Vec<(SystemTime, net::Chat)>>, StatusCode> {
-    Ok(Json(
-        s.chat
-            .pull(after)
-            .await
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
-    ))
+    Path(setpoint): Path<u64>,
+) -> Result<Json<Vec<Message>>, StatusCode> {
+    Ok(Json(s.chat.msg_after(setpoint).await.map_err(|e| {
+        error!("{e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?))
 }
 
 async fn create(
     State(s): State<Server>,
     Token(user): Token,
-    Json(chat): Json<net::Chat>,
-) -> Result<Json<SystemTime>, StatusCode> {
+    Json(chat): Json<net::Message>,
+) -> Result<(), StatusCode> {
     if user != chat.sender {
         return Err(StatusCode::FORBIDDEN);
     }
-    if chat.msg.chars().nth(0) == Some('/') {
+    if chat.content.chars().nth(0) == Some('/') {
         let res = if s.is_op(&user).await {
-            s.op_cmd(&chat.msg[1..]).await
+            s.op_cmd(&chat.content[1..]).await
         } else {
-            s.cmd(&chat.msg[1..]).await
+            s.cmd(&chat.content[1..]).await
         };
         let res = match res {
             Ok(o) => o,
             Err(e) => e.to_string(),
         };
         s.chat
-            .broadcast(format!("{user} {} -- {res}", chat.msg))
+            .server_msg(format!("{user} {} -- {res}", chat.content))
             .await;
-        return Ok(Json(SystemTime::now()));
+        return Ok(());
     }
-    Ok(Json(s.chat.push(chat).await))
+    let res = s.chat.handle(chat).await;
+    if let Err(e) = res {
+        error!("{e}")
+    }
+    Ok(())
 }
