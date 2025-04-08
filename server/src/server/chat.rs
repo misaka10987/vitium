@@ -2,8 +2,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::{
     extract::{Path, State},
-    http::StatusCode,
-    response::{sse::Event, Sse},
+    http::{HeaderMap, StatusCode},
+    response::{sse::Event, IntoResponse, Sse},
     routing::get,
     Json, Router,
 };
@@ -93,11 +93,20 @@ impl ChatServer {
 /// The REST API method router.
 pub fn rest() -> Router<Server> {
     Router::new()
-        .route("/", get(list).post(create))
+        .route("/", get(fetch).post(create))
         .route("/{time}", get(read))
 }
 
-async fn list(State(s): State<Server>) -> Sse<impl Stream<Item = anyhow::Result<Event>>> {
+async fn fetch(State(s): State<Server>, head: HeaderMap) -> impl IntoResponse {
+    match head.get("accept") {
+        Some(accept) if accept.to_str().unwrap_or("").contains("text/event-stream") => {
+            fetch_sse(s).await.into_response()
+        }
+        _ => fetch_longpoll(s).await.into_response(),
+    }
+}
+
+async fn fetch_sse(s: Server) -> Sse<impl Stream<Item = anyhow::Result<Event>>> {
     let wait = move |_| {
         let s = s.clone();
         async move {
@@ -108,6 +117,13 @@ async fn list(State(s): State<Server>) -> Sse<impl Stream<Item = anyhow::Result<
     };
     let stream = tokio_stream::iter(0..).then(wait);
     Sse::new(stream)
+}
+
+async fn fetch_longpoll(s: Server) -> Result<Json<Message>, StatusCode> {
+    s.chat.wait_new().await.map(|x| Json(x)).map_err(|e| {
+        error!("{e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })
 }
 
 async fn read(
