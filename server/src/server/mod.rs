@@ -116,7 +116,7 @@ impl Server {
     pub async fn run(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
-        let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port)).await?;
+        let listener = TcpListener::bind(format!("[::]:{}", self.cfg.port)).await?;
         let app = Router::new();
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());
