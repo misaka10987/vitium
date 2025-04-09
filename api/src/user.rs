@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-#[cfg(target_family = "wasm")]
-use {tsify_next::Tsify, wasm_bindgen::prelude::wasm_bindgen};
-
 #[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct UserProfile {
     /// The displayed name in contrast to username used for login.
     pub nickname: String,

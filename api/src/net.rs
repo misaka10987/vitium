@@ -25,8 +25,11 @@ pub trait REST: Serialize + DeserializeOwned {
 use {tsify_next::Tsify, wasm_bindgen::prelude::wasm_bindgen};
 
 #[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct SignUp {
     pub user: String,
     pub pass: String,
@@ -43,13 +46,19 @@ impl Req for SignUp {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct Enroll(pub String);
 
 #[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct Message {
     /// Milisecond timestamp the message is sent.
     pub time: u64,
@@ -62,8 +71,11 @@ pub struct Message {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct EditPass(pub String);
 
 impl Req for EditPass {

@@ -12,7 +12,10 @@ use crate::{
 /// Melee weapons.
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct Melee {
     /// Damage dice.
     pub atk: HashMap<DmgType, Dice>,

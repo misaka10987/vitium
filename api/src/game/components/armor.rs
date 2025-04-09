@@ -10,7 +10,10 @@ use crate::{game::Mat, Dice};
 /// Instance of armor.
 #[derive(Clone, Serialize, Deserialize, Component)]
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct Armor {
     /// Defense.
     pub def: Dice,
@@ -21,7 +24,10 @@ pub struct Armor {
 /// Defines a layer of armor.
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct ArmorLayer {
     /// Material of this layer.
     pub mat: Id<Mat>,

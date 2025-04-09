@@ -7,7 +7,10 @@ use crate::{game::DmgType, Dice};
 /// Ranged weapons.
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct Ranged {
     pub atk: HashMap<DmgType, Dice>,
     /// In metres.
@@ -25,8 +28,3 @@ pub struct Ranged {
     /// Shots able to perform in a turn.
     pub freq: f32,
 }
-
-// #[derive(Clone, Serialize, Deserialize)]
-// pub struct RangedData {
-//     pub charge: Vec<(Id<Item>, i16)>,
-// }

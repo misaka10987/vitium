@@ -1,12 +1,17 @@
-use super::{level::Level, Attr, Mart, Prof, Race, Skill, Spell};
+use super::Pos;
+use crate::game::{level::Level, Attr, Mart, Prof, Race, Skill, Spell};
+use bevy_ecs::component::Component;
 use fe3o4::Id;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 /// Defines a character.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Component)]
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct Char {
     /// Displayed name of the character.
     pub name: String,
@@ -33,7 +38,12 @@ pub struct Char {
 }
 
 /// Denotes a player character.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Component)]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(
+    target_family = "wasm",
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct PlayerChar {
     /// User the character belongs to.
     pub user: String,
@@ -41,17 +51,4 @@ pub struct PlayerChar {
     pub bg_story: String,
     /// Mods to use with.
     pub mods: HashSet<String>,
-    /// The character object player holds.
-    pub char: Char,
-}
-
-/// Defines coordinate for characters.
-#[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct Pos {
-    /// The scene the character is in.
-    pub scene: usize,
-    /// Coordinate with respect to scene origin.
-    pub coord: (f32, f32),
 }

@@ -1,6 +1,5 @@
 pub mod act;
 pub mod attr;
-pub mod char;
 pub mod components;
 pub mod fight;
 pub mod level;

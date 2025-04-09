@@ -1,8 +1,11 @@
 pub mod armor;
+pub mod char;
 pub mod container;
 pub mod edible;
+pub mod hp;
 pub mod item;
 pub mod melee;
+pub mod pos;
 mod prelude;
 pub mod ranged;
 
