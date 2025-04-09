@@ -1,8 +1,9 @@
 import { access, symlink } from 'fs/promises'
-import type { NextConfig } from "next"
+import type { NextConfig } from 'next'
 import { join } from 'path'
 
 const nextConfig: NextConfig = {
+  crossOrigin: 'anonymous',
   webpack: (config, { isServer }) => {
     config.experiments.asyncWebAssembly = true
     // walkaround for wasm loading
@@ -32,10 +33,10 @@ const nextConfig: NextConfig = {
                 await symlink(to, from, 'junction')
                 console.log(`created symlink ${from} -> ${to}`)
               }
-            },
+            }
           )
         }
-      })(),
+      })()
     )
     return config
   },

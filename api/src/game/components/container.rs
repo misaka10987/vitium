@@ -1,11 +1,12 @@
+use bevy_ecs::component::Component;
 use serde::{Deserialize, Serialize};
 
 use crate::UId;
 
-use super::Item;
-
 /// Containers.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Component)]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Container {
     /// Time to store an item.
     pub time_cost: i32,
@@ -17,9 +18,5 @@ pub struct Container {
     pub weight: i32,
     /// If the container is waterproof.
     pub waterproof: bool,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct ContainerData {
-    pub inside: Vec<UId<Item>>,
+    pub content: Vec<UId>,
 }

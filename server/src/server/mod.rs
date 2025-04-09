@@ -1,18 +1,22 @@
+mod auth;
 mod chat;
 mod cmd;
-mod handler;
+mod profile;
+#[cfg(debug_assertions)]
+mod test;
 
 use anyhow::bail;
 use axum::{
     http::StatusCode,
     response::Redirect,
-    routing::{any, get, post},
+    routing::{any, get},
     Json, Router,
 };
 
 use axum_pass::safe::Safe;
-use chat::ChatSto;
+use chat::ChatServer;
 use serde::{Deserialize, Serialize};
+use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
     collections::{HashMap, HashSet},
     ops::{Deref, DerefMut},
@@ -21,30 +25,33 @@ use std::{
     time::SystemTime,
 };
 use tokio::{net::TcpListener, sync::RwLock};
-use vitium_api::{game::PC, player::Player};
+use vitium_api::user::UserProfile;
 
 use crate::recv_shutdown;
 
 // use crate::game::{self, Game};
 
+const DB_INIT_QUERY: &'static str = r#"
+CREATE TABLE IF NOT EXISTS chat (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time INTEGER UNSIGNED,
+    sender TEXT NOT NULL,
+    content TEXT NOT NULL,
+    html BOOLEAN NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_chat_time ON chat(time);
+"#;
+
 pub struct ServerInst {
     pub cfg: ServerConfig,
-    player: RwLock<HashMap<String, Player>>,
+    db: SqlitePool,
+    player: RwLock<HashMap<String, UserProfile>>,
     safe: Safe,
-    pc: RwLock<HashMap<String, PC>>,
     op: RwLock<HashSet<String>>,
-    pub chat: ChatSto,
-    // pub game: RwLock<Game>,
+    pub chat: ChatServer,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
-/// ```
-/// use crate::server::Server;
-/// Server::default()
-///     .run()
-///     .await
-///     .expect("internal server error");
-/// ```
 #[derive(Clone)]
 pub struct Server(Arc<ServerInst>);
 
@@ -64,23 +71,21 @@ impl DerefMut for Server {
 
 impl Server {
     /// Create a server with specified configuration.
-    pub async fn new(cfg: ServerConfig) -> Self {
-        let chat = ChatSto::new(cfg.chat_cap);
-        Self(Arc::new(ServerInst {
+    pub async fn new(cfg: ServerConfig) -> anyhow::Result<Self> {
+        let conn_opt = SqliteConnectOptions::new()
+            .filename("./server.db")
+            .create_if_missing(true);
+        let pool = SqlitePool::connect_with(conn_opt).await?;
+        query(DB_INIT_QUERY).execute(&pool).await?;
+        let value = Self(Arc::new(ServerInst {
             cfg,
-            player: RwLock::new(HashMap::from([(
-                "foo".into(),
-                Player {
-                    display_name: "Foo".into(),
-                    profile: None,
-                },
-            )])),
-            safe: Safe::new("./password.db").await.unwrap(),
-            pc: RwLock::new(HashMap::new()),
-            op: RwLock::new(HashSet::new()),
-            chat,
-            // game: RwLock::new(Game::new()),
-        }))
+            db: pool.clone(),
+            player: RwLock::const_new(HashMap::new()),
+            safe: Safe::new("./password.db").await?,
+            op: RwLock::const_new(HashSet::new()),
+            chat: ChatServer::new(pool.clone()),
+        }));
+        Ok(value)
     }
 
     pub async fn is_op(&self, user: &str) -> bool {
@@ -111,30 +116,17 @@ impl Server {
     pub async fn run(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
-        let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port))
-            .await
-            .expect("failed to bind TCP listener");
-        let auth = Router::new()
-            .route("/login", get(handler::login))
-            .route("/signup", post(handler::signup))
-            .route("/pass", post(handler::edit_pass));
-        let api = Router::new()
-            .nest("/auth", auth)
-            .route("/hello", get("Hello, world!"))
-            .route("/chat", get(handler::recv_chat))
-            .route("/chat", post(handler::send_chat))
-            .route("/player", get(handler::list_player))
-            .route("/player/{*name}", get(handler::get_player))
-            .route("/player/{*name}", post(handler::edit_player))
-            .route("/pc", get(handler::list_pc))
-            .route("/pc/{*name}", get(handler::get_pc))
-            .route("/pc/{*name}", post(handler::edit_pc))
-            .route("/sync", get(handler::sync));
-        // .nest("/act", game::act_handler());
-        let app = Router::new()
+        let listener = TcpListener::bind(format!("localhost:{}", self.cfg.port)).await?;
+        let app = Router::new();
+        #[cfg(debug_assertions)]
+        let app = app.nest("/test", test::router());
+        let app = app
             .route("/", get(Redirect::to(&self.cfg.page_url)))
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
-            .nest("/api", api)
+            .route("/hello", get("Hello, world!"))
+            .nest("/auth", auth::rest())
+            .nest("/chat", chat::rest())
+            .nest("/profile", profile::rest())
             .fallback(any(StatusCode::NOT_FOUND))
             .with_state(self);
         let res = axum::serve(listener, app)

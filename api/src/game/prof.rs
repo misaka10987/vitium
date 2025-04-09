@@ -3,14 +3,11 @@ use std::collections::{HashMap, HashSet};
 
 use fe3o4::{def_regtab, Id};
 
-use super::{Attr, Item, Mart, Spell};
-
-#[cfg(target_family = "wasm")]
-use {tsify_next::Tsify, wasm_bindgen::prelude::wasm_bindgen};
+use super::{Attr, Mart, Spell};
 
 /// Profession.
 #[derive(Serialize, Deserialize, Clone)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Prof {
     /// Coefficient of money for an initial character, timed by level.
@@ -23,8 +20,8 @@ pub struct Prof {
     pub mart: HashMap<Id<Mart>, i16>,
     /// Spells automatically learnt.
     pub spell: HashSet<Id<Spell>>,
-    /// Initial items given by this profession.
-    pub item: Vec<Id<Item>>,
+    // /// Initial items given by this profession.
+    // pub item: Vec<Id<Item>>,
 }
 
 def_regtab!(Prof, REG_PROF);
