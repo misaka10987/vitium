@@ -1,29 +1,28 @@
 pub mod game;
 pub mod net;
 pub mod prelude;
-pub mod uid;
 pub mod user;
 
 pub use prelude::*;
 
 pub type Dice = String;
 
-#[cfg(target_family = "wasm")]
-use wasm_bindgen::prelude::wasm_bindgen;
+pub type UId = u64;
 
 /// This is some documentation.
-#[cfg_attr(target_family = "wasm", wasm_bindgen)]
+#[cfg_attr(target_family = "wasm", wasm_bindgen::prelude::wasm_bindgen)]
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
-#[cfg_attr(target_family = "wasm", wasm_bindgen(typescript_custom_section))]
-const _TS_APPEND_CONTENT: &'static str = r#"export type Id<T> = string;"#;
-
-// #[cfg_attr(target_family = "wasm", wasm_bindgen)]
-// pub fn _fool_wasm_pack() -> Id<Item> {
-//     panic!()
-// }
+#[cfg_attr(
+    target_family = "wasm",
+    wasm_bindgen::prelude::wasm_bindgen(typescript_custom_section)
+)]
+const _TS_APPEND_CONTENT: &'static str = r#"
+export type UId = bigint
+export type Id<T> = string
+"#;
 
 #[cfg(test)]
 mod tests {

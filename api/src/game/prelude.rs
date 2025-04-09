@@ -1,8 +1,8 @@
 pub use super::act::{Act, Action};
 pub use super::attr::Attr;
 pub use super::char::{Char, PlayerChar};
+pub use super::components::item::Item;
 pub use super::fight::DmgType;
-pub use super::item::Item;
 pub use super::level::Level;
 pub use super::mart::Mart;
 pub use super::mat::Mat;

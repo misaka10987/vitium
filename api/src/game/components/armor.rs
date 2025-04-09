@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use bevy_ecs::component::Component;
 use serde::{Deserialize, Serialize};
 
 use fe3o4::Id;
@@ -7,18 +8,20 @@ use fe3o4::Id;
 use crate::{game::Mat, Dice};
 
 /// Instance of armor.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Component)]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Armor {
-    /// Damage
+    /// Defense.
     pub def: Dice,
-    /// Species able to wear this armor.
-    pub species: Species,
     /// Layers of the armor.
     pub layer: Vec<ArmorLayer>,
 }
 
 /// Defines a layer of armor.
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ArmorLayer {
     /// Material of this layer.
     pub mat: Id<Mat>,
@@ -28,15 +31,4 @@ pub struct ArmorLayer {
     pub rate: f32,
     /// Thickness of material, in milimetres.
     pub thickness: i16,
-}
-
-/// Defines species for deciding if an armor is able to wear.
-#[derive(Clone, Serialize, Deserialize)]
-pub enum Species {
-    /// Human-liked species.
-    Human,
-    /// Non human-liked species.
-    NonHuman,
-    /// Let host decide if able to wear.
-    Else(String),
 }

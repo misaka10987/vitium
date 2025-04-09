@@ -1,5 +1,4 @@
 pub use crate::game::Action;
-use crate::game::PlayerChar;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// Describes a request.
@@ -65,51 +64,6 @@ pub struct Message {
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(target_family = "wasm", derive(Tsify))]
 #[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct ListPC;
-
-impl Req for ListPC {
-    type Response = Vec<(String, PlayerChar)>;
-
-    fn path(&self) -> String {
-        "/api/pc".into()
-    }
-
-    const METHOD: &'static str = "GET";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct GetPC(#[serde(skip)] pub String);
-
-impl Req for GetPC {
-    type Response = PlayerChar;
-
-    fn path(&self) -> String {
-        format!("/api/pc/{}", self.0)
-    }
-
-    const METHOD: &'static str = "GET";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct EditPC(#[serde(skip)] pub String, pub Option<PlayerChar>);
-
-impl Req for EditPC {
-    type Response = ();
-
-    fn path(&self) -> String {
-        format!("/api/pc/{}", self.0)
-    }
-
-    const METHOD: &'static str = "POST";
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct EditPass(pub String);
 
 impl Req for EditPass {
@@ -121,8 +75,3 @@ impl Req for EditPass {
 
     const METHOD: &'static str = "POST";
 }
-
-#[derive(Serialize, Deserialize)]
-#[cfg_attr(target_family = "wasm", derive(Tsify))]
-#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-pub struct Sync {}

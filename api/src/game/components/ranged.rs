@@ -2,14 +2,12 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use fe3o4::Id;
-
 use crate::{game::DmgType, Dice};
-
-use super::Item;
 
 /// Ranged weapons.
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
+#[cfg_attr(target_family = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Ranged {
     pub atk: HashMap<DmgType, Dice>,
     /// In metres.
@@ -28,7 +26,7 @@ pub struct Ranged {
     pub freq: f32,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct RangedData {
-    pub charge: Vec<(Id<Item>, i16)>,
-}
+// #[derive(Clone, Serialize, Deserialize)]
+// pub struct RangedData {
+//     pub charge: Vec<(Id<Item>, i16)>,
+// }

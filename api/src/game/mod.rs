@@ -1,9 +1,8 @@
 pub mod act;
 pub mod attr;
 pub mod char;
-pub mod error;
+pub mod components;
 pub mod fight;
-pub mod item;
 pub mod level;
 pub mod mart;
 pub mod mat;
@@ -26,11 +25,11 @@ use std::collections::HashSet;
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum Obj {
-    Item(UId<Item>),
-    Char(UId<Char>),
-    PC(UId<PlayerChar>),
+    Item(UId),
+    Char(UId),
+    PC(UId),
     Scena(usize),
-    Vehicle(UId<Vehicle>),
+    Vehicle(UId),
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
