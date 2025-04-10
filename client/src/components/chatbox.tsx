@@ -1,24 +1,66 @@
-import { Label } from "@/components/ui/label";
+"use client"
+
+import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Chatbubble } from "@/components/chatbubble";
+import { Button } from "@/components/ui/button";
+import { sendMessage, sendImage } from "@/lib/chat";
+import { Send, Image } from "lucide-react";
 
 export function Chatbox() {
+    const [message, setMessage] = useState("");
+    
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (message.trim()) {
+            sendMessage(message);
+            setMessage("");
+        }
+    };
+    
+    const handleImageUpload = () => {
+        sendImage();
+    };
+
     return (
-        <div className="flex flex-col gap-6">
-            <div className="grid gap-3">
-                <Label htmlFor="chatbox">Chat</Label>
-                <ScrollArea 
-                    className="h-full w-full rounded-md border"
+        <div className="flex flex-col h-screen w-full">
+            <div className="flex-1 flex flex-col">
+                <ScrollArea
+                    className="h-[calc(100vh-180px)] flex w-full rounded-md border mb-2"
                     type="auto"
                     scrollHideDelay={100}
                 >
+                    <div className="p-2">
+                        <Chatbubble author="dev" timestamp={1672531199000} message="Hello, how are you?" />
+                    </div>
                 </ScrollArea>
-                <Textarea
-                    id="chatinput"
-                    name="chatinput"
-                    placeholder="Type your message here..."
-                    required
-                />
+                <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                    <Textarea
+                        className="h-[90px] w-full"
+                        id="chatinput"
+                        name="chatinput"
+                        placeholder="Type your message here..."
+                        required
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                    />
+                    <div className="flex flex-col gap-1">
+                        <Button className="h-[40px] px-3" type="submit" aria-label="Send message">
+                            <Send className="h-4 w-4" />
+                        </Button>
+                        <div></div>
+                        <Button 
+                            className="h-[40px] px-3" 
+                            type="button" 
+                            variant="outline" 
+                            aria-label="Upload image"
+                            onClick={handleImageUpload}
+                        >
+                            <Image className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </form>
             </div>
         </div>
     )
