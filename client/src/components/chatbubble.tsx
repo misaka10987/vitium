@@ -29,8 +29,8 @@ export function Chatbubble({
                     "flex-shrink-0",
                     variant === "send" && "order-2"
                 )}>
-                    <Avatar>
-                        <AvatarFallback className="text-sm mt-2">
+                    <Avatar className="m-1">
+                        <AvatarFallback className="text-sm">
                             {author.length > 1 ? author.charAt(0).toUpperCase() + author.charAt(1) : author.charAt(0).toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
