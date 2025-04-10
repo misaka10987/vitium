@@ -11,7 +11,7 @@ use axum_pass::Token;
 use sqlx::{query, Row, SqlitePool};
 use tokio::sync::watch;
 use tokio_stream::{Stream, StreamExt};
-use tracing::error;
+use tracing::{error, info};
 use vitium_api::net::{self, Message};
 
 use super::Server;
@@ -64,6 +64,7 @@ impl ChatServer {
             .bind(&msg.content)
             .bind(msg.html);
         query.execute(&self.db).await?;
+        info!("{} {}", msg.sender, msg.content);
         self.send.send_replace(msg);
         Ok(())
     }
