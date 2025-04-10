@@ -3,10 +3,12 @@
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
-import { add } from 'vitium-api'
+import { add, test } from 'vitium-api'
 
 export default function Page() {
   console.debug(`WASM initialized: 2+3=${add(2, 3)}`)
+  const res = test()
+  console.debug(`BigInt from WASM test: ${res}`)
   return (
     <div className="flex h-full justify-center items-center">
       <div className="mb-32">
