@@ -46,12 +46,11 @@ export function Chatbox() {
                         onChange={(e) => setMessage(e.target.value)}
                     />
                     <div className="flex flex-col gap-1">
-                        <Button className="h-[40px] px-3" type="submit" aria-label="Send message">
+                        <Button className="h-[40px] px-4" type="submit" aria-label="Send message">
                             <Send className="h-4 w-4" />
                         </Button>
-                        <div></div>
                         <Button 
-                            className="h-[40px] px-3" 
+                            className="h-[40px] px-4 mt-1" 
                             type="button" 
                             variant="outline" 
                             aria-label="Upload image"
