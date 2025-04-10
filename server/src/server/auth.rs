@@ -1,5 +1,8 @@
 use axum::{extract::State, http::StatusCode, routing::get, Form, Router};
-use axum_extra::extract::{cookie::Cookie, CookieJar};
+use axum_extra::extract::{
+    cookie::{Cookie, SameSite},
+    CookieJar,
+};
 use axum_pass::{safe, Password};
 
 use tracing::error;
@@ -14,7 +17,12 @@ pub fn rest() -> Router<Server> {
 
 async fn read(State(s): State<Server>, Password(user): Password) -> CookieJar {
     let token = s.safe.issue_token(&user);
-    let cookie = CookieJar::new().add(Cookie::new("token", token));
+    let mut cookie = Cookie::new("token", token);
+    cookie.set_http_only(true);
+    cookie.set_partitioned(true);
+    cookie.set_same_site(Some(SameSite::None));
+    cookie.set_secure(true);
+    let cookie = CookieJar::new().add(cookie);
     cookie
 }
 
