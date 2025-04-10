@@ -39,3 +39,5 @@ ctrlc = "3.4.6"
 dicexp = "1.1.1"
 sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio"] }
 tokio-stream = "0.1.17"
+tower-http = { version = "0.6.2", features = ["cors", "trace"] }
+axum-server = { version = "0.7.2", features = ["tls-rustls"] }

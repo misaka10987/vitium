@@ -14,17 +14,20 @@ use axum::{
 };
 
 use axum_pass::safe::Safe;
+use axum_server::{tls_rustls::RustlsConfig, Handle};
 use chat::ChatServer;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
     collections::{HashMap, HashSet},
+    net::ToSocketAddrs,
     ops::{Deref, DerefMut},
     path::PathBuf,
     sync::Arc,
-    time::SystemTime,
+    time::{Duration, SystemTime},
 };
-use tokio::{net::TcpListener, sync::RwLock};
+use tokio::sync::RwLock;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use vitium_api::user::UserProfile;
 
 use crate::recv_shutdown;
@@ -116,7 +119,17 @@ impl Server {
     pub async fn run(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
-        let listener = TcpListener::bind(format!("[::]:{}", self.cfg.port)).await?;
+        let addr = format!("[::]:{}", self.cfg.port)
+            .to_socket_addrs()
+            .unwrap()
+            .next()
+            .unwrap();
+        let tls_cfg = match &self.cfg.ssl {
+            Some(SSLConfig { cert, key }) => {
+                Some(RustlsConfig::from_pem_file(cert, key).await.unwrap())
+            }
+            None => None,
+        };
         let app = Router::new();
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());
@@ -128,10 +141,27 @@ impl Server {
             .nest("/chat", chat::rest())
             .nest("/profile", profile::rest())
             .fallback(any(StatusCode::NOT_FOUND))
+            .layer(CorsLayer::very_permissive())
+            .layer(TraceLayer::new_for_http())
             .with_state(self);
-        let res = axum::serve(listener, app)
-            .with_graceful_shutdown(recv_shutdown())
-            .await;
+        let handle = Handle::new();
+        let shutdown_handle = handle.clone();
+        let shutdown = async move {
+            recv_shutdown().await;
+            shutdown_handle.graceful_shutdown(Some(Duration::from_secs(30)));
+        };
+        tokio::spawn(shutdown);
+        let res = if let Some(cfg) = tls_cfg {
+            axum_server::bind_rustls(addr, cfg)
+                .handle(handle)
+                .serve(app.into_make_service())
+                .await
+        } else {
+            axum_server::bind(addr)
+                .handle(handle)
+                .serve(app.into_make_service())
+                .await
+        };
         Ok(res?)
     }
 }
@@ -150,10 +180,10 @@ pub mod exec {
 }
 
 /// Server configuration.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
-    pub host_dir: PathBuf,
     pub port: u16,
+    pub ssl: Option<SSLConfig>,
     pub chat_cap: usize,
     pub page_url: String,
     #[serde(default)]
@@ -163,11 +193,26 @@ pub struct ServerConfig {
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
-            host_dir: PathBuf::from("."),
             port: 10987,
+            ssl: None,
             chat_cap: 255,
             page_url: "https://github.com/misaka10987/vitium".into(),
             motd: String::new(),
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct SSLConfig {
+    pub cert: PathBuf,
+    pub key: PathBuf,
+}
+
+impl Default for SSLConfig {
+    fn default() -> Self {
+        Self {
+            cert: "./cert.pem".into(),
+            key: "./key.pem".into(),
         }
     }
 }

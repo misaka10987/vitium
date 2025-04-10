@@ -15,6 +15,7 @@ pub mod script;
 pub mod server;
 
 pub use server::Server;
+use tracing_subscriber::{filter::Targets, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -36,8 +37,12 @@ async fn recv_shutdown() {
 }
 
 fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_max_level(Level::TRACE)
+    let filter = Targets::new()
+        .with_default(Level::TRACE)
+        .with_target("h2", Level::INFO);
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(tracing_subscriber::fmt::layer())
         .init();
     info!("running with {:?}", *ARG);
     ctrlc::set_handler(|| shutdown())?;
