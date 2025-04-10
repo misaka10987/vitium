@@ -12,11 +12,11 @@ export const grabToken = async (user: string, pass: string) => {
   const hostname = hostStore.getState().hostname
   const url = `https://${hostname}/auth`
   const header = basicAuthHeader(user, pass)
-  const future = fetch(url, {
+  const res = await fetch(url, {
     method: 'GET',
     headers: header,
     credentials: 'include',
   })
-  console.debug(`Fetching token from ${url}`)
-  await future
+  if (res.ok) console.debug(`Fetched token from ${url}`)
+  return res.ok
 }
