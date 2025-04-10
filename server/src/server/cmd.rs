@@ -1,13 +1,14 @@
 use anyhow::bail;
 use clearscreen::clear;
+use colored::Colorize;
 use std::process::exit;
 use tokio::{
     io::{stdin, AsyncBufReadExt, BufReader},
-    spawn,
+    select, spawn,
     task::JoinHandle,
 };
 
-use crate::{dice::roll, shutdown, Server};
+use crate::{dice::roll, recv_shutdown, shutdown, Server};
 
 fn resolve(cmd: &str) -> (&str, &str) {
     let mut token = cmd.trim().splitn(2, " ");
@@ -20,12 +21,38 @@ impl Server {
         let stdin = BufReader::new(stdin());
         let mut line = stdin.lines();
         spawn(async move {
-            while let Ok(Some(line)) = line.next_line().await {
-                if let Err(e) = server.exec(&line).await {
-                    eprintln!("  {e}")
+            loop {
+                select! {
+                    line = line.next_line() => {
+                        match line {
+                            Ok(Some(line)) => {
+                                match line.as_str() {
+                                    "exit" | "stop" | "shutdown" => {
+                                        shutdown();
+                                        break;
+                                    }
+                                    other => {
+                                        let res = server.exec(other).await;
+                                        if let Err(e) = res {
+                                            eprintln!("{} {e}", "=>".red().bold());
+                                        }
+                                    }
+                                }
+                            },
+                            // EOF
+                            Ok(None) => {
+                                shutdown();
+                                break;
+                            },
+                            Err(e) => {
+                                shutdown();
+                                panic!("{e:?}")
+                            }
+                        }
+                    },
+                    _ = recv_shutdown() => break
                 }
             }
-            shutdown();
         })
     }
 
@@ -55,7 +82,6 @@ impl Server {
     pub async fn exec(&self, cmd: &str) -> anyhow::Result<()> {
         let (exe, arg) = resolve(cmd);
         match exe {
-            "exit" | "stop" | "shutdown" => Ok(shutdown()),
             "clear" => Ok(clear()?),
             "kill" => exit(-1),
             "broadcast" => Ok(self.chat.server_msg(arg.into()).await),
