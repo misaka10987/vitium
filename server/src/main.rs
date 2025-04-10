@@ -51,7 +51,7 @@ fn main() -> anyhow::Result<()> {
         let cfg = try_load_toml(&ARG.config).await;
         let server = Server::new(cfg).await.unwrap();
         let input = server.input();
-        server.run().await.unwrap();
+        server.start().await.unwrap();
         input.abort();
     });
     run.block_on(recv_shutdown());

@@ -10,6 +10,8 @@ use tokio::{
 
 use crate::{dice::roll, recv_shutdown, shutdown, Server};
 
+use super::chat::ChatServer;
+
 fn resolve(cmd: &str) -> (&str, &str) {
     let mut token = cmd.trim().splitn(2, " ");
     (token.next().unwrap(), token.next().unwrap_or(""))
@@ -84,8 +86,8 @@ impl Server {
         match exe {
             "clear" => Ok(clear()?),
             "kill" => exit(-1),
-            "broadcast" => Ok(self.chat.server_msg(arg.into()).await),
-            _ => Ok(self.chat.server_msg(self.op_cmd(cmd).await?).await),
+            "broadcast" => Ok(self.send_server_msg(arg.into()).await),
+            _ => Ok(self.send_server_msg(self.op_cmd(cmd).await?).await),
         }
     }
 }

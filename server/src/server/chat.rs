@@ -20,77 +20,6 @@ fn mili_timestamp(time: SystemTime) -> u64 {
     time.duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
 }
 
-pub struct ChatServer {
-    db: SqlitePool,
-    send: watch::Sender<Message>,
-}
-
-impl ChatServer {
-    pub fn new(db: SqlitePool) -> Self {
-        let (send, _) = watch::channel(Message {
-            time: mili_timestamp(SystemTime::now()),
-            sender: "".into(),
-            content: "".into(),
-            html: false,
-        });
-        Self { send, db }
-    }
-
-    pub async fn msg_after(&self, setpoint: u64) -> anyhow::Result<Vec<Message>> {
-        let row = query("SELECT * FROM chat WHERE time > ? ORDER BY time")
-            .bind(setpoint as i64)
-            .fetch_all(&self.db)
-            .await?;
-        let mut msg = vec![];
-        for row in row {
-            msg.push(Message {
-                time: row.try_get("time")?,
-                sender: row.try_get("sender")?,
-                content: row.try_get("content")?,
-                html: row.try_get("html")?,
-            });
-        }
-        Ok(msg)
-    }
-
-    pub fn subscribe(&self) -> watch::Receiver<Message> {
-        self.send.subscribe()
-    }
-
-    pub async fn handle(&self, msg: Message) -> anyhow::Result<()> {
-        let query = query("INSERT INTO chat (time, sender, content, html) VALUES (?, ?, ?, ?);")
-            .bind(msg.time as i64)
-            .bind(&msg.sender)
-            .bind(&msg.content)
-            .bind(msg.html);
-        query.execute(&self.db).await?;
-        info!("{} {}", msg.sender, msg.content);
-        self.send.send_replace(msg);
-        Ok(())
-    }
-
-    pub async fn server_msg(&self, content: String) {
-        let res = self
-            .handle(Message {
-                time: mili_timestamp(SystemTime::now()),
-                sender: "".into(),
-                content,
-                html: false,
-            })
-            .await;
-        if let Err(e) = res {
-            error!("{e}");
-        }
-    }
-
-    pub async fn wait_new(&self) -> anyhow::Result<Message> {
-        let mut recv = self.send.subscribe();
-        recv.changed().await?;
-        let value = recv.borrow_and_update().clone();
-        Ok(value)
-    }
-}
-
 /// The REST API method router.
 pub fn rest() -> Router<Server> {
     Router::new()
@@ -111,7 +40,7 @@ async fn fetch_sse(s: Server) -> Sse<impl Stream<Item = anyhow::Result<Event>>> 
     let wait = move |_| {
         let s = s.clone();
         async move {
-            let value = s.chat.wait_new().await?;
+            let value = s.wait_next_msg().await?;
             let event = Event::default().json_data(value)?;
             Ok(event)
         }
@@ -121,7 +50,7 @@ async fn fetch_sse(s: Server) -> Sse<impl Stream<Item = anyhow::Result<Event>>> 
 }
 
 async fn fetch_longpoll(s: Server) -> Result<Json<Message>, StatusCode> {
-    s.chat.wait_new().await.map(|x| Json(x)).map_err(|e| {
+    s.wait_next_msg().await.map(|x| Json(x)).map_err(|e| {
         error!("{e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })
@@ -131,7 +60,7 @@ async fn read(
     State(s): State<Server>,
     Path(setpoint): Path<u64>,
 ) -> Result<Json<Vec<Message>>, StatusCode> {
-    Ok(Json(s.chat.msg_after(setpoint).await.map_err(|e| {
+    Ok(Json(s.msg_after(setpoint).await.map_err(|e| {
         error!("{e}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?))
@@ -155,14 +84,95 @@ async fn create(
             Ok(o) => o,
             Err(e) => e.to_string(),
         };
-        s.chat
-            .server_msg(format!("{user} {} -- {res}", chat.content))
+        s.send_server_msg(format!("{user} {} -- {res}", chat.content))
             .await;
         return Ok(());
     }
-    let res = s.chat.handle(chat).await;
+    let res = s.send_msg(chat).await;
     if let Err(e) = res {
         error!("{e}")
     }
     Ok(())
+}
+
+pub struct ChatModule {
+    send: watch::Sender<Message>,
+}
+
+impl ChatModule {
+    pub fn new() -> Self {
+        let (send, _) = watch::channel(Message {
+            time: mili_timestamp(SystemTime::now()),
+            sender: "".into(),
+            content: "".into(),
+            html: false,
+        });
+        Self { send }
+    }
+}
+
+pub trait ChatServer {
+    async fn msg_after(&self, setpoint: u64) -> anyhow::Result<Vec<Message>>;
+    async fn send_msg(&self, msg: Message) -> anyhow::Result<()>;
+    async fn send_server_msg(&self, content: String);
+    async fn wait_next_msg(&self) -> anyhow::Result<Message>;
+}
+
+impl<T> ChatServer for T
+where
+    T: AsRef<ChatModule> + AsRef<SqlitePool>,
+{
+    async fn msg_after(&self, setpoint: u64) -> anyhow::Result<Vec<Message>> {
+        let db: &SqlitePool = self.as_ref();
+        let row = query("SELECT * FROM chat WHERE time > ? ORDER BY time")
+            .bind(setpoint as i64)
+            .fetch_all(db)
+            .await?;
+        let mut msg = vec![];
+        for row in row {
+            msg.push(Message {
+                time: row.try_get("time")?,
+                sender: row.try_get("sender")?,
+                content: row.try_get("content")?,
+                html: row.try_get("html")?,
+            });
+        }
+        Ok(msg)
+    }
+
+    async fn send_msg(&self, msg: Message) -> anyhow::Result<()> {
+        let module: &ChatModule = self.as_ref();
+        let db: &SqlitePool = self.as_ref();
+        let query = query("INSERT INTO chat (time, sender, content, html) VALUES (?, ?, ?, ?);")
+            .bind(msg.time as i64)
+            .bind(&msg.sender)
+            .bind(&msg.content)
+            .bind(msg.html);
+        query.execute(db).await?;
+        info!("{} {}", msg.sender, msg.content);
+        module.send.send_replace(msg);
+        Ok(())
+    }
+
+    async fn send_server_msg(&self, content: String) {
+        let res = self
+            .send_msg(Message {
+                time: mili_timestamp(SystemTime::now()),
+                sender: "".into(),
+                content,
+                html: false,
+            })
+            .await;
+        if let Err(e) = res {
+            error!("{e}");
+        }
+    }
+
+    async fn wait_next_msg(&self) -> anyhow::Result<Message> {
+        let module: &ChatModule = self.as_ref();
+        let mut recv = module.send.subscribe();
+        recv.changed().await?;
+        let value = recv.borrow_and_update().clone();
+        Ok(value)
+    }
 }

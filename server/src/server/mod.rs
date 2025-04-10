@@ -15,7 +15,7 @@ use axum::{
 
 use axum_pass::safe::Safe;
 use axum_server::{tls_rustls::RustlsConfig, Handle};
-use chat::ChatServer;
+use chat::ChatModule;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
@@ -51,7 +51,7 @@ pub struct ServerInst {
     player: RwLock<HashMap<String, UserProfile>>,
     safe: Safe,
     op: RwLock<HashSet<String>>,
-    pub chat: ChatServer,
+    chat: ChatModule,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -86,7 +86,7 @@ impl Server {
             player: RwLock::const_new(HashMap::new()),
             safe: Safe::new("./password.db").await?,
             op: RwLock::const_new(HashSet::new()),
-            chat: ChatServer::new(pool.clone()),
+            chat: ChatModule::new(),
         }));
         Ok(value)
     }
@@ -116,7 +116,7 @@ impl Server {
     }
 
     /// Consumes `self` and start the server.
-    pub async fn run(self) -> anyhow::Result<()> {
+    pub async fn start(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await;
         let addr = format!("[::]:{}", self.cfg.port)
@@ -163,6 +163,18 @@ impl Server {
                 .await
         };
         Ok(res?)
+    }
+}
+
+impl AsRef<ChatModule> for Server {
+    fn as_ref(&self) -> &ChatModule {
+        &self.chat
+    }
+}
+
+impl AsRef<SqlitePool> for Server {
+    fn as_ref(&self) -> &SqlitePool {
+        &self.db
     }
 }
 
