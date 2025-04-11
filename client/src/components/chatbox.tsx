@@ -27,7 +27,7 @@ export function Chatbox() {
         <div className="flex flex-col h-screen w-full">
             <div className="flex-1 flex flex-col">
                 <ScrollArea
-                    className="h-[calc(100vh-180px)] flex w-full rounded-md border p-1"
+                    className="h-[calc(100vh-180px)] flex w-full rounded-md border p-1 mb-2"
                     type="auto"
                     scrollHideDelay={100}
                 >
