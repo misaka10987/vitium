@@ -115,8 +115,9 @@ impl Server {
     #[cfg(debug_assertions)]
     async fn dev_hooks(&self) -> anyhow::Result<()> {
         use basileus::{pass::PassManage, user::UserManage};
-
-        self.basileus.create_user("dev").await?;
+        if !self.basileus.exist_user("dev").await? {
+            self.basileus.create_user("dev").await?;
+        }
         self.basileus.update_pass("dev", "dev").await?;
         Ok(())
     }
