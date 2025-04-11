@@ -7,14 +7,13 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use axum_pass::Token;
 use sqlx::{query, Row, SqlitePool};
 use tokio::sync::watch;
 use tokio_stream::{Stream, StreamExt};
 use tracing::{error, info};
 use vitium_api::net::{self, Message};
 
-use super::Server;
+use super::{auth::Token, Server};
 
 fn mili_timestamp(time: SystemTime) -> u64 {
     time.duration_since(UNIX_EPOCH).unwrap().as_millis() as u64

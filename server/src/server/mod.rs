@@ -13,13 +13,14 @@ use axum::{
     Json, Router,
 };
 
-use axum_pass::safe::Safe;
 use axum_server::{tls_rustls::RustlsConfig, Handle};
+use basileus::Basileus;
 use chat::ChatModule;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
     collections::{HashMap, HashSet},
+    error::Error,
     net::ToSocketAddrs,
     ops::{Deref, DerefMut},
     path::PathBuf,
@@ -28,6 +29,7 @@ use std::{
 };
 use tokio::sync::RwLock;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tracing::error;
 use vitium_api::user::UserProfile;
 
 use crate::recv_shutdown;
@@ -49,7 +51,7 @@ pub struct ServerInst {
     pub cfg: ServerConfig,
     db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
-    safe: Safe,
+    basileus: Basileus,
     op: RwLock<HashSet<String>>,
     chat: ChatModule,
 }
@@ -84,7 +86,7 @@ impl Server {
             cfg,
             db: pool.clone(),
             player: RwLock::const_new(HashMap::new()),
-            safe: Safe::new("./password.db").await?,
+            basileus: Basileus::new(Default::default()).await?,
             op: RwLock::const_new(HashSet::new()),
             chat: ChatModule::new(),
         }));
@@ -111,14 +113,18 @@ impl Server {
     }
 
     #[cfg(debug_assertions)]
-    async fn dev_hooks(&self) {
-        let _ = self.safe.create("dev", "dev").await;
+    async fn dev_hooks(&self) -> anyhow::Result<()> {
+        use basileus::{pass::PassManage, user::UserManage};
+
+        self.basileus.create_user("dev").await?;
+        self.basileus.update_pass("dev", "dev").await?;
+        Ok(())
     }
 
     /// Consumes `self` and start the server.
     pub async fn start(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
-        self.dev_hooks().await;
+        self.dev_hooks().await?;
         let addr = format!("[::]:{}", self.cfg.port)
             .to_socket_addrs()
             .unwrap()
@@ -178,9 +184,9 @@ impl AsRef<SqlitePool> for Server {
     }
 }
 
-impl AsRef<Safe> for Server {
-    fn as_ref(&self) -> &Safe {
-        &self.safe
+impl AsRef<Basileus> for Server {
+    fn as_ref(&self) -> &Basileus {
+        &self.basileus
     }
 }
 
@@ -227,4 +233,9 @@ impl Default for SSLConfig {
             key: "./key.pem".into(),
         }
     }
+}
+
+fn internal_server_error(err: impl Error) -> StatusCode {
+    error!("{err}");
+    StatusCode::INTERNAL_SERVER_ERROR
 }
