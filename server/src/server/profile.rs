@@ -4,11 +4,10 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use axum_pass::Token;
 
 use vitium_api::UserProfile;
 
-use super::Server;
+use super::{auth::Token, Server};
 
 /// The REST API method router.
 pub fn rest() -> Router<Server> {

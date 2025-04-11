@@ -1,7 +1,6 @@
 use axum::{routing::get, Router};
-use axum_pass::Token;
 
-use super::Server;
+use super::{auth::Token, Server};
 
 pub fn router() -> Router<Server> {
     Router::new().route("/auth", get(auth))
