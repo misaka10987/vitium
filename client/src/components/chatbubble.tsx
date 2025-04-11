@@ -46,7 +46,7 @@ export function Chatbubble({
                         </Badge>
                     </div>
                     <p className={cn(
-                        "text-sm p-1 pl-2 pr-2 mt-1 rounded-lg max-w-md break-words overflow-wrap-anywhere overflow-hidden",
+                        "text-sm p-1 pl-2 pr-2 mt-1 rounded-lg max-w-md break-words overflow-wrap-anywhere overflow-hidden w-fit",
                         variant === "default" && "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
                         variant === "send" && "bg-gray-500 text-white ml-auto rounded-tr-none dark:bg-gray-600",
                         variant === "receive" && "bg-gray-200 text-gray-800 mr-auto rounded-tl-none dark:bg-gray-700 dark:text-gray-200"
