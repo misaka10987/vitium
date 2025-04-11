@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Host } from '@/components/host'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import Link from 'next/link'
 import { grabToken } from '@/lib/auth'
 
@@ -20,6 +20,7 @@ export function LoginForm({
 }: React.ComponentProps<'div'>) {
   const userInputId = useId()
   const passInputId = useId()
+  const [wrongCredentials, setWrongCredentials] = useState(false)
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -41,7 +42,21 @@ export function LoginForm({
               const pass = data.get('pass')?.toString()
               if (user == undefined || pass == undefined)
                 throw new Error('impossible')
-              grabToken(user, pass)
+              grabToken(user, pass).then(
+                (response) => {
+                  if (response.status >= 300 || response.status < 200) {
+                    setWrongCredentials(true)
+                  }
+                  else {
+                    // Navigate to game page
+                    window.location.href = '/game';
+                  }
+                },
+                (error) => {
+                  // Handle error
+                  console.error('Login failed:', error);
+                }
+              )
             }}
           >
             <div className="flex flex-col gap-6">
@@ -65,6 +80,13 @@ export function LoginForm({
                   </Link>
                 </div>
                 <Input id={passInputId} name="pass" type="password" required />
+              </div>
+              <div className='flex h-0 items-center'>
+                {wrongCredentials && (
+                  <p className="text-sm text-red-600">
+                    Wrong username or password
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">
