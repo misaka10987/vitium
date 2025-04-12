@@ -1,7 +1,13 @@
-use anyhow::bail;
+use anyhow::{anyhow, bail};
+use basileus::Perm;
+use clap::Parser;
 use clearscreen::clear;
 use colored::Colorize;
-use std::process::exit;
+use std::{
+    collections::{HashMap, HashSet},
+    process::exit,
+    sync::Mutex,
+};
 use tokio::{
     io::{stdin, AsyncBufReadExt, BufReader},
     select, spawn,
@@ -89,5 +95,104 @@ impl Server {
             "broadcast" => Ok(self.send_server_msg(arg.into()).await),
             _ => Ok(self.send_server_msg(self.op_cmd(cmd).await?).await),
         }
+    }
+}
+
+#[derive(Parser)]
+#[command(name = "shutdown", visible_alias = "stop", visible_alias = "exit")]
+#[command(about = "shutdown the server")]
+struct Shutdown;
+
+impl Command for Shutdown {
+    async fn exec(self, _: Server) {
+        shutdown();
+    }
+
+    fn perm_req() -> Perm {
+        Perm::Root
+    }
+}
+
+pub trait Command: Parser {
+    fn exec(self, server: Server) -> impl std::future::Future<Output = ()> + Send;
+    fn perm_req() -> Perm;
+}
+
+pub struct CommandInst {
+    pub clap: clap::Command,
+    pub perm: Perm,
+    exe: Mutex<Box<dyn Fn(Server, String) + Send>>,
+}
+
+impl CommandInst {
+    pub fn from<T: Command>() -> Self {
+        let clap = T::command();
+        let perm = T::perm_req();
+        let exe = move |server, line: String| {
+            tokio::spawn(async move {
+                let arg = T::parse_from(line.split_whitespace());
+                arg.exec(server).await;
+            });
+        };
+        Self {
+            clap,
+            perm,
+            exe: Mutex::new(Box::new(exe)),
+        }
+    }
+    pub fn run(&self, server: Server, line: String) {
+        (self.exe.lock().unwrap())(server, line)
+    }
+}
+
+pub struct CommandModule {
+    map: Mutex<HashMap<String, CommandInst>>,
+}
+
+impl CommandModule {
+    pub fn new() -> Self {
+        Self {
+            map: Mutex::new(HashMap::new()),
+        }
+    }
+    pub fn register_cmd<T: Command>(&self) {
+        let cmd = CommandInst::from::<T>();
+        self.map
+            .lock()
+            .unwrap()
+            .insert(cmd.clap.get_name().into(), cmd);
+    }
+}
+
+pub trait CommandServer {
+    fn register_cmd<T: Command>(&self);
+    fn server_run_cmd(&self, line: String) -> anyhow::Result<String>;
+}
+
+impl CommandServer for Server {
+    fn register_cmd<T: Command>(&self) {
+        self.cmd.register_cmd::<T>();
+    }
+    fn server_run_cmd(&self, line: String) -> anyhow::Result<String> {
+        let name = line
+            .split_whitespace()
+            .next()
+            .ok_or_else(|| anyhow!("unable to parse command"))?;
+        let map = self.cmd.map.lock().unwrap();
+        if let Some(cmd) = map.get(name) {
+            cmd.run(self.clone(), line.clone());
+        }
+        for cmd in map.values() {
+            if cmd
+                .clap
+                .get_visible_aliases()
+                .collect::<HashSet<_>>()
+                .contains(name)
+            {
+                cmd.run(self.clone(), line.clone());
+                break;
+            }
+        }
+        bail!("unknown command: {name}")
     }
 }

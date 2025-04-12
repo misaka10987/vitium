@@ -16,6 +16,7 @@ use axum::{
 use axum_server::{tls_rustls::RustlsConfig, Handle};
 use basileus::Basileus;
 use chat::ChatModule;
+use cmd::CommandModule;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
@@ -54,6 +55,7 @@ pub struct ServerInst {
     basileus: Basileus,
     op: RwLock<HashSet<String>>,
     chat: ChatModule,
+    cmd: CommandModule,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -89,6 +91,7 @@ impl Server {
             basileus: Basileus::new(Default::default()).await?,
             op: RwLock::const_new(HashSet::new()),
             chat: ChatModule::new(),
+            cmd: CommandModule::new(),
         }));
         Ok(value)
     }
