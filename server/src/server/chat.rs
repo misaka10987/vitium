@@ -73,20 +73,6 @@ async fn create(
     if user != chat.sender {
         return Err(StatusCode::FORBIDDEN);
     }
-    if chat.content.chars().nth(0) == Some('/') {
-        let res = if s.is_op(&user).await {
-            s.op_cmd(&chat.content[1..]).await
-        } else {
-            s.cmd(&chat.content[1..]).await
-        };
-        let res = match res {
-            Ok(o) => o,
-            Err(e) => e.to_string(),
-        };
-        s.send_server_msg(format!("{user} {} -- {res}", chat.content))
-            .await;
-        return Ok(());
-    }
     let res = s.send_msg(chat).await;
     if let Err(e) = res {
         error!("{e}")
