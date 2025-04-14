@@ -40,16 +40,16 @@ export function Chatbubble({
                         "flex items-center gap-1",
                         variant === "send" && "justify-end"
                     )}>
-                        <span className="text-sm font-medium mt-1 dark:text-gray-300 truncate">{author}</span>
-                        <Badge variant="outline" className="text-[10px] py-0 px-1 h-auto mt-1 dark:bg-transparent dark:text-gray-400 dark:border-gray-700 flex-shrink-0">
+                        <span className="text-sm font-medium mt-1 text-muted-foreground truncate">{author}</span>
+                        <Badge variant="outline" className="text-[10px] py-0 px-1 h-auto mt-1 bg-transparent text-muted-foreground border-border flex-shrink-0">
                             {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Badge>
                     </div>
                     <p className={cn(
                         "text-sm p-1 pl-2 pr-2 mt-1 rounded-lg max-w-md break-words overflow-wrap-anywhere overflow-hidden w-fit",
-                        variant === "default" && "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-                        variant === "send" && "bg-gray-500 text-white ml-auto rounded-tr-none dark:bg-gray-600",
-                        variant === "receive" && "bg-gray-200 text-gray-800 mr-auto rounded-tl-none dark:bg-gray-700 dark:text-gray-200"
+                        variant === "default" && "bg-secondary text-secondary-foreground",
+                        variant === "send" && "bg-primary text-primary-foreground ml-auto rounded-tr-none",
+                        variant === "receive" && "bg-secondary text-secoondary-foreground mr-auto rounded-tl-none"
                     )}>
                         {message}
                     </p>
