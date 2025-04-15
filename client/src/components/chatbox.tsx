@@ -20,7 +20,7 @@ export function Chatbox() {
     useEffect(() => {
         if (!hostname) return;
 
-        let eventSource: EventSource;
+        let eventSource: EventSource = null;
 
         const connectToSSE = () => {
             // The browser automatically sets Accept: text/event-stream for EventSource connections
@@ -58,8 +58,7 @@ export function Chatbox() {
 
         connectToSSE();
 
-        // Clean up when component unmounts
-        return () => { eventSource ? eventSource.close() : null; }
+        return () => eventSource?.close()
     }, [hostname]);
 
     const sendCurrentMessage = () => {
