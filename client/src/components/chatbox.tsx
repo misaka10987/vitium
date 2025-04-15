@@ -62,7 +62,7 @@ export const Chatbox = () => {
     connectToSSE()
 
     return () => eventSource?.close()
-  }, [hostname])
+  }, [hostname, router])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
