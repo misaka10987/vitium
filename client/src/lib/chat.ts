@@ -1,6 +1,6 @@
 import { Chatbubble } from '@/components/chatbubble'
 import { hostStore } from '@/components/host'
-import { useUserStore } from '@/components/user'
+import { userStore } from '@/components/user'
 
 function unwrapMessage(msgEvent: MessageEvent) {
   const data = JSON.parse(msgEvent.data)
@@ -18,6 +18,7 @@ export const setSSEListener = (
   es.addEventListener('message', (event) => {
     try {
       const data = JSON.parse(event.data)
+      const username = userStore.getState().username
       // Add the received message to the messages state
       messagesDispatch((prevMessages) => [
         ...prevMessages,
@@ -25,10 +26,7 @@ export const setSSEListener = (
           author: data.sender,
           timestamp: data.time,
           message: data.content,
-          variant:
-            data.sender === useUserStore.getState().username
-              ? 'send'
-              : 'receive',
+          variant: data.sender === username ? 'send' : 'receive',
           html: data.html || false,
         },
       ])
@@ -46,14 +44,12 @@ export const setSSEListener = (
 export const sendMessage = async (message: string) => {
   console.info('Sending chat message: ', message)
   const hostname = hostStore.getState().hostname
-  if (typeof hostname === 'undefined' || hostname === '') {
+  if (!hostname?.trim()) {
     console.error('Hostname is not set.')
     return
   }
-  if (
-    typeof useUserStore.getState().username === 'undefined' ||
-    useUserStore.getState().username === ''
-  ) {
+  const username = userStore.getState().username
+  if (!username?.trim()) {
     console.error('Username is not set.')
     return
   }
@@ -65,7 +61,7 @@ export const sendMessage = async (message: string) => {
     },
     body: JSON.stringify({
       time: Date.now(),
-      sender: useUserStore.getState().username,
+      sender: username,
       content: message,
       html: false,
     }),
