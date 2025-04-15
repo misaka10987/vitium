@@ -50,7 +50,7 @@ export function Chatbubble({
                         "text-sm p-1 pl-2 pr-2 mt-1 rounded-lg max-w-md break-all overflow-hidden w-fit",
                         variant === "default" && "bg-secondary text-secondary-foreground",
                         variant === "send" && "bg-primary text-primary-foreground ml-auto rounded-tr-none",
-                        variant === "receive" && "bg-secondary text-secoondary-foreground mr-auto rounded-tl-none"
+                        variant === "receive" && "bg-secondary text-secondary-foreground mr-auto rounded-tl-none"
                     )}>
                         {message}
                     </div>
