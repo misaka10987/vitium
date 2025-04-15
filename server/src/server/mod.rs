@@ -130,6 +130,7 @@ impl Server {
             .route("/hello", get("Hello, world!"))
             .nest("/auth", auth::rest())
             .nest("/chat", chat::rest())
+            .nest("/cmd", cmd::rest())
             .nest("/profile", profile::rest())
             .fallback(any(StatusCode::NOT_FOUND))
             .layer(CorsLayer::very_permissive())

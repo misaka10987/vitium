@@ -6,6 +6,13 @@ mod say;
 mod shutdown;
 
 use anyhow::{anyhow, bail};
+use axum::{
+    extract::State,
+    http::{HeaderMap, StatusCode},
+    response::{sse::Event, IntoResponse, Sse},
+    routing::get,
+    Json, Router,
+};
 use basileus::{perm::PermManage, Perm};
 use clap::Parser;
 use clear::Clear;
@@ -27,10 +34,13 @@ use tokio::{
     sync::broadcast,
     task::JoinHandle,
 };
+use tokio_stream::{Stream, StreamExt};
 use tracing::warn;
-use vitium_api::cmd::CommandLine;
+use vitium_api::cmd::{CommandLine, CommandStatus};
 
 use crate::{should_shutdown, trigger_shutdown, wait_shutdown, Server};
+
+use super::{auth::Token, internal_server_error};
 
 impl Server {
     pub fn handle_input(&self) -> JoinHandle<()> {
@@ -190,6 +200,7 @@ pub trait CommandServer {
     fn print_cmd_output(&self) -> JoinHandle<()>;
     fn server_run_cmd(&self, line: String) -> impl std::future::Future<Output = ()> + Send;
     fn run_cmd(&self, user: &str, line: String) -> impl std::future::Future<Output = ()> + Send;
+    fn cmd_output(&self) -> broadcast::Receiver<Arc<(CommandLine, anyhow::Result<String>)>>;
 }
 
 fn resolve_cmd<'a>(server: &'a Server, line: &str) -> anyhow::Result<&'a CommandInst> {
@@ -231,6 +242,9 @@ impl CommandServer for Server {
         let cmd = CommandLine { user: None, line };
         self.cmd.broadcast(cmd, res);
     }
+    fn cmd_output(&self) -> broadcast::Receiver<Arc<(CommandLine, anyhow::Result<String>)>> {
+        self.cmd.output.subscribe()
+    }
     fn print_cmd_output(&self) -> JoinHandle<()> {
         let mut output = self.cmd.output.subscribe();
         tokio::spawn(async move {
@@ -246,4 +260,58 @@ impl CommandServer for Server {
             }
         })
     }
+}
+
+/// The REST API method router.
+pub fn rest() -> Router<Server> {
+    Router::new().route("/", get(fetch).post(create))
+}
+
+async fn fetch(State(s): State<Server>, head: HeaderMap) -> impl IntoResponse {
+    match head.get("accept") {
+        Some(accept) if accept.to_str().unwrap_or("").contains("text/event-stream") => {
+            fetch_sse(s).await.into_response()
+        }
+        _ => fetch_longpoll(s).await.into_response(),
+    }
+}
+
+async fn fetch_sse(s: Server) -> Sse<impl Stream<Item = anyhow::Result<Event>>> {
+    let wait = move |_| {
+        let s = s.clone();
+        async move {
+            let mut output = s.cmd_output();
+            let (cmd, res) = &*output.recv().await?;
+            let res = match res {
+                Ok(x) => Ok(x),
+                Err(e) => Err(format!("{e}")),
+            };
+            let event = Event::default().json_data((cmd, res))?;
+            Ok(event)
+        }
+    };
+    let stream = tokio_stream::iter(0..).then(wait);
+    Sse::new(stream)
+}
+
+async fn fetch_longpoll(s: Server) -> Result<Json<(CommandLine, CommandStatus)>, StatusCode> {
+    let output = s.cmd_output().recv().await.map_err(internal_server_error)?;
+    let (cmd, res) = &*output;
+    let res = match res {
+        Ok(x) => Ok(x.clone()),
+        Err(e) => Err(format!("{e}")),
+    };
+    Ok(Json((cmd.clone(), res)))
+}
+
+async fn create(
+    State(s): State<Server>,
+    Token(user): Token,
+    Json(cmd): Json<CommandLine>,
+) -> Result<(), StatusCode> {
+    if cmd.user.is_some_and(|x| x == user) {
+        return Err(StatusCode::FORBIDDEN);
+    }
+    s.run_cmd(&user, cmd.line).await;
+    Ok(())
 }
