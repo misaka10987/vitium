@@ -7,15 +7,13 @@ import { Chatbubble } from '@/components/chatbubble'
 import { Button } from '@/components/ui/button'
 import { sendMessage, sendImage, setSSEListener } from '@/lib/chat'
 import { Send, Image } from 'lucide-react'
-import { hostStore } from '@/components/host'
-import { useUsername } from '@/components/user'
+import { useHostStore } from '@/components/host'
 
 export function Chatbox() {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<any[]>([])
-  const { hostname } = hostStore.getState()
+  const { hostname } = useHostStore()
   const connectAttempts = useRef(0)
-  const name = useUsername()
 
   useEffect(() => {
     if (!hostname) return
@@ -29,7 +27,7 @@ export function Chatbox() {
       })
 
       // Log connection attempt
-      console.log('Establishing SSE connection to', hostname)
+      console.debug('Establishing SSE connection to', hostname)
 
       // Set up the SSE listener
       setSSEListener(eventSource, setMessages)
@@ -43,10 +41,12 @@ export function Chatbox() {
       eventSource.addEventListener('error', () => {
         if (eventSource?.readyState === EventSource.CLOSED) {
           connectAttempts.current += 1
-          console.log(`Connection closed. Attempt ${connectAttempts.current}/3`)
+          console.debug(
+            `Connection closed. Attempt ${connectAttempts.current}/3`
+          )
 
           if (connectAttempts.current >= 3) {
-            console.log(
+            console.debug(
               'Maximum connection attempts reached. Redirecting to login.'
             )
             window.location.href = '/login'
