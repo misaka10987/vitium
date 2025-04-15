@@ -8,7 +8,6 @@ interface ChatbubbleProps {
   timestamp: number
   message: string | JSX.Element
   variant?: 'default' | 'send' | 'receive'
-  className?: string
 }
 
 export function Chatbubble({
@@ -16,24 +15,20 @@ export function Chatbubble({
   timestamp,
   message,
   variant = 'default',
-  className,
 }: ChatbubbleProps) {
   return (
     <div
       className={cn(
         'flex flex-col gap-2',
         variant === 'send' && 'self-end',
-        variant === 'receive' && 'self-start',
-        className
+        variant === 'receive' && 'self-start'
       )}
     >
       <div className="flex items-start gap-2">
         <div className={cn('flex-shrink-0', variant === 'send' && 'order-2')}>
           <Avatar className="m-1">
             <AvatarFallback className="text-sm select-none">
-              {author.length > 1
-                ? author.charAt(0).toUpperCase() + author.charAt(1)
-                : author.charAt(0).toUpperCase()}
+              {author.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
         </div>
