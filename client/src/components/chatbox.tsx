@@ -11,7 +11,8 @@ import { useHostStore } from '@/components/host'
 import { useRouter } from 'next/navigation'
 
 export const Chatbox = () => {
-  const [message, setMessage] = useState('')
+  const msgForm = useRef<HTMLFormElement>(null)
+  const msgInput = useRef<HTMLTextAreaElement>(null)
   const [messages, setMessages] = useState<any[]>([])
   const { hostname } = useHostStore()
   const connectAttempts = useRef(0)
@@ -63,31 +64,10 @@ export const Chatbox = () => {
     return () => eventSource?.close()
   }, [hostname])
 
-  const sendCurrentMessage = () => {
-    if (message.trim()) {
-      //     // Add the sent message to the UI immediately
-      //     setMessages(prev => [...prev, {
-      //         author: name,
-      //         timestamp: Date.now(),
-      //         message: message,
-      //         variant: "send",
-      //         html: false
-      //     }]);
-
-      sendMessage(message)
-      setMessage('')
-    }
-  }
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    sendCurrentMessage()
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault() // Prevent default Enter behavior (new line)
-      sendCurrentMessage()
+      e.preventDefault()
+      msgForm.current?.requestSubmit()
     }
   }
 
@@ -123,13 +103,25 @@ export const Chatbox = () => {
             ))}
           </div>
         </ScrollArea>
-        <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+        <form
+          ref={msgForm}
+          className="flex gap-2 items-center"
+          onSubmit={async (e) => {
+            e.preventDefault()
+            const form = new FormData(e.currentTarget)
+            const msg = form.get('msg')?.toString()
+            if (msg == undefined) throw Error()
+            sendMessage(msg)
+            if (msgInput?.current == null) throw Error()
+            msgInput.current.value = ''
+          }}
+        >
           <Textarea
+            ref={msgInput}
+            name="msg"
             className="h-[90px] w-full"
             placeholder="Type your message here..."
             required
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
           />
           <div className="flex flex-col gap-1">
