@@ -43,10 +43,9 @@ export const setSSEListener = (
   })
 }
 
-export const sendMessage = (message: string) => {
-  console.log('Sending message:', message)
+export const sendMessage = async (message: string) => {
+  console.info('Sending chat message: ', message)
   const hostname = hostStore.getState().hostname
-  console.log('to: ', hostname)
   if (typeof hostname === 'undefined' || hostname === '') {
     console.error('Hostname is not set.')
     return
@@ -58,7 +57,7 @@ export const sendMessage = (message: string) => {
     console.error('Username is not set.')
     return
   }
-  fetch(`https://${hostname}/chat`, {
+  const res = await fetch(`https://${hostname}/chat`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -70,17 +69,11 @@ export const sendMessage = (message: string) => {
       content: message,
       html: false,
     }),
-  }).then(
-    (response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      console.debug('Message sent successfully')
-    },
-    (error) => {
-      console.error('Error sending message:', error)
-    }
-  )
+  })
+  if (!res.ok) {
+    console.error('HTTP error sending message:', res)
+  }
+  console.debug('Message sent successfully')
 }
 
 export const sendImage = () => {
