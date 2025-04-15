@@ -1,3 +1,4 @@
+import React, { JSX } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -5,7 +6,7 @@ import { cn } from "@/lib/utils";
 interface ChatbubbleProps {
     author: string;
     timestamp: number;
-    message: string;
+    message: string | JSX.Element;
     variant?: "default" | "send" | "receive";
     className?: string;
 }
@@ -45,14 +46,14 @@ export function Chatbubble({
                             {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Badge>
                     </div>
-                    <p className={cn(
-                        "text-sm p-1 pl-2 pr-2 mt-1 rounded-lg max-w-md break-words overflow-wrap-anywhere overflow-hidden w-fit",
+                    <div className={cn(
+                        "text-sm p-1 pl-2 pr-2 mt-1 rounded-lg max-w-md break-all overflow-hidden w-fit",
                         variant === "default" && "bg-secondary text-secondary-foreground",
                         variant === "send" && "bg-primary text-primary-foreground ml-auto rounded-tr-none",
                         variant === "receive" && "bg-secondary text-secoondary-foreground mr-auto rounded-tl-none"
                     )}>
                         {message}
-                    </p>
+                    </div>
                 </div>
             </div>
         </div>

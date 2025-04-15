@@ -10,6 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Host } from '@/components/host'
+import { useSetUsername } from '@/components/user'
 import { useId, useState } from 'react'
 import Link from 'next/link'
 import { grabToken } from '@/lib/auth'
@@ -21,6 +22,7 @@ export function LoginForm({
   const userInputId = useId()
   const passInputId = useId()
   const [wrongCredentials, setWrongCredentials] = useState(false)
+  const setUsername = useSetUsername();
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -48,7 +50,7 @@ export function LoginForm({
                     setWrongCredentials(true)
                   }
                   else {
-                    // Navigate to game page
+                    setUsername(user);
                     window.location.href = '/game';
                   }
                 },
