@@ -7,8 +7,8 @@ use super::Command;
 
 #[derive(Parser)]
 #[command(name = "say")]
-#[command(about = "broadcast a message from server")]
 #[clap(disable_help_flag = true)]
+/// Broadcast a server message.
 pub struct Say {
     /// The message.
     message: String,

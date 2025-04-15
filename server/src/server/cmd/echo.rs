@@ -7,9 +7,10 @@ use super::Command;
 
 #[derive(Parser)]
 #[command(name = "echo")]
-#[command(about = "print command input to output")]
 #[clap(disable_help_flag = true)]
+/// Output specified content.
 pub struct Echo {
+    /// Content to output.
     input: String,
 }
 

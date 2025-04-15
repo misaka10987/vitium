@@ -8,12 +8,11 @@ use super::Command;
 
 #[derive(Parser)]
 #[command(name = "help")]
-#[command(about = "print help page of command")]
 #[clap(disable_help_flag = true)]
+/// Print help page of command.
 pub struct Help {
+    /// The command to print help page.
     command: String,
-    #[arg(short, long)]
-    x: Option<String>,
 }
 
 impl Command for Help {

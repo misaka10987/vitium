@@ -7,9 +7,9 @@ use crate::Server;
 use super::Command;
 
 #[derive(Parser, Clone, Copy)]
-#[command(name = "clear", visible_alias = "cls")]
-#[command(about = "clear screen")]
+#[command(name = "clear")]
 #[clap(disable_help_flag = true)]
+/// Clear terminal screen.
 pub struct Clear;
 
 impl Command for Clear {
