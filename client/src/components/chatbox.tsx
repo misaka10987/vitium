@@ -76,7 +76,7 @@ export const Chatbox = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full">
+    <div className="flex flex-col h-full w-full">
       <div className="flex-1 flex flex-col">
         <ScrollArea
           className="h-[calc(100vh-180px)] flex w-full rounded-md border p-1 mb-2"
@@ -106,7 +106,7 @@ export const Chatbox = () => {
         <form
           ref={msgForm}
           className="flex gap-2 items-center"
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault()
             const form = new FormData(e.currentTarget)
             const msg = form.get('msg')?.toString()
@@ -119,7 +119,7 @@ export const Chatbox = () => {
           <Textarea
             ref={msgInput}
             name="msg"
-            className="h-[90px] w-full"
+            className="h-[90px] w-full resize-none overflow-auto py-2"
             placeholder="Type your message here..."
             required
             onKeyDown={handleKeyDown}
