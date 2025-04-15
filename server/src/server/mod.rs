@@ -1,6 +1,7 @@
 mod auth;
 mod chat;
 mod cmd;
+mod prelude;
 mod profile;
 #[cfg(debug_assertions)]
 mod test;
@@ -34,6 +35,8 @@ use tracing::error;
 use vitium_api::user::UserProfile;
 
 use crate::recv_shutdown;
+
+pub use prelude::*;
 
 // use crate::game::{self, Game};
 
@@ -191,6 +194,12 @@ impl AsRef<SqlitePool> for Server {
 impl AsRef<Basileus> for Server {
     fn as_ref(&self) -> &Basileus {
         &self.basileus
+    }
+}
+
+impl AsRef<CommandModule> for Server {
+    fn as_ref(&self) -> &CommandModule {
+        &self.cmd
     }
 }
 

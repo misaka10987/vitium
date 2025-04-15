@@ -2,6 +2,7 @@ use std::{path::PathBuf, sync::LazyLock, time::Duration};
 
 use clap::Parser;
 use load::try_load_toml;
+use server::CommandServer;
 use tokio::{runtime, sync::broadcast};
 use tracing::{info, Level};
 
@@ -50,9 +51,11 @@ fn main() -> anyhow::Result<()> {
     run.spawn(async {
         let cfg = try_load_toml(&ARG.config).await;
         let server = Server::new(cfg).await.unwrap();
-        let input = server.input();
+        let input = server.handle_input();
+        let output = server.print_cmd_output();
         server.start().await.unwrap();
         input.abort();
+        output.abort();
     });
     run.block_on(recv_shutdown());
     info!("shutting down in 30s");

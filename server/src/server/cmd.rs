@@ -1,30 +1,37 @@
+mod clear;
+mod echo;
+mod help;
+mod say;
+mod shutdown;
+
 use anyhow::{anyhow, bail};
-use basileus::Perm;
+use basileus::{perm::PermManage, Perm};
 use clap::Parser;
-use clearscreen::clear;
+use clear::Clear;
 use colored::Colorize;
+use echo::Echo;
+use help::Help;
+use say::Say;
+use shutdown::Shutdown;
 use std::{
     collections::{HashMap, HashSet},
-    process::exit,
-    sync::Mutex,
+    future::Future,
+    pin::Pin,
+    sync::Arc,
 };
 use tokio::{
     io::{stdin, AsyncBufReadExt, BufReader},
     select, spawn,
+    sync::broadcast,
     task::JoinHandle,
 };
+use tracing::warn;
+use vitium_api::cmd::CommandLine;
 
-use crate::{dice::roll, recv_shutdown, shutdown, Server};
-
-use super::chat::ChatServer;
-
-fn resolve(cmd: &str) -> (&str, &str) {
-    let mut token = cmd.trim().splitn(2, " ");
-    (token.next().unwrap(), token.next().unwrap_or(""))
-}
+use crate::{recv_shutdown, shutdown, Server};
 
 impl Server {
-    pub fn input(&self) -> JoinHandle<()> {
+    pub fn handle_input(&self) -> JoinHandle<()> {
         let server = self.clone();
         let stdin = BufReader::new(stdin());
         let mut line = stdin.lines();
@@ -34,17 +41,10 @@ impl Server {
                     line = line.next_line() => {
                         match line {
                             Ok(Some(line)) => {
+                                server.server_run_cmd(line.clone()).await;
                                 match line.as_str() {
-                                    "exit" | "stop" | "shutdown" => {
-                                        shutdown();
-                                        break;
-                                    }
-                                    other => {
-                                        let res = server.exec(other).await;
-                                        if let Err(e) = res {
-                                            eprintln!("{} {e}", "=>".red().bold());
-                                        }
-                                    }
+                                    "exit" | "stop" | "shutdown" => break,
+                                    _ => {}
                                 }
                             },
                             // EOF
@@ -63,136 +63,183 @@ impl Server {
             }
         })
     }
+}
 
-    pub async fn cmd(&self, cmd: &str) -> anyhow::Result<String> {
-        let (cmd, arg) = resolve(cmd);
-        match cmd {
-            "roll" => Ok(roll(&arg)?.to_string()),
-            _ => bail!("command not found: {cmd}"),
-        }
+fn print_info(cmd: &CommandLine, status: &anyhow::Result<String>) {
+    if let Some(user) = &cmd.user {
+        eprintln!(
+            "{} {} {}",
+            user.purple().bold(),
+            ">".bright_blue().bold(),
+            cmd.line
+        )
     }
-
-    pub async fn op_cmd(&self, cmd: &str) -> anyhow::Result<String> {
-        let (exe, arg) = resolve(cmd);
-        match exe {
-            "op" => {
-                self.op(arg).await?;
-                Ok(format!("opped {arg}"))
-            }
-            "deop" => {
-                self.deop(arg).await?;
-                Ok(format!("deopped {arg}"))
-            }
-            _ => self.cmd(cmd).await,
-        }
-    }
-
-    pub async fn exec(&self, cmd: &str) -> anyhow::Result<()> {
-        let (exe, arg) = resolve(cmd);
-        match exe {
-            "clear" => Ok(clear()?),
-            "kill" => exit(-1),
-            "broadcast" => Ok(self.send_server_msg(arg.into()).await),
-            _ => Ok(self.send_server_msg(self.op_cmd(cmd).await?).await),
-        }
+    match status {
+        Ok(o) if !o.is_empty() => eprintln!("{} {o}", "=>".green().bold()),
+        Err(e) => eprintln!("{} {e}", "=>".red().bold()),
+        _ => {}
     }
 }
 
-#[derive(Parser)]
-#[command(name = "shutdown", visible_alias = "stop", visible_alias = "exit")]
-#[command(about = "shutdown the server")]
-struct Shutdown;
+trait CommandExec: Send + Sync {
+    fn exec(
+        &self,
+        line: String,
+        server: Server,
+    ) -> Pin<Box<dyn Future<Output = anyhow::Result<String>> + Send>>;
+}
 
-impl Command for Shutdown {
-    async fn exec(self, _: Server) {
-        shutdown();
-    }
-
-    fn perm_req() -> Perm {
-        Perm::Root
+impl<F, Fut> CommandExec for F
+where
+    F: Fn(String, Server) -> Fut + Send + Sync,
+    Fut: Future<Output = anyhow::Result<String>> + Send + 'static,
+{
+    fn exec(
+        &self,
+        line: String,
+        server: Server,
+    ) -> Pin<Box<dyn Future<Output = anyhow::Result<String>> + Send>> {
+        Box::pin(self(line, server))
     }
 }
 
 pub trait Command: Parser {
-    fn exec(self, server: Server) -> impl std::future::Future<Output = ()> + Send;
+    fn exec(
+        self,
+        server: Server,
+    ) -> impl std::future::Future<Output = anyhow::Result<String>> + Send;
     fn perm_req() -> Perm;
 }
 
 pub struct CommandInst {
     pub clap: clap::Command,
     pub perm: Perm,
-    exe: Mutex<Box<dyn Fn(Server, String) + Send>>,
+    exe: Box<dyn CommandExec>,
 }
 
 impl CommandInst {
     pub fn from<T: Command>() -> Self {
         let clap = T::command();
         let perm = T::perm_req();
-        let exe = move |server, line: String| {
-            tokio::spawn(async move {
-                let arg = T::parse_from(line.split_whitespace());
-                arg.exec(server).await;
-            });
+        let exe = |line: String, server| async move {
+            let arg = T::try_parse_from(line.split_whitespace())
+                .map_err(|e| anyhow!("{}", e.render().ansi()))?;
+            arg.exec(server).await
         };
         Self {
             clap,
             perm,
-            exe: Mutex::new(Box::new(exe)),
+            exe: Box::new(exe),
         }
     }
-    pub fn run(&self, server: Server, line: String) {
-        (self.exe.lock().unwrap())(server, line)
+    pub async fn run(&self, arg: String, server: Server) -> anyhow::Result<String> {
+        self.exe.exec(arg, server).await
     }
 }
 
 pub struct CommandModule {
-    map: Mutex<HashMap<String, CommandInst>>,
+    map: HashMap<String, CommandInst>,
+    output: broadcast::Sender<Arc<(CommandLine, anyhow::Result<String>)>>,
 }
 
 impl CommandModule {
     pub fn new() -> Self {
-        Self {
-            map: Mutex::new(HashMap::new()),
-        }
+        let (output, _) = broadcast::channel(255);
+        let mut init = Self {
+            map: HashMap::new(),
+            output,
+        };
+        init.register_cmd::<Shutdown>();
+        init.register_cmd::<Echo>();
+        init.register_cmd::<Clear>();
+        init.register_cmd::<Help>();
+        init.register_cmd::<Say>();
+        init
     }
-    pub fn register_cmd<T: Command>(&self) {
+    pub fn register_cmd<T: Command>(&mut self) {
         let cmd = CommandInst::from::<T>();
-        self.map
-            .lock()
-            .unwrap()
-            .insert(cmd.clap.get_name().into(), cmd);
+        self.map.insert(cmd.clap.get_name().into(), cmd);
+    }
+    pub fn resolve(&self, name: &str) -> Option<&CommandInst> {
+        if let Some(cmd) = self.map.get(name) {
+            return Some(cmd);
+        }
+        for cmd in self.map.values() {
+            let alias = cmd.clap.get_visible_aliases();
+            let alias = alias.chain(cmd.clap.get_aliases());
+            if alias.collect::<HashSet<_>>().contains(name) {
+                return Some(cmd);
+            }
+        }
+        None
+    }
+    pub fn broadcast(&self, cmd: CommandLine, res: anyhow::Result<String>) {
+        let res = self.output.send(Arc::new((cmd, res)));
+        if res.is_err() {
+            warn!("failed send command output")
+        }
     }
 }
 
 pub trait CommandServer {
-    fn register_cmd<T: Command>(&self);
-    fn server_run_cmd(&self, line: String) -> anyhow::Result<String>;
+    fn print_cmd_output(&self) -> JoinHandle<()>;
+    fn server_run_cmd(&self, line: String) -> impl std::future::Future<Output = ()> + Send;
+    fn run_cmd(&self, user: &str, line: String) -> impl std::future::Future<Output = ()> + Send;
+    // fn server_run_cmd(&self, line: String);
+}
+
+fn resolve_cmd<'a>(server: &'a Server, line: &str) -> anyhow::Result<&'a CommandInst> {
+    let name = line
+        .split_whitespace()
+        .next()
+        .ok_or_else(|| anyhow!("unable to parse command"))?;
+    let cmd = server
+        .cmd
+        .resolve(name)
+        .ok_or_else(|| anyhow!("unknown command: {name}"))?;
+    Ok(cmd)
+}
+
+async fn run_cmd_checked(server: &Server, user: &str, line: String) -> anyhow::Result<String> {
+    let cmd = resolve_cmd(server, &line)?;
+    if !server.basileus.check_perm(user, &cmd.perm).await? {
+        bail!("permission denied");
+    }
+    cmd.run(line, server.clone()).await
+}
+
+async fn run_cmd_unchecked(server: &Server, line: String) -> anyhow::Result<String> {
+    let cmd = resolve_cmd(server, &line)?;
+    cmd.run(line, server.clone()).await
 }
 
 impl CommandServer for Server {
-    fn register_cmd<T: Command>(&self) {
-        self.cmd.register_cmd::<T>();
+    async fn run_cmd(&self, user: &str, line: String) {
+        let res = run_cmd_checked(self, user, line.clone()).await;
+        let cmd = CommandLine {
+            user: Some(user.into()),
+            line,
+        };
+        self.cmd.broadcast(cmd, res);
     }
-    fn server_run_cmd(&self, line: String) -> anyhow::Result<String> {
-        let name = line
-            .split_whitespace()
-            .next()
-            .ok_or_else(|| anyhow!("unable to parse command"))?;
-        let map = self.cmd.map.lock().unwrap();
-        if let Some(cmd) = map.get(name) {
-            cmd.run(self.clone(), line.clone());
-        }
-        for cmd in map.values() {
-            if cmd
-                .clap
-                .get_visible_aliases()
-                .collect::<HashSet<_>>()
-                .contains(name)
-            {
-                cmd.run(self.clone(), line.clone());
-                break;
+    async fn server_run_cmd(&self, line: String) {
+        let res = run_cmd_unchecked(self, line.clone()).await;
+        let cmd = CommandLine { user: None, line };
+        self.cmd.broadcast(cmd, res);
+    }
+    fn print_cmd_output(&self) -> JoinHandle<()> {
+        let mut output = self.cmd.output.subscribe();
+        tokio::spawn(async move {
+            loop {
+                select! {
+                    res = output.recv() => {
+                        let res = res.unwrap();
+                        let (cmd, res) = &*res;
+                        print_info(cmd, res);
+                    }
+                    _ = recv_shutdown() => break
+                }
             }
-        }
-        bail!("unknown command: {name}")
+        })
     }
 }
