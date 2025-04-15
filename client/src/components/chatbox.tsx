@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Chatbubble } from "@/components/chatbubble";
 import { Button } from "@/components/ui/button";
-import { sendMessage, sendImage, SetSSEListener } from "@/lib/chat";
+import { sendMessage, sendImage, setSSEListener } from "@/lib/chat";
 import { Send, Image } from "lucide-react";
 import { hostStore } from "@/components/host";
 import { useUsername } from "@/components/user";
@@ -32,7 +32,7 @@ export function Chatbox() {
             console.log("Establishing SSE connection to", hostname);
 
             // Set up the SSE listener
-            SetSSEListener(eventSource, setMessages);
+            setSSEListener(eventSource, setMessages);
 
             // Reset attempts counter on successful connection
             eventSource.addEventListener("open", () => {

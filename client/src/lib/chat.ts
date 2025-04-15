@@ -7,7 +7,7 @@ function unwrapMessage(msgEvent: MessageEvent) {
     return Chatbubble({ author: data.sender, timestamp: data.time, message: data.content });
 }
 
-export function SetSSEListener(es: EventSource, messagesDispatch: React.Dispatch<React.SetStateAction<any[]>>) {
+export function setSSEListener(es: EventSource, messagesDispatch: React.Dispatch<React.SetStateAction<any[]>>) {
     es.addEventListener("message", (event) => {
         try {
             const data = JSON.parse(event.data);
