@@ -6,7 +6,6 @@ mod profile;
 #[cfg(debug_assertions)]
 mod test;
 
-use anyhow::bail;
 use axum::{
     http::StatusCode,
     response::Redirect,
@@ -21,7 +20,7 @@ use cmd::CommandModule;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     error::Error,
     net::ToSocketAddrs,
     ops::{Deref, DerefMut},
@@ -34,7 +33,7 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::error;
 use vitium_api::user::UserProfile;
 
-use crate::recv_shutdown;
+use crate::wait_shutdown;
 
 pub use prelude::*;
 
@@ -56,7 +55,6 @@ pub struct ServerInst {
     db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
     basileus: Basileus,
-    op: RwLock<HashSet<String>>,
     chat: ChatModule,
     cmd: CommandModule,
 }
@@ -92,30 +90,10 @@ impl Server {
             db: pool.clone(),
             player: RwLock::const_new(HashMap::new()),
             basileus: Basileus::new(Default::default()).await?,
-            op: RwLock::const_new(HashSet::new()),
             chat: ChatModule::new(),
             cmd: CommandModule::new(),
         }));
         Ok(value)
-    }
-
-    pub async fn is_op(&self, user: &str) -> bool {
-        self.op.read().await.contains(user)
-    }
-
-    pub async fn op(&self, user: &str) -> anyhow::Result<()> {
-        if !self.player.read().await.contains_key(user) {
-            bail!("user '{user}' does not exist")
-        }
-        self.op.write().await.insert(user.into());
-        Ok(())
-    }
-
-    pub async fn deop(&self, user: &str) -> anyhow::Result<()> {
-        if !self.op.write().await.remove(user) {
-            bail!("user '{user}' is not operator yet")
-        }
-        Ok(())
     }
 
     #[cfg(debug_assertions)]
@@ -160,7 +138,7 @@ impl Server {
         let handle = Handle::new();
         let shutdown_handle = handle.clone();
         let shutdown = async move {
-            recv_shutdown().await;
+            wait_shutdown().await;
             shutdown_handle.graceful_shutdown(Some(Duration::from_secs(30)));
         };
         tokio::spawn(shutdown);
@@ -200,13 +178,6 @@ impl AsRef<Basileus> for Server {
 impl AsRef<CommandModule> for Server {
     fn as_ref(&self) -> &CommandModule {
         &self.cmd
-    }
-}
-
-/// Command executors. Note that permission will **NOT** be verified.
-pub mod exec {
-    pub fn hello() -> String {
-        "Hello, world!".to_string()
     }
 }
 

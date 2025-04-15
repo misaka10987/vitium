@@ -1,22 +1,20 @@
-use std::{path::PathBuf, sync::LazyLock, time::Duration};
+pub mod dice;
+pub mod game;
+pub mod load;
+mod prelude;
+pub mod script;
+pub mod server;
+mod shutdown;
 
 use clap::Parser;
 use load::try_load_toml;
 use server::CommandServer;
-use tokio::{runtime, sync::broadcast};
+use std::{path::PathBuf, sync::LazyLock, time::Duration};
+use tokio::runtime;
 use tracing::{info, Level};
-
-/// Dice implementation using `ndm`.
-pub mod dice;
-/// Specific game logics goes here.
-pub mod game;
-pub mod load;
-pub mod script;
-/// New server.
-pub mod server;
-
-pub use server::Server;
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, util::SubscriberInitExt};
+
+pub use prelude::*;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -27,16 +25,6 @@ struct Args {
 
 static ARG: LazyLock<Args> = LazyLock::new(Args::parse);
 
-static SHUTDOWN: LazyLock<broadcast::Sender<()>> = LazyLock::new(|| broadcast::channel(1).0);
-
-fn shutdown() {
-    let _ = SHUTDOWN.send(());
-}
-
-async fn recv_shutdown() {
-    SHUTDOWN.subscribe().recv().await.unwrap()
-}
-
 fn main() -> anyhow::Result<()> {
     let filter = Targets::new()
         .with_default(Level::TRACE)
@@ -46,7 +34,7 @@ fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
     info!("running with {:?}", *ARG);
-    ctrlc::set_handler(|| shutdown())?;
+    ctrlc::set_handler(|| trigger_shutdown())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
     run.spawn(async {
         let cfg = try_load_toml(&ARG.config).await;
@@ -57,7 +45,7 @@ fn main() -> anyhow::Result<()> {
         input.abort();
         output.abort();
     });
-    run.block_on(recv_shutdown());
+    run.block_on(wait_shutdown());
     info!("shutting down in 30s");
     run.shutdown_timeout(Duration::from_secs(30));
     Ok(())

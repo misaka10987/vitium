@@ -28,7 +28,7 @@ use tokio::{
 use tracing::warn;
 use vitium_api::cmd::CommandLine;
 
-use crate::{recv_shutdown, shutdown, Server};
+use crate::{should_shutdown, trigger_shutdown, wait_shutdown, Server};
 
 impl Server {
     pub fn handle_input(&self) -> JoinHandle<()> {
@@ -41,24 +41,26 @@ impl Server {
                     line = line.next_line() => {
                         match line {
                             Ok(Some(line)) => {
+                                if line.is_empty() || line.chars().all(|c|c.is_whitespace()) {
+                                    continue;
+                                }
                                 server.server_run_cmd(line.clone()).await;
-                                match line.as_str() {
-                                    "exit" | "stop" | "shutdown" => break,
-                                    _ => {}
+                                if should_shutdown() {
+                                    break;
                                 }
                             },
                             // EOF
                             Ok(None) => {
-                                shutdown();
+                                trigger_shutdown();
                                 break;
                             },
                             Err(e) => {
-                                shutdown();
+                                trigger_shutdown();
                                 panic!("{e:?}")
                             }
                         }
                     },
-                    _ = recv_shutdown() => break
+                    _ = wait_shutdown() => break
                 }
             }
         })
@@ -185,7 +187,6 @@ pub trait CommandServer {
     fn print_cmd_output(&self) -> JoinHandle<()>;
     fn server_run_cmd(&self, line: String) -> impl std::future::Future<Output = ()> + Send;
     fn run_cmd(&self, user: &str, line: String) -> impl std::future::Future<Output = ()> + Send;
-    // fn server_run_cmd(&self, line: String);
 }
 
 fn resolve_cmd<'a>(server: &'a Server, line: &str) -> anyhow::Result<&'a CommandInst> {
@@ -196,7 +197,7 @@ fn resolve_cmd<'a>(server: &'a Server, line: &str) -> anyhow::Result<&'a Command
     let cmd = server
         .cmd
         .resolve(name)
-        .ok_or_else(|| anyhow!("unknown command: {name}"))?;
+        .ok_or_else(|| anyhow!("unknown command: '{name}'"))?;
     Ok(cmd)
 }
 
@@ -237,7 +238,7 @@ impl CommandServer for Server {
                         let (cmd, res) = &*res;
                         print_info(cmd, res);
                     }
-                    _ = recv_shutdown() => break
+                    _ = wait_shutdown() => break
                 }
             }
         })
