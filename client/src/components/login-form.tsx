@@ -22,7 +22,7 @@ export function LoginForm({
   const userInputId = useId()
   const passInputId = useId()
   const [wrongCredentials, setWrongCredentials] = useState(false)
-  const setUsername = useSetUsername();
+  const setUsername = useSetUsername()
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -48,15 +48,14 @@ export function LoginForm({
                 (response) => {
                   if (response.status >= 300 || response.status < 200) {
                     setWrongCredentials(true)
-                  }
-                  else {
-                    setUsername(user);
-                    window.location.href = '/game';
+                  } else {
+                    setUsername(user)
+                    window.location.href = '/game'
                   }
                 },
                 (error) => {
                   // Handle error
-                  console.error('Login failed:', error);
+                  console.error('Login failed:', error)
                 }
               )
             }}
@@ -83,7 +82,7 @@ export function LoginForm({
                 </div>
                 <Input id={passInputId} name="pass" type="password" required />
               </div>
-              <div className='flex h-0 items-center'>
+              <div className="flex h-0 items-center">
                 {wrongCredentials && (
                   <p className="text-sm text-red-600">
                     Wrong username or password

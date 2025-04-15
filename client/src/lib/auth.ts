@@ -13,12 +13,12 @@ export const grabToken = async (user: string, pass: string) => {
   const url = `https://${hostname}/auth`
   const header = basicAuthHeader(user, pass)
   console.debug(`Fetching token from ${url}`)
-  
+
   const response = await fetch(url, {
     method: 'GET',
     headers: header,
     credentials: 'include',
   })
-  
+
   return response
 }
