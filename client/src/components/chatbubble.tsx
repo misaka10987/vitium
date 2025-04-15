@@ -31,7 +31,7 @@ export function Chatbubble({
                     variant === "send" && "order-2"
                 )}>
                     <Avatar className="m-1">
-                        <AvatarFallback className="text-sm">
+                        <AvatarFallback className="text-sm select-none">
                             {author.length > 1 ? author.charAt(0).toUpperCase() + author.charAt(1) : author.charAt(0).toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
@@ -41,8 +41,8 @@ export function Chatbubble({
                         "flex items-center gap-1",
                         variant === "send" && "justify-end"
                     )}>
-                        <span className="text-sm font-medium mt-1 text-muted-foreground truncate">{author}</span>
-                        <Badge variant="outline" className="text-[10px] py-0 px-1 h-auto mt-1 bg-transparent text-muted-foreground border-border flex-shrink-0">
+                        <span className="text-sm font-medium mt-1 text-muted-foreground truncate select-none">{author}</span>
+                        <Badge variant="outline" className="text-[10px] py-0 px-1 h-auto mt-1 bg-transparent text-muted-foreground border-border flex-shrink-0 select-none">
                             {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Badge>
                     </div>
