@@ -1,6 +1,7 @@
 import { access, symlink } from 'fs/promises'
 import type { NextConfig } from 'next'
 import { join } from 'path'
+import unTypiaNext from '@ryoppippi/unplugin-typia/next'
 
 const nextConfig: NextConfig = {
   crossOrigin: 'anonymous',
@@ -42,4 +43,8 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default unTypiaNext(nextConfig, {
+  cache: false,
+  // untypia is producing too many logs
+  log: false,
+})

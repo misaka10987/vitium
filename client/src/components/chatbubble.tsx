@@ -1,21 +1,22 @@
-import React, { JSX } from 'react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-
-interface ChatbubbleProps {
-  author: string
-  timestamp: number
-  message: string | JSX.Element
-  variant?: 'default' | 'send' | 'receive'
-}
+import { Message } from 'vitium-api'
 
 export const Chatbubble = ({
-  author,
-  timestamp,
-  message,
+  sender,
+  time,
+  content,
+  html,
   variant = 'default',
-}: ChatbubbleProps) => {
+}: Message & { variant?: 'default' | 'send' | 'receive' }) => {
+  const renderedContent = html ? (
+    <iframe sandbox="">
+      <div dangerouslySetInnerHTML={{ __html: content }} />
+    </iframe>
+  ) : (
+    content
+  )
   return (
     <div
       className={cn(
@@ -28,7 +29,7 @@ export const Chatbubble = ({
         <div className={cn('flex-shrink-0', variant === 'send' && 'order-2')}>
           <Avatar className="m-1">
             <AvatarFallback className="text-sm select-none">
-              {author.substring(0, 2)}
+              {sender.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -40,13 +41,13 @@ export const Chatbubble = ({
             )}
           >
             <span className="text-sm font-medium mt-1 text-muted-foreground truncate select-none">
-              {author}
+              {sender}
             </span>
             <Badge
               variant="outline"
               className="text-[10px] py-0 px-1 h-auto mt-1 bg-transparent text-muted-foreground border-border flex-shrink-0 select-none"
             >
-              {new Date(timestamp).toLocaleTimeString([], {
+              {new Date(Number(time)).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
@@ -62,7 +63,7 @@ export const Chatbubble = ({
                 'bg-secondary text-secondary-foreground mr-auto rounded-tl-none'
             )}
           >
-            {message}
+            {renderedContent}
           </div>
         </div>
       </div>

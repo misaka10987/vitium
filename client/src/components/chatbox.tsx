@@ -5,15 +5,21 @@ import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Chatbubble } from '@/components/chatbubble'
 import { Button } from '@/components/ui/button'
-import { sendMessage, sendImage, setSSEListener } from '@/lib/chat'
-import { Send, Image } from 'lucide-react'
+import { sendMessage, setSSEListener } from '@/lib/chat'
+import {
+  Send,
+  // due to an eslint bug, it requires you to provide an `alt` prop
+  // this is a walkaround
+  Image as Photo,
+} from 'lucide-react'
 import { useHostStore } from '@/components/host'
 import { useRouter } from 'next/navigation'
+import { Message } from 'vitium-api'
 
 export const Chatbox = () => {
   const msgForm = useRef<HTMLFormElement>(null)
   const msgInput = useRef<HTMLTextAreaElement>(null)
-  const [messages, setMessages] = useState<any[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const { hostname } = useHostStore()
   const connectAttempts = useRef(0)
   const router = useRouter()
@@ -25,11 +31,11 @@ export const Chatbox = () => {
 
     const connectToSSE = () => {
       // The browser automatically sets Accept: text/event-stream for EventSource connections
-      eventSource = new EventSource(`https://${hostname}/chat`, {
-        withCredentials: true,
-      })
-
       console.debug('Establishing SSE connection to', hostname)
+
+      eventSource = new EventSource(`https://${hostname}/chat`)
+
+      window.addEventListener('beforeunload', () => eventSource?.close())
 
       // Set up the SSE listener
       setSSEListener(eventSource, setMessages)
@@ -64,17 +70,6 @@ export const Chatbox = () => {
     return () => eventSource?.close()
   }, [hostname, router])
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      msgForm.current?.requestSubmit()
-    }
-  }
-
-  const handleImageUpload = () => {
-    sendImage()
-  }
-
   return (
     <div className="flex flex-col h-full w-full">
       <div className="flex-1 flex flex-col">
@@ -85,21 +80,7 @@ export const Chatbox = () => {
         >
           <div className="p-2">
             {messages.map((msg, index) => (
-              <Chatbubble
-                key={index}
-                author={msg.author}
-                timestamp={msg.timestamp}
-                message={
-                  msg.html ? (
-                    <iframe sandbox="">
-                      <div dangerouslySetInnerHTML={{ __html: msg.message }} />
-                    </iframe>
-                  ) : (
-                    msg.message
-                  )
-                }
-                variant={msg.variant} // use iframe above to create a 'sandbox'
-              />
+              <Chatbubble key={index} {...msg} />
             ))}
           </div>
         </ScrollArea>
@@ -122,7 +103,12 @@ export const Chatbox = () => {
             className="h-[90px] w-full resize-none overflow-auto py-2"
             placeholder="Type your message here..."
             required
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                msgForm.current?.requestSubmit()
+              }
+            }}
           />
           <div className="flex flex-col gap-1">
             <Button
@@ -137,9 +123,8 @@ export const Chatbox = () => {
               type="button"
               variant="outline"
               aria-label="Upload image"
-              onClick={handleImageUpload}
             >
-              <Image className="h-4 w-4" />
+              <Photo className="h-4 w-4" />
             </Button>
           </div>
         </form>

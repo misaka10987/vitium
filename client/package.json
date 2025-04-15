@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "ts-patch install"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.4",
@@ -27,11 +28,13 @@
     "tailwind-merge": "^3.1.0",
     "tslog": "^4.9.3",
     "tw-animate-css": "^1.2.5",
+    "typia": "^9.1.1",
     "vitium-api": "file:../api/pkg",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@ryoppippi/unplugin-typia": "npm:@jsr/ryoppippi__unplugin-typia@^1.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -39,6 +42,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-patch": "^3.3.0",
+    "typescript": "~5.8.3"
   }
 }

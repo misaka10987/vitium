@@ -1,38 +1,24 @@
-import { Chatbubble } from '@/components/chatbubble'
 import { hostStore } from '@/components/host'
 import { userStore } from '@/components/user'
-
-function unwrapMessage(msgEvent: MessageEvent) {
-  const data = JSON.parse(msgEvent.data)
-  return Chatbubble({
-    author: data.sender,
-    timestamp: data.time,
-    message: data.content,
-  })
-}
+import { Message } from 'vitium-api'
+import { json } from 'typia'
 
 export const setSSEListener = (
   es: EventSource,
-  messagesDispatch: React.Dispatch<React.SetStateAction<any[]>>
+  messagesDispatch: (_: (_: Message[]) => Message[]) => void
 ) => {
   es.addEventListener('message', (event) => {
-    try {
-      const data = JSON.parse(event.data)
-      const username = userStore.getState().username
-      // Add the received message to the messages state
-      messagesDispatch((prevMessages) => [
-        ...prevMessages,
-        {
-          author: data.sender,
-          timestamp: data.time,
-          message: data.content,
-          variant: data.sender === username ? 'send' : 'receive',
-          html: data.html || false,
-        },
-      ])
-    } catch (error) {
-      console.error('Error parsing SSE message:', error)
-    }
+    const data = json.assertParse<Message>(event.data)
+    const username = userStore.getState().username
+    // Add the received message to the messages state
+    const update = (prev: Message[]) => [
+      ...prev,
+      {
+        ...data,
+        variant: data.sender === username ? 'send' : 'receive',
+      },
+    ]
+    messagesDispatch(update)
   })
 
   es.addEventListener('error', (event) => {
@@ -70,10 +56,4 @@ export const sendMessage = async (message: string) => {
     console.error('HTTP error sending message:', res)
   }
   console.debug('Message sent successfully')
-}
-
-export const sendImage = () => {
-  console.log('Uploading image...')
-  console.log('Image upload not implemented yet.')
-  // Implement your image upload logic here
 }
