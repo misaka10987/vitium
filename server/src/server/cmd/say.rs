@@ -5,10 +5,10 @@ use crate::{server::chat::ChatServer, Server};
 
 use super::Command;
 
-#[derive(Parser)]
-#[command(name = "say")]
-#[clap(disable_help_flag = true)]
 /// Broadcast a server message.
+#[derive(Parser)]
+#[command(name = "say", visible_alias = "broadcast")]
+#[clap(disable_help_flag = true)]
 pub struct Say {
     /// The message.
     message: String,

@@ -6,10 +6,10 @@ use crate::Server;
 
 use super::Command;
 
+/// Print help page of command.
 #[derive(Parser)]
 #[command(name = "help")]
 #[clap(disable_help_flag = true)]
-/// Print help page of command.
 pub struct Help {
     /// The command to print help page.
     command: String,

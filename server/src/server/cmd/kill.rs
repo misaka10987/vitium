@@ -1,24 +1,24 @@
+use std::process::exit;
+
 use basileus::Perm;
 use clap::Parser;
-use clearscreen::clear;
 
 use crate::Server;
 
 use super::Command;
 
-/// Clear terminal screen.
+/// Forcefully terminate the server.
 #[derive(Parser)]
-#[command(name = "clear", visible_alias = "cls")]
+#[command(name = "kill")]
 #[clap(disable_help_flag = true)]
-pub struct Clear;
+pub struct Kill;
 
-impl Command for Clear {
+impl Command for Kill {
     async fn exec(self, _: Server) -> anyhow::Result<String> {
-        clear()?;
-        Ok("".into())
+        exit(-1)
     }
 
     fn perm_req() -> Perm {
-        Perm::from("server-console")
+        Perm::from("root")
     }
 }

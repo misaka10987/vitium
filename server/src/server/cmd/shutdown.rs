@@ -5,10 +5,10 @@ use crate::{trigger_shutdown, Server};
 
 use super::Command;
 
-#[derive(Parser, Clone, Copy)]
+/// Shutdown the server with specified timeout.
+#[derive(Parser)]
 #[command(name = "shutdown", visible_alias = "stop", visible_alias = "exit")]
 #[clap(disable_help_flag = true)]
-/// Shutdown the server with specified timeout.
 pub struct Shutdown;
 
 impl Command for Shutdown {

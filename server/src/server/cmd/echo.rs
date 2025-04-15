@@ -5,10 +5,10 @@ use crate::Server;
 
 use super::Command;
 
+/// Output specified content.
 #[derive(Parser)]
 #[command(name = "echo")]
 #[clap(disable_help_flag = true)]
-/// Output specified content.
 pub struct Echo {
     /// Content to output.
     input: String,
