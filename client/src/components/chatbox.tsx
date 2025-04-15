@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button'
 import { sendMessage, sendImage, setSSEListener } from '@/lib/chat'
 import { Send, Image } from 'lucide-react'
 import { useHostStore } from '@/components/host'
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export const Chatbox = () => {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<any[]>([])
   const { hostname } = useHostStore()
   const connectAttempts = useRef(0)
+  const router = useRouter()
 
   useEffect(() => {
     if (!hostname) return
@@ -49,7 +50,7 @@ export const Chatbox = () => {
             console.debug(
               'Maximum connection attempts reached. Redirecting to login.'
             )
-            redirect('/login')
+            router.replace('/login')
           }
 
           setTimeout(connectToSSE, 3000) // Reconnect after 3 seconds

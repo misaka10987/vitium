@@ -14,7 +14,7 @@ import { useUserStore } from '@/components/user'
 import { useId, useState } from 'react'
 import Link from 'next/link'
 import { grabToken } from '@/lib/auth'
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export function LoginForm({
   className,
@@ -24,7 +24,7 @@ export function LoginForm({
   const passInputId = useId()
   const [wrongCredentials, setWrongCredentials] = useState(false)
   const { setUsername } = useUserStore()
-
+  const router = useRouter()
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
@@ -52,7 +52,7 @@ export function LoginForm({
                   return
                 }
                 setUsername(user)
-                redirect('/game')
+                router.replace('/game')
               } catch (error) {
                 console.error('Login failed:', error)
               }
