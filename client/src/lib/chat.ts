@@ -1,8 +1,6 @@
-import { Chatbox } from "@/components/chatbox";
 import { Chatbubble } from "@/components/chatbubble";
 import { hostStore } from "@/components/host";
 import { username } from "@/components/user";
-import { useEffect, useState } from "react";
 
 function unwrapMessage(msgEvent: MessageEvent) {
     const data = JSON.parse(msgEvent.data);

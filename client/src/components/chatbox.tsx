@@ -59,12 +59,7 @@ export function Chatbox() {
         connectToSSE();
 
         // Clean up when component unmounts
-        return () => {
-            if (eventSource) {
-                console.log("Closing SSE connection");
-                eventSource.close();
-            }
-        };
+        return () => { eventSource ? eventSource.close() : null; }
     }, [hostname]);
 
     const sendCurrentMessage = () => {
@@ -123,8 +118,6 @@ export function Chatbox() {
                 <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
                     <Textarea
                         className="h-[90px] w-full"
-                        id="chatinput"
-                        name="chatinput"
                         placeholder="Type your message here..."
                         required
                         value={message}
