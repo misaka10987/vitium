@@ -69,14 +69,15 @@ export function Chatbox() {
 
     const sendCurrentMessage = () => {
         if (message.trim()) {
-            // Add the sent message to the UI immediately
-            setMessages(prev => [...prev, {
-                author: name,
-                timestamp: Date.now(),
-                message: message,
-                variant: "send",
-                html: false
-            }]);
+
+            //     // Add the sent message to the UI immediately
+            //     setMessages(prev => [...prev, {
+            //         author: name,
+            //         timestamp: Date.now(),
+            //         message: message,
+            //         variant: "send",
+            //         html: false
+            //     }]);
 
             sendMessage(message);
             setMessage("");
