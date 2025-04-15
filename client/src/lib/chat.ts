@@ -1,6 +1,6 @@
 import { Chatbubble } from '@/components/chatbubble'
 import { hostStore } from '@/components/host'
-import { username } from '@/components/user'
+import { useUserStore } from '@/components/user'
 
 function unwrapMessage(msgEvent: MessageEvent) {
   const data = JSON.parse(msgEvent.data)
@@ -11,10 +11,10 @@ function unwrapMessage(msgEvent: MessageEvent) {
   })
 }
 
-export function setSSEListener(
+export const setSSEListener = (
   es: EventSource,
   messagesDispatch: React.Dispatch<React.SetStateAction<any[]>>
-) {
+) => {
   es.addEventListener('message', (event) => {
     try {
       const data = JSON.parse(event.data)
@@ -26,7 +26,9 @@ export function setSSEListener(
           timestamp: data.time,
           message: data.content,
           variant:
-            data.sender === username.getState().name ? 'send' : 'receive',
+            data.sender === useUserStore.getState().username
+              ? 'send'
+              : 'receive',
           html: data.html || false,
         },
       ])
@@ -41,7 +43,7 @@ export function setSSEListener(
   })
 }
 
-export function sendMessage(message: string) {
+export const sendMessage = (message: string) => {
   console.log('Sending message:', message)
   const hostname = hostStore.getState().hostname
   console.log('to: ', hostname)
@@ -50,8 +52,8 @@ export function sendMessage(message: string) {
     return
   }
   if (
-    typeof username.getState().name === 'undefined' ||
-    username.getState().name === ''
+    typeof useUserStore.getState().username === 'undefined' ||
+    useUserStore.getState().username === ''
   ) {
     console.error('Username is not set.')
     return
@@ -64,7 +66,7 @@ export function sendMessage(message: string) {
     },
     body: JSON.stringify({
       time: Date.now(),
-      sender: username.getState().name,
+      sender: useUserStore.getState().username,
       content: message,
       html: false,
     }),
@@ -81,7 +83,7 @@ export function sendMessage(message: string) {
   )
 }
 
-export function sendImage() {
+export const sendImage = () => {
   console.log('Uploading image...')
   console.log('Image upload not implemented yet.')
   // Implement your image upload logic here

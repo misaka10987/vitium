@@ -10,12 +10,12 @@ interface ChatbubbleProps {
   variant?: 'default' | 'send' | 'receive'
 }
 
-export function Chatbubble({
+export const Chatbubble = ({
   author,
   timestamp,
   message,
   variant = 'default',
-}: ChatbubbleProps) {
+}: ChatbubbleProps) => {
   return (
     <div
       className={cn(

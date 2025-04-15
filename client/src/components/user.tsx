@@ -3,32 +3,23 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware' // Import persist middleware
 
-export const username = create<{
-  name?: string
-  setName: (name: string) => void
+export const useUserStore = create<{
+  username?: string
+  setUsername: (name: string) => void
 }>()(
   persist(
-    // Wrap the initializer with persist
     (set) => ({
-      setName: (username) => set(() => ({ name: username })),
+      setUsername: (username) => set(() => ({ username: username })),
     }),
     {
-      name: 'username-storage', // Unique name for localStorage key
+      name: 'username',
     }
   )
 )
 
-export const Username = () => {
-  const name = username((state) => state.name)
-  return <>{name}</> // Example: render the name
-}
+export const userStore = useUserStore
 
-// Optional: A hook might be a more conventional way to access the state
-export const useUsername = () => {
-  return username((state) => state.name)
-}
-
-// Optional: A hook to access the setter function
-export const useSetUsername = () => {
-  return username((state) => state.setName)
+export const User = () => {
+  const { username } = useUserStore()
+  return username
 }

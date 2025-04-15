@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { sendMessage, sendImage, setSSEListener } from '@/lib/chat'
 import { Send, Image } from 'lucide-react'
 import { useHostStore } from '@/components/host'
+import { redirect } from 'next/navigation'
 
-export function Chatbox() {
+export const Chatbox = () => {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<any[]>([])
   const { hostname } = useHostStore()
@@ -26,7 +27,6 @@ export function Chatbox() {
         withCredentials: true,
       })
 
-      // Log connection attempt
       console.debug('Establishing SSE connection to', hostname)
 
       // Set up the SSE listener
@@ -49,8 +49,7 @@ export function Chatbox() {
             console.debug(
               'Maximum connection attempts reached. Redirecting to login.'
             )
-            window.location.href = '/login'
-            return
+            redirect('/login')
           }
 
           setTimeout(connectToSSE, 3000) // Reconnect after 3 seconds

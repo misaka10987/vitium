@@ -10,10 +10,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Host } from '@/components/host'
-import { useSetUsername } from '@/components/user'
+import { useUserStore } from '@/components/user'
 import { useId, useState } from 'react'
 import Link from 'next/link'
 import { grabToken } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
 export function LoginForm({
   className,
@@ -22,7 +23,7 @@ export function LoginForm({
   const userInputId = useId()
   const passInputId = useId()
   const [wrongCredentials, setWrongCredentials] = useState(false)
-  const setUsername = useSetUsername()
+  const { setUsername } = useUserStore()
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -44,20 +45,17 @@ export function LoginForm({
               const pass = data.get('pass')?.toString()
               if (user == undefined || pass == undefined)
                 throw new Error('impossible')
-              grabToken(user, pass).then(
-                (response) => {
-                  if (response.status >= 300 || response.status < 200) {
-                    setWrongCredentials(true)
-                  } else {
-                    setUsername(user)
-                    window.location.href = '/game'
-                  }
-                },
-                (error) => {
-                  // Handle error
-                  console.error('Login failed:', error)
+              try {
+                const res = await grabToken(user, pass)
+                if (!res.ok) {
+                  setWrongCredentials(true)
+                  return
                 }
-              )
+                setUsername(user)
+                redirect('/game')
+              } catch (error) {
+                console.error('Login failed:', error)
+              }
             }}
           >
             <div className="flex flex-col gap-6">
