@@ -58,6 +58,10 @@ pub struct Enroll(pub String);
 )]
 pub struct Message {
     /// Milisecond timestamp the message is sent.
+    #[cfg(target_family = "wasm")] // walkaround for json missing bigint support
+    pub time: f64,
+    /// Milisecond timestamp the message is sent.
+    #[cfg(not(target_family = "wasm"))]
     pub time: u64,
     /// The user who sends the message.
     pub sender: String,

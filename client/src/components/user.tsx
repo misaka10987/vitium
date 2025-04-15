@@ -1,13 +1,25 @@
+'use client'
+
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware' // Import persist middleware
 
-export const username = create<{
-  name?: string
-  setName: (name: string) => void
-}>()((set) => ({
-  setName: (username) => set(() => ({ name: username })),
-}))
+export const useUserStore = create<{
+  username?: string
+  setUsername: (name: string) => void
+}>()(
+  persist(
+    (set) => ({
+      setUsername: (username) => set(() => ({ username: username })),
+    }),
+    {
+      name: 'username',
+    }
+  )
+)
 
-export const Username = () => {
-  const name = username((state) => state.name)
-  return name
+export const userStore = useUserStore
+
+export const User = () => {
+  const { username } = useUserStore()
+  return username
 }

@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { add, test } from 'vitium-api'
 
 export default function Page() {
-  console.debug(`WASM initialized: 2+3=${add(2, 3)}`)
+  console.debug('WASM initialized: 2+3=', add(2, 3))
   const res = test()
-  console.debug(`BigInt from WASM test: ${res}`)
+  console.debug('BigInt from WASM test:', res)
   return (
     <div className="flex h-full justify-center items-center">
       <div className="mb-32">

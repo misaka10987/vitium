@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,9 +12,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Host } from '@/components/host'
-import { useId } from 'react'
+import { useUserStore } from '@/components/user'
+import { useId, useState } from 'react'
 import Link from 'next/link'
 import { grabToken } from '@/lib/auth'
+import { useRouter } from 'next/navigation'
 
 export function LoginForm({
   className,
@@ -20,7 +24,9 @@ export function LoginForm({
 }: React.ComponentProps<'div'>) {
   const userInputId = useId()
   const passInputId = useId()
-
+  const [wrongCredentials, setWrongCredentials] = useState(false)
+  const { setUsername } = useUserStore()
+  const router = useRouter()
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
@@ -41,7 +47,17 @@ export function LoginForm({
               const pass = data.get('pass')?.toString()
               if (user == undefined || pass == undefined)
                 throw new Error('impossible')
-              grabToken(user, pass)
+              try {
+                const res = await grabToken(user, pass)
+                if (!res.ok) {
+                  setWrongCredentials(true)
+                  return
+                }
+                setUsername(user)
+                router.replace('/game')
+              } catch (error) {
+                console.error('Login failed:', error)
+              }
             }}
           >
             <div className="flex flex-col gap-6">
@@ -65,6 +81,13 @@ export function LoginForm({
                   </Link>
                 </div>
                 <Input id={passInputId} name="pass" type="password" required />
+              </div>
+              <div className="flex h-0 items-center">
+                {wrongCredentials && (
+                  <p className="text-sm text-red-600">
+                    Wrong username or password
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">
