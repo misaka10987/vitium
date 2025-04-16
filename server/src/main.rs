@@ -1,6 +1,7 @@
 pub mod dice;
 pub mod game;
 pub mod load;
+mod log;
 mod prelude;
 pub mod script;
 pub mod server;
@@ -11,8 +12,7 @@ use load::try_load_toml;
 use server::CommandServer;
 use std::{path::PathBuf, sync::LazyLock, time::Duration};
 use tokio::runtime;
-use tracing::{info, Level};
-use tracing_subscriber::{filter::Targets, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing::info;
 
 pub use prelude::*;
 
@@ -26,13 +26,6 @@ struct Args {
 static ARG: LazyLock<Args> = LazyLock::new(Args::parse);
 
 fn main() -> anyhow::Result<()> {
-    let filter = Targets::new()
-        .with_default(Level::TRACE)
-        .with_target("h2", Level::INFO);
-    tracing_subscriber::registry()
-        .with(filter)
-        .with(tracing_subscriber::fmt::layer())
-        .init();
     info!("running with {:?}", *ARG);
     ctrlc::set_handler(|| trigger_shutdown())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;

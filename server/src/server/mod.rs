@@ -3,6 +3,7 @@ mod chat;
 mod cmd;
 mod prelude;
 mod profile;
+mod proxy;
 #[cfg(debug_assertions)]
 mod test;
 
@@ -13,7 +14,6 @@ use axum::{
     Json, Router,
 };
 
-use axum_server::{tls_rustls::RustlsConfig, Handle};
 use basileus::Basileus;
 use chat::ChatModule;
 use cmd::CommandModule;
@@ -22,13 +22,12 @@ use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
     collections::HashMap,
     error::Error,
-    net::ToSocketAddrs,
+    net::{Ipv6Addr, SocketAddr},
     ops::{Deref, DerefMut},
-    path::PathBuf,
     sync::Arc,
-    time::{Duration, SystemTime},
+    time::SystemTime,
 };
-use tokio::sync::RwLock;
+use tokio::{net::TcpListener, sync::RwLock};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::error;
 use vitium_api::user::UserProfile;
@@ -110,22 +109,14 @@ impl Server {
     pub async fn start(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await?;
-        let addr = format!("[::]:{}", self.cfg.port)
-            .to_socket_addrs()
-            .unwrap()
-            .next()
-            .unwrap();
-        let tls_cfg = match &self.cfg.ssl {
-            Some(SSLConfig { cert, key }) => {
-                Some(RustlsConfig::from_pem_file(cert, key).await.unwrap())
-            }
-            None => None,
-        };
+        let proxy = proxy::ProxyModule::new(self.cfg.proxy.clone());
+        proxy.start()?;
         let app = Router::new();
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());
         let app = app
             .route("/", get(Redirect::to(&self.cfg.page_url)))
+            .route("/api", get("Hello, world!"))
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
             .route("/hello", get("Hello, world!"))
             .nest("/auth", auth::rest())
@@ -136,25 +127,12 @@ impl Server {
             .layer(CorsLayer::very_permissive())
             .layer(TraceLayer::new_for_http())
             .with_state(self);
-        let handle = Handle::new();
-        let shutdown_handle = handle.clone();
-        let shutdown = async move {
-            wait_shutdown().await;
-            shutdown_handle.graceful_shutdown(Some(Duration::from_secs(30)));
-        };
-        tokio::spawn(shutdown);
-        let res = if let Some(cfg) = tls_cfg {
-            axum_server::bind_rustls(addr, cfg)
-                .handle(handle)
-                .serve(app.into_make_service())
-                .await
-        } else {
-            axum_server::bind(addr)
-                .handle(handle)
-                .serve(app.into_make_service())
-                .await
-        };
-        Ok(res?)
+        let addr = SocketAddr::from((Ipv6Addr::UNSPECIFIED, 10987));
+        let listener = TcpListener::bind(addr).await?;
+        axum::serve(listener, app)
+            .with_graceful_shutdown(wait_shutdown())
+            .await?;
+        Ok(())
     }
 }
 
@@ -185,9 +163,7 @@ impl AsRef<CommandModule> for Server {
 /// Server configuration.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
-    pub port: u16,
-    pub ssl: Option<SSLConfig>,
-    pub chat_cap: usize,
+    pub proxy: proxy::Config,
     pub page_url: String,
     #[serde(default)]
     pub motd: String,
@@ -196,26 +172,9 @@ pub struct ServerConfig {
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
-            port: 10987,
-            ssl: None,
-            chat_cap: 255,
+            proxy: Default::default(),
             page_url: "https://github.com/misaka10987/vitium".into(),
             motd: String::new(),
-        }
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct SSLConfig {
-    pub cert: PathBuf,
-    pub key: PathBuf,
-}
-
-impl Default for SSLConfig {
-    fn default() -> Self {
-        Self {
-            cert: "./cert.pem".into(),
-            key: "./key.pem".into(),
         }
     }
 }
