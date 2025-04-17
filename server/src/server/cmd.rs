@@ -2,6 +2,7 @@ mod clear;
 mod echo;
 mod help;
 mod kill;
+mod loglevel;
 mod say;
 mod shutdown;
 
@@ -20,6 +21,7 @@ use colored::Colorize;
 use echo::Echo;
 use help::Help;
 use kill::Kill;
+use loglevel::LogLevel;
 use say::Say;
 use shutdown::Shutdown;
 use std::{
@@ -169,6 +171,7 @@ impl CommandModule {
         init.register_cmd::<Help>();
         init.register_cmd::<Say>();
         init.register_cmd::<Kill>();
+        init.register_cmd::<LogLevel>();
         init
     }
     pub fn register_cmd<T: Command>(&mut self) {
