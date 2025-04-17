@@ -70,7 +70,7 @@ async fn create(
     Token(user): Token,
     Json(chat): Json<net::Message>,
 ) -> Result<(), StatusCode> {
-    if user != chat.sender {
+    if chat.sender != Some(user) {
         return Err(StatusCode::FORBIDDEN);
     }
     let res = s.send_msg(chat).await;
@@ -88,7 +88,7 @@ impl ChatModule {
     pub fn new() -> Self {
         let (send, _) = watch::channel(Message {
             time: mili_timestamp(SystemTime::now()),
-            sender: "".into(),
+            sender: None,
             content: "".into(),
             html: false,
         });
@@ -134,7 +134,11 @@ where
             .bind(&msg.content)
             .bind(msg.html);
         query.execute(db).await?;
-        info!("{} {}", msg.sender, msg.content);
+        let sender = match &msg.sender {
+            Some(x) => x,
+            None => "",
+        };
+        info!("{} {}", sender, msg.content);
         module.send.send_replace(msg);
         Ok(())
     }
@@ -143,7 +147,7 @@ where
         let res = self
             .send_msg(Message {
                 time: mili_timestamp(SystemTime::now()),
-                sender: "".into(),
+                sender: None,
                 content,
                 html: false,
             })

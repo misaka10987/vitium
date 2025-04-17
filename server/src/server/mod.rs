@@ -41,7 +41,7 @@ const DB_INIT_QUERY: &'static str = r#"
 CREATE TABLE IF NOT EXISTS chat (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     time INTEGER UNSIGNED,
-    sender TEXT NOT NULL,
+    sender TEXT,
     content TEXT NOT NULL,
     html BOOLEAN NOT NULL
 );
