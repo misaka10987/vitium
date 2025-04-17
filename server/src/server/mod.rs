@@ -17,6 +17,7 @@ use axum::{
 use basileus::Basileus;
 use chat::ChatModule;
 use cmd::CommandModule;
+use proxy::ProxyServer;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
@@ -29,7 +30,7 @@ use std::{
 };
 use tokio::{net::TcpListener, sync::RwLock};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
-use tracing::error;
+use tracing::{error, info};
 use vitium_api::user::UserProfile;
 
 use crate::wait_shutdown;
@@ -109,7 +110,11 @@ impl Server {
     pub async fn start(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await?;
-        let proxy = proxy::ProxyModule::new(self.cfg.proxy.clone());
+        let addr = SocketAddr::from((Ipv6Addr::UNSPECIFIED, 0));
+        let listener = TcpListener::bind(addr).await?;
+        info!("direct HTTP server on {}", listener.local_addr()?);
+        let port = listener.local_addr()?.port();
+        let proxy = ProxyServer::new(self.cfg.proxy.clone(), port);
         proxy.start()?;
         let app = Router::new();
         #[cfg(debug_assertions)]
@@ -127,8 +132,6 @@ impl Server {
             .layer(CorsLayer::very_permissive())
             .layer(TraceLayer::new_for_http())
             .with_state(self);
-        let addr = SocketAddr::from((Ipv6Addr::UNSPECIFIED, 10987));
-        let listener = TcpListener::bind(addr).await?;
         axum::serve(listener, app)
             .with_graceful_shutdown(wait_shutdown())
             .await?;

@@ -1,19 +1,24 @@
 use async_trait::async_trait;
-use http::uri::Builder;
-use pingora::http::{ResponseHeader, StatusCode};
-use pingora::proxy::http_proxy_service;
-use pingora::proxy::{ProxyHttp, Session};
-use pingora::services::Service;
-use pingora::upstreams::peer::HttpPeer;
+use http::{
+    header::{HOST, LOCATION, UPGRADE},
+    uri::Builder,
+};
+use pingora::{
+    http::{ResponseHeader, StatusCode},
+    listeners::tls::TlsSettings,
+    proxy::{http_proxy_service, ProxyHttp, Session},
+    services::Service,
+    upstreams::peer::HttpPeer,
+};
 use serde::{Deserialize, Serialize};
-use tokio::sync::watch;
-use tokio::task::JoinHandle;
-use tracing::trace;
+use std::net::{Ipv6Addr, SocketAddr};
+use tokio::{sync::watch, task::JoinHandle};
 
 use crate::wait_shutdown;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SSLConfig {
+    pub port: u16,
     pub cert: String,
     pub key: String,
 }
@@ -21,6 +26,7 @@ pub struct SSLConfig {
 impl Default for SSLConfig {
     fn default() -> Self {
         Self {
+            port: 443,
             cert: "./cert.pem".into(),
             key: "./key.pem".into(),
         }
@@ -29,15 +35,17 @@ impl Default for SSLConfig {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub ssl: Option<SSLConfig>,
+    pub port: u16,
     pub http_to_https: bool,
     pub homepage: String,
     pub hostname: String,
+    pub ssl: Option<SSLConfig>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
+            port: 80,
             ssl: None,
             http_to_https: false,
             homepage: "https://github.com/misaka10987/vitium".into(),
@@ -46,31 +54,35 @@ impl Default for Config {
     }
 }
 
-pub struct ProxyModule {
+pub struct ProxyServer {
     pub cfg: Config,
+    pub api_port: u16,
 }
 
-impl ProxyModule {
-    pub fn new(cfg: Config) -> Self {
-        Self { cfg }
+impl ProxyServer {
+    pub fn new(cfg: Config, api_port: u16) -> Self {
+        Self { cfg, api_port }
     }
 
     pub fn start(self) -> anyhow::Result<JoinHandle<()>> {
-        let ssl_cfg = self.cfg.ssl.clone();
+        let cfg = self.cfg.clone();
 
         let mut proxy = http_proxy_service(&Default::default(), self);
 
-        proxy.add_tcp("[::]:10080");
+        proxy.add_tcp(&format!("[::]:{}", cfg.port));
 
-        if let Some(cfg) = ssl_cfg {
-            proxy.add_tls("[::]:10443", &cfg.cert, &cfg.key)?;
+        if let Some(cfg) = cfg.ssl {
+            // proxy.add_tls(&format!("[::]:{}",self.cfg.port), &cfg.cert, &cfg.key)?;
+            let mut set = TlsSettings::intermediate(&cfg.cert, &cfg.key)?;
+            set.enable_h2();
+            proxy.add_tls_with_settings(&format!("[::]:{}", cfg.port), None, set);
         }
 
         let (send, recv) = watch::channel(false);
 
         tokio::spawn(async move {
             wait_shutdown().await;
-            send.send(true).unwrap();
+            let _ = send.send(true);
         });
 
         let task = tokio::spawn(async move {
@@ -83,7 +95,7 @@ impl ProxyModule {
         session
             .req_header()
             .headers
-            .get("Host")
+            .get(HOST)
             .map(|h| h.to_str().unwrap_or(&self.cfg.hostname))
             .unwrap_or(&self.cfg.hostname)
             .to_string()
@@ -91,15 +103,15 @@ impl ProxyModule {
 
     async fn tmp_redirect(&self, session: &mut Session, location: &str) -> pingora::Result<()> {
         let mut head = ResponseHeader::build(StatusCode::TEMPORARY_REDIRECT, None).unwrap();
-        head.insert_header("Location", location).unwrap();
-        session.write_response_header(Box::new(head), true).await?;
+        head.insert_header(LOCATION, location).unwrap();
+        session.write_response_header(head.into(), true).await?;
         session.shutdown().await;
         Ok(())
     }
 }
 
 #[async_trait]
-impl ProxyHttp for ProxyModule {
+impl ProxyHttp for ProxyServer {
     type CTX = ();
 
     fn new_ctx(&self) -> Self::CTX {
@@ -147,21 +159,21 @@ impl ProxyHttp for ProxyModule {
 
         if let Some(path) = head.uri.path_and_query() {
             if path.path().starts_with("/api") {
-                trace!("here");
                 let new = &path.path()[4..];
                 let new_uri = Builder::from(uri).path_and_query(new).build().unwrap();
                 head.set_uri(new_uri);
-                trace!("redirecting");
-                return Ok(Box::new(HttpPeer::new(
-                    "localhost:10987",
-                    false,
-                    "".to_string(),
-                )));
+                let addr = SocketAddr::from((Ipv6Addr::LOCALHOST, self.api_port));
+                let mut peer: HttpPeer = HttpPeer::new(addr, false, "".into());
+                match head.headers.get(UPGRADE) {
+                    Some(_) => peer.options.set_http_version(1, 1),
+                    None => peer.options.set_http_version(2, 2),
+                }
+                return Ok(Box::new(peer));
             }
         }
 
         Err(Box::new(*pingora::Error::new(
-            pingora::ErrorType::HTTPStatus(StatusCode::TEMPORARY_REDIRECT.as_u16()),
+            pingora::ErrorType::HTTPStatus(StatusCode::INTERNAL_SERVER_ERROR.as_u16()),
         )))
     }
 }

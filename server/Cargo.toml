@@ -16,7 +16,7 @@ license = "GPL-3.0-only"
 [dependencies]
 vitium-api = { path = "../api" }
 basileus = "0.1.3"
-axum = { version = "0.8.3", features = ["macros", "tokio"] }
+axum = { version = "0.8.3", features = ["macros", "tokio", "http2", "ws"] }
 tokio = { version = "1.44.2", features = [
     "rt-multi-thread",
     "tracing",
@@ -40,7 +40,6 @@ dicexp = "1.1.1"
 sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio"] }
 tokio-stream = "0.1.17"
 tower-http = { version = "0.6.2", features = ["cors", "trace"] }
-axum-server = { version = "0.7.2", features = ["tls-rustls"] }
 colored = "3.0.0"
 http-auth-basic = "0.3.5"
 pingora = { version = "0.4.0", features = ["proxy", "rustls"] }
