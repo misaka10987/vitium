@@ -29,7 +29,7 @@ export const Chatbubble = ({
         <div className={cn('flex-shrink-0', variant === 'send' && 'order-2')}>
           <Avatar className="m-1">
             <AvatarFallback className="text-sm select-none">
-              {sender.substring(0, 2)}
+              {sender?.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
         </div>
