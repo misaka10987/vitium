@@ -108,7 +108,13 @@ impl Server {
     pub async fn start(self) -> anyhow::Result<()> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await?;
-        let addr = SocketAddr::from((Ipv6Addr::UNSPECIFIED, 0));
+        let port = self.cfg.port.unwrap_or(0);
+        let ip = if self.cfg.direct_api {
+            Ipv6Addr::UNSPECIFIED
+        } else {
+            Ipv6Addr::LOCALHOST
+        };
+        let addr = SocketAddr::from((ip, port));
         let listener = TcpListener::bind(addr).await?;
         info!("start API server on {}", listener.local_addr()?);
         let port = listener.local_addr()?.port();
@@ -159,9 +165,16 @@ impl AsRef<CommandModule> for Server {
     }
 }
 
+fn f() -> bool {
+    false
+}
+
 /// Server configuration.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
+    pub port: Option<u16>,
+    #[serde(default = "f")]
+    pub direct_api: bool,
     pub proxy: proxy::Config,
     #[serde(default)]
     pub motd: String,
@@ -170,6 +183,8 @@ pub struct ServerConfig {
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
+            port: None,
+            direct_api: false,
             proxy: Default::default(),
             motd: String::new(),
         }
