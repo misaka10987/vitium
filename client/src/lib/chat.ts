@@ -39,7 +39,7 @@ export const sendMessage = async (message: string) => {
     console.error('Username is not set.')
     return
   }
-  const res = await fetch(`https://${hostname}/chat`, {
+  const res = await fetch(`https://${hostname}/api/chat`, {
     method: 'POST',
     credentials: 'include',
     headers: {

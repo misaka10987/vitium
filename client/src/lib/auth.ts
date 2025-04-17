@@ -10,7 +10,7 @@ export const basicAuthHeader = (user: string, pass: string) => {
 
 export const grabToken = async (user: string, pass: string) => {
   const hostname = hostStore.getState().hostname
-  const url = `https://${hostname}/auth`
+  const url = `https://${hostname}/api/auth`
   const header = basicAuthHeader(user, pass)
   console.debug(`Fetching token from ${url}`)
 

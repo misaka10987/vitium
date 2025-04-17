@@ -33,7 +33,7 @@ export const Chatbox = () => {
       // The browser automatically sets Accept: text/event-stream for EventSource connections
       console.debug('Establishing SSE connection to', hostname)
 
-      eventSource = new EventSource(`https://${hostname}/chat`)
+      eventSource = new EventSource(`https://${hostname}/api/chat`)
 
       window.addEventListener('beforeunload', () => eventSource?.close())
 
