@@ -105,6 +105,8 @@ impl ProxyServer {
         let mut head = ResponseHeader::build(StatusCode::TEMPORARY_REDIRECT, None).unwrap();
         head.insert_header(LOCATION, location).unwrap();
         session.write_response_header(head.into(), true).await?;
+        session.write_response_body(None, true).await?;
+        session.finish_body().await?;
         session.shutdown().await;
         Ok(())
     }
