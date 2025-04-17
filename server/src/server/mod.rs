@@ -9,11 +9,9 @@ mod test;
 
 use axum::{
     http::StatusCode,
-    response::Redirect,
     routing::{any, get},
     Json, Router,
 };
-
 use basileus::Basileus;
 use chat::ChatModule;
 use cmd::CommandModule;
@@ -112,7 +110,7 @@ impl Server {
         self.dev_hooks().await?;
         let addr = SocketAddr::from((Ipv6Addr::UNSPECIFIED, 0));
         let listener = TcpListener::bind(addr).await?;
-        info!("direct HTTP server on {}", listener.local_addr()?);
+        info!("start API server on {}", listener.local_addr()?);
         let port = listener.local_addr()?.port();
         let proxy = ProxyServer::new(self.cfg.proxy.clone(), port);
         proxy.start()?;
@@ -120,8 +118,6 @@ impl Server {
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());
         let app = app
-            .route("/", get(Redirect::to(&self.cfg.page_url)))
-            .route("/api", get("Hello, world!"))
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
             .route("/hello", get("Hello, world!"))
             .nest("/auth", auth::rest())
@@ -167,7 +163,6 @@ impl AsRef<CommandModule> for Server {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     pub proxy: proxy::Config,
-    pub page_url: String,
     #[serde(default)]
     pub motd: String,
 }
@@ -176,7 +171,6 @@ impl Default for ServerConfig {
     fn default() -> Self {
         Self {
             proxy: Default::default(),
-            page_url: "https://github.com/misaka10987/vitium".into(),
             motd: String::new(),
         }
     }
