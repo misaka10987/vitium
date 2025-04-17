@@ -10,9 +10,12 @@ pub struct UserProfile {
     /// The displayed name in contrast to username used for login.
     pub nickname: String,
     /// URL to the avatar image.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub avatar: Option<String>,
     /// Optional email.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
     /// Optional self introduction.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub intro: Option<String>,
 }

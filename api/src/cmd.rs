@@ -5,11 +5,16 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(
     target_family = "wasm",
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+    tsify(
+        into_wasm_abi,
+        from_wasm_abi,
+        missing_as_null,
+        large_number_types_as_bigints
+    )
 )]
 pub struct CommandLine {
     /// The user who issued this command.
-    /// 
+    ///
     /// A value of [`None`] indicates that the command is directly executed from the server console.
     pub user: Option<String>,
     /// The complete line of command to execute, including the name of command and space seperated arguments.

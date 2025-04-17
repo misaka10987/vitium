@@ -72,7 +72,12 @@ pub struct Enroll(pub String);
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(
     target_family = "wasm",
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+    tsify(
+        into_wasm_abi,
+        from_wasm_abi,
+        missing_as_null,
+        large_number_types_as_bigints
+    )
 )]
 pub struct Message {
     /// Milisecond UNIX timestamp when the message is sent.
