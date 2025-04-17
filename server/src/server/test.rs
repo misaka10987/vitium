@@ -1,11 +1,14 @@
 use axum::{
-    extract::{ws::WebSocket, WebSocketUpgrade},
+    extract::{
+        ws::{Message, WebSocket},
+        WebSocketUpgrade,
+    },
     response::IntoResponse,
-    routing::{any, get},
+    routing::get,
     Router,
 };
-use std::time::Duration;
-use tokio::time::sleep;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::{select, time::sleep};
 use tracing::error;
 
 use super::{auth::Token, Server};
@@ -13,7 +16,7 @@ use super::{auth::Token, Server};
 pub fn router() -> Router<Server> {
     Router::new()
         .route("/auth", get(auth))
-        .route("/ws", any(ws))
+        .route("/ws", get(ws))
 }
 
 async fn auth(Token(user): Token) -> String {
@@ -21,17 +24,29 @@ async fn auth(Token(user): Token) -> String {
 }
 
 async fn ws(ws: WebSocketUpgrade) -> impl IntoResponse {
-    async fn handle(mut sock: WebSocket) {
-        for i in 0..5 {
-            if let Err(e) = sock
-                .send(axum::extract::ws::Message::Text(
-                    format!("Hello, WebSocket! ({i})").into(),
-                ))
-                .await
-            {
-                error!("{e}")
+    async fn update(sock: &mut WebSocket) -> anyhow::Result<()> {
+        loop {
+            select! {
+                res = sock.recv() => {
+                    match res {
+                        Some(msg) => sock.send(msg?).await?,
+                        None => return Ok(()),
+                    }
+                }
+                _ = sleep(Duration::from_secs(10)) => {
+                    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+                    sock.send(Message::Text(
+                        format!("Hello, WebSocket! Current UNIX timestamp is {now}.").into(),
+                    ))
+                    .await?;
+                }
             }
-            sleep(Duration::from_secs(2)).await;
+        }
+    }
+    async fn handle(mut sock: WebSocket) {
+        let res = update(&mut sock).await;
+        if let Err(e) = res {
+            error!("{e}")
         }
     }
     ws.on_upgrade(handle)
