@@ -1,6 +1,5 @@
 mod cli;
 mod dice;
-mod game;
 mod load;
 mod log;
 mod prelude;
