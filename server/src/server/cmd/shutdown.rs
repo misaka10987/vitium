@@ -8,7 +8,6 @@ use super::Command;
 /// Shutdown the server with specified timeout.
 #[derive(Parser)]
 #[command(name = "shutdown", visible_alias = "stop", visible_alias = "exit")]
-#[clap(disable_help_flag = true)]
 pub struct Shutdown;
 
 impl Command for Shutdown {

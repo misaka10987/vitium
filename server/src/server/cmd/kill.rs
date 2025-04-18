@@ -10,7 +10,6 @@ use super::Command;
 /// Forcefully terminate the server.
 #[derive(Parser)]
 #[command(name = "kill")]
-#[clap(disable_help_flag = true)]
 pub struct Kill;
 
 impl Command for Kill {

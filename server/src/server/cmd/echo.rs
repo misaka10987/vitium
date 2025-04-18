@@ -8,7 +8,6 @@ use super::Command;
 /// Output specified content.
 #[derive(Parser)]
 #[command(name = "echo")]
-#[clap(disable_help_flag = true)]
 pub struct Echo {
     /// Content to output.
     input: String,

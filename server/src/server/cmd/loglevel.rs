@@ -9,7 +9,6 @@ use super::Command;
 /// Set the log verbosity level.
 #[derive(Parser)]
 #[command(name = "loglevel")]
-#[clap(disable_help_flag = true)]
 pub struct LogLevel {
     /// The level to set to.
     level: Level,

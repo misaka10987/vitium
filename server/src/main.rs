@@ -1,14 +1,14 @@
-pub mod dice;
-pub mod game;
-pub mod load;
+mod cli;
+mod dice;
+mod game;
+mod load;
 mod log;
 mod prelude;
-pub mod script;
-pub mod server;
+mod script;
+mod server;
 
 use clap::Parser;
 use load::try_load_toml;
-use shutup::ShutUp;
 use std::{path::PathBuf, sync::LazyLock, time::Duration};
 use tokio::runtime;
 use tracing::info;
@@ -28,14 +28,11 @@ fn main() -> anyhow::Result<()> {
     info!("running with {:?}", *ARG);
     ctrlc::set_handler(|| shutup::ROOT.shut())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
-    let shutdown = ShutUp::new();
-    let fut = shutdown.wait();
-    run.spawn(async move {
-        let cfg = try_load_toml(&ARG.config).await;
-        let server = Server::new(cfg).await.unwrap();
-        server.start().await.unwrap().adopt(&shutdown);
-    });
-    run.block_on(fut);
+    let cfg = run.block_on(try_load_toml(&ARG.config));
+    let server = run.block_on(Server::new(cfg))?;
+    cli::start(server.clone())?;
+    let shutdown = run.block_on(server.start())?;
+    run.block_on(shutdown.wait());
     info!("shutdown in 30s");
     run.shutdown_timeout(Duration::from_secs(30));
     Ok(())

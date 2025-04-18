@@ -31,12 +31,7 @@ use std::{
     pin::Pin,
     sync::Arc,
 };
-use tokio::{
-    io::{stdin, AsyncBufReadExt, BufReader},
-    select, spawn,
-    sync::broadcast,
-    task::JoinHandle,
-};
+use tokio::{select, sync::broadcast, task::JoinHandle};
 use tokio_stream::{Stream, StreamExt};
 use tracing::warn;
 use vitium_api::cmd::{CommandLine, CommandStatus};
@@ -44,46 +39,6 @@ use vitium_api::cmd::{CommandLine, CommandStatus};
 use crate::Server;
 
 use super::{auth::Token, internal_server_error};
-
-impl Server {
-    pub fn handle_input(&self, shutdown: ShutUp) -> ShutUp {
-        let server = self.clone();
-        let stdin = BufReader::new(stdin());
-        let mut line = stdin.lines();
-        let emit = ShutUp::new();
-        let emit_shutdown = emit.clone();
-        spawn(async move {
-            loop {
-                select! {
-                    line = line.next_line() => {
-                        match line {
-                            Ok(Some(line)) => {
-                                if line.is_empty() || line.chars().all(|c|c.is_whitespace()) {
-                                    continue;
-                                }
-                                server.server_run_cmd(line.clone()).await;
-                                if shutdown.off() {
-                                    break;
-                                }
-                            },
-                            // EOF
-                            Ok(None) => {
-                                emit.shut();
-                                break;
-                            },
-                            Err(e) => {
-                                emit.shut();
-                                panic!("{e:?}")
-                            }
-                        }
-                    },
-                    _ = shutdown.wait() => break
-                }
-            }
-        });
-        emit_shutdown
-    }
-}
 
 fn print_info(cmd: &CommandLine, status: &anyhow::Result<String>) {
     if let Some(user) = &cmd.user {
@@ -139,21 +94,32 @@ pub struct CommandInst {
 
 impl CommandInst {
     pub fn from<T: Command>() -> Self {
-        let clap = T::command();
         let perm = T::perm_req();
         let exe = |line: String, server| async move {
             let it = shell_words::split(&line)?;
+            let mut clap = T::command();
+
+            if let Err(e) = clap.clone().try_get_matches_from(&it) {
+                if e.kind() == clap::error::ErrorKind::DisplayHelp {
+                    return Ok(format!("{}", clap.render_long_help().ansi()));
+                }
+            }
+
             let arg = T::try_parse_from(it).map_err(|e| anyhow!("{}", e.render().ansi()))?;
             arg.exec(server).await
         };
         Self {
-            clap,
+            clap: T::command(),
             perm,
             exe: Box::new(exe),
         }
     }
     pub async fn run(&self, arg: String, server: Server) -> anyhow::Result<String> {
         self.exe.exec(arg, server).await
+    }
+    pub fn help_page(&self) -> String {
+        let help = self.clap.clone().render_long_help();
+        format!("{help}")
     }
 }
 

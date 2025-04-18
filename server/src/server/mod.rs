@@ -49,7 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_time ON chat(time);
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
-    shutdown: ShutUp,
+    pub shutdown: ShutUp,
     db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
     basileus: Basileus,
@@ -111,8 +111,6 @@ impl Server {
         #[cfg(debug_assertions)]
         self.dev_hooks().await?;
 
-        self.handle_input(self.shutdown.child())
-            .adopt(&self.shutdown);
         self.print_cmd_output(self.shutdown.child());
 
         let port = self.cfg.port.unwrap_or(0);

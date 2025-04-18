@@ -9,7 +9,6 @@ use super::Command;
 /// Clear terminal screen.
 #[derive(Parser)]
 #[command(name = "clear", visible_alias = "cls")]
-#[clap(disable_help_flag = true)]
 pub struct Clear;
 
 impl Command for Clear {
