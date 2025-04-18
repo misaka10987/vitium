@@ -142,8 +142,8 @@ impl CommandInst {
         let clap = T::command();
         let perm = T::perm_req();
         let exe = |line: String, server| async move {
-            let arg = T::try_parse_from(line.split_whitespace())
-                .map_err(|e| anyhow!("{}", e.render().ansi()))?;
+            let it = shell_words::split(&line)?;
+            let arg = T::try_parse_from(it).map_err(|e| anyhow!("{}", e.render().ansi()))?;
             arg.exec(server).await
         };
         Self {
