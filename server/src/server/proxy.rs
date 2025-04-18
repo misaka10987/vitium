@@ -11,10 +11,9 @@ use pingora::{
     upstreams::peer::HttpPeer,
 };
 use serde::{Deserialize, Serialize};
+use shutup::ShutUp;
 use std::net::{Ipv6Addr, SocketAddr};
-use tokio::{sync::watch, task::JoinHandle};
-
-use crate::wait_shutdown;
+use tokio::sync::watch;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SSLConfig {
@@ -57,15 +56,22 @@ impl Default for Config {
 pub struct ProxyServer {
     pub cfg: Config,
     pub api_port: u16,
+    pub shutdown: ShutUp,
 }
 
 impl ProxyServer {
     pub fn new(cfg: Config, api_port: u16) -> Self {
-        Self { cfg, api_port }
+        Self {
+            cfg,
+            api_port,
+            shutdown: ShutUp::new(),
+        }
     }
 
-    pub fn start(self) -> anyhow::Result<JoinHandle<()>> {
+    pub fn start(self) -> anyhow::Result<ShutUp> {
         let cfg = self.cfg.clone();
+
+        let shutdown = self.shutdown.clone();
 
         let mut proxy = http_proxy_service(&Default::default(), self);
 
@@ -80,15 +86,17 @@ impl ProxyServer {
 
         let (send, recv) = watch::channel(false);
 
+        let fut = shutdown.wait();
+
         tokio::spawn(async move {
-            wait_shutdown().await;
+            fut.await;
             let _ = send.send(true);
         });
 
-        let task = tokio::spawn(async move {
+        tokio::spawn(async move {
             proxy.start_service(None, recv).await;
         });
-        Ok(task)
+        Ok(shutdown)
     }
 
     fn get_host(&self, session: &Session) -> String {

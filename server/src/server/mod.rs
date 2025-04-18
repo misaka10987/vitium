@@ -17,6 +17,7 @@ use chat::ChatModule;
 use cmd::CommandModule;
 use proxy::ProxyServer;
 use serde::{Deserialize, Serialize};
+use shutup::ShutUp;
 use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
 use std::{
     collections::HashMap,
@@ -30,8 +31,6 @@ use tokio::{net::TcpListener, sync::RwLock};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::{error, info};
 use vitium_api::user::UserProfile;
-
-use crate::wait_shutdown;
 
 pub use prelude::*;
 
@@ -50,6 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_time ON chat(time);
 
 pub struct ServerInst {
     pub cfg: ServerConfig,
+    shutdown: ShutUp,
     db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
     basileus: Basileus,
@@ -83,8 +83,10 @@ impl Server {
             .create_if_missing(true);
         let pool = SqlitePool::connect_with(conn_opt).await?;
         query(DB_INIT_QUERY).execute(&pool).await?;
+        let shutdown = ShutUp::new();
         let value = Self(Arc::new(ServerInst {
             cfg,
+            shutdown,
             db: pool.clone(),
             player: RwLock::const_new(HashMap::new()),
             basileus: Basileus::new(Default::default()).await?,
@@ -105,9 +107,14 @@ impl Server {
     }
 
     /// Consumes `self` and start the server.
-    pub async fn start(self) -> anyhow::Result<()> {
+    pub async fn start(self) -> anyhow::Result<ShutUp> {
         #[cfg(debug_assertions)]
         self.dev_hooks().await?;
+
+        self.handle_input(self.shutdown.child())
+            .adopt(&self.shutdown);
+        self.print_cmd_output(self.shutdown.child());
+
         let port = self.cfg.port.unwrap_or(0);
         let ip = if self.cfg.direct_api {
             Ipv6Addr::UNSPECIFIED
@@ -119,7 +126,12 @@ impl Server {
         info!("start API server on {}", listener.local_addr()?);
         let port = listener.local_addr()?.port();
         let proxy = ProxyServer::new(self.cfg.proxy.clone(), port);
-        proxy.start()?;
+        let proxy = proxy.start()?;
+        self.shutdown.adopt(&proxy);
+
+        let fut = self.shutdown.wait();
+        let shutdown = self.shutdown.clone();
+
         let app = Router::new();
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());
@@ -134,10 +146,13 @@ impl Server {
             .layer(CorsLayer::very_permissive())
             .layer(TraceLayer::new_for_http())
             .with_state(self);
-        axum::serve(listener, app)
-            .with_graceful_shutdown(wait_shutdown())
-            .await?;
-        Ok(())
+        tokio::spawn(async move {
+            axum::serve(listener, app)
+                .with_graceful_shutdown(fut)
+                .await
+                .unwrap()
+        });
+        Ok(shutdown)
     }
 }
 

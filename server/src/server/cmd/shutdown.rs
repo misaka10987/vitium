@@ -1,7 +1,7 @@
 use basileus::Perm;
 use clap::Parser;
 
-use crate::{trigger_shutdown, Server};
+use crate::Server;
 
 use super::Command;
 
@@ -12,8 +12,8 @@ use super::Command;
 pub struct Shutdown;
 
 impl Command for Shutdown {
-    async fn exec(self, _: Server) -> anyhow::Result<String> {
-        trigger_shutdown();
+    async fn exec(self, s: Server) -> anyhow::Result<String> {
+        s.shutdown.shut();
         Ok("".into())
     }
 

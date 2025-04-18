@@ -24,6 +24,7 @@ use kill::Kill;
 use loglevel::LogLevel;
 use say::Say;
 use shutdown::Shutdown;
+use shutup::ShutUp;
 use std::{
     collections::{HashMap, HashSet},
     future::Future,
@@ -40,15 +41,17 @@ use tokio_stream::{Stream, StreamExt};
 use tracing::warn;
 use vitium_api::cmd::{CommandLine, CommandStatus};
 
-use crate::{should_shutdown, trigger_shutdown, wait_shutdown, Server};
+use crate::Server;
 
 use super::{auth::Token, internal_server_error};
 
 impl Server {
-    pub fn handle_input(&self) -> JoinHandle<()> {
+    pub fn handle_input(&self, shutdown: ShutUp) -> ShutUp {
         let server = self.clone();
         let stdin = BufReader::new(stdin());
         let mut line = stdin.lines();
+        let emit = ShutUp::new();
+        let emit_shutdown = emit.clone();
         spawn(async move {
             loop {
                 select! {
@@ -59,25 +62,26 @@ impl Server {
                                     continue;
                                 }
                                 server.server_run_cmd(line.clone()).await;
-                                if should_shutdown() {
+                                if shutdown.off() {
                                     break;
                                 }
                             },
                             // EOF
                             Ok(None) => {
-                                trigger_shutdown();
+                                emit.shut();
                                 break;
                             },
                             Err(e) => {
-                                trigger_shutdown();
+                                emit.shut();
                                 panic!("{e:?}")
                             }
                         }
                     },
-                    _ = wait_shutdown() => break
+                    _ = shutdown.wait() => break
                 }
             }
-        })
+        });
+        emit_shutdown
     }
 }
 
@@ -200,7 +204,7 @@ impl CommandModule {
 }
 
 pub trait CommandServer {
-    fn print_cmd_output(&self) -> JoinHandle<()>;
+    fn print_cmd_output(&self, shutdown: ShutUp) -> JoinHandle<()>;
     fn server_run_cmd(&self, line: String) -> impl std::future::Future<Output = ()> + Send;
     fn run_cmd(&self, user: &str, line: String) -> impl std::future::Future<Output = ()> + Send;
     fn cmd_output(&self) -> broadcast::Receiver<Arc<(CommandLine, anyhow::Result<String>)>>;
@@ -248,17 +252,18 @@ impl CommandServer for Server {
     fn cmd_output(&self) -> broadcast::Receiver<Arc<(CommandLine, anyhow::Result<String>)>> {
         self.cmd.output.subscribe()
     }
-    fn print_cmd_output(&self) -> JoinHandle<()> {
+    fn print_cmd_output(&self, shutdown: ShutUp) -> JoinHandle<()> {
         let mut output = self.cmd.output.subscribe();
         tokio::spawn(async move {
             loop {
                 select! {
                     res = output.recv() => {
-                        let res = res.unwrap();
-                        let (cmd, res) = &*res;
-                        print_info(cmd, res);
+                        if let Ok(res) = res {
+                            let (cmd, res) = &*res;
+                            print_info(cmd, res);
+                        }
                     }
-                    _ = wait_shutdown() => break
+                    _ = shutdown.wait() => break
                 }
             }
         })

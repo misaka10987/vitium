@@ -5,11 +5,10 @@ mod log;
 mod prelude;
 pub mod script;
 pub mod server;
-mod shutdown;
 
 use clap::Parser;
 use load::try_load_toml;
-use server::CommandServer;
+use shutup::ShutUp;
 use std::{path::PathBuf, sync::LazyLock, time::Duration};
 use tokio::runtime;
 use tracing::info;
@@ -27,19 +26,17 @@ static ARG: LazyLock<Args> = LazyLock::new(Args::parse);
 
 fn main() -> anyhow::Result<()> {
     info!("running with {:?}", *ARG);
-    ctrlc::set_handler(|| trigger_shutdown())?;
+    ctrlc::set_handler(|| shutup::ROOT.shut())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
-    run.spawn(async {
+    let shutdown = ShutUp::new();
+    let fut = shutdown.wait();
+    run.spawn(async move {
         let cfg = try_load_toml(&ARG.config).await;
         let server = Server::new(cfg).await.unwrap();
-        let input = server.handle_input();
-        let output = server.print_cmd_output();
-        server.start().await.unwrap();
-        input.abort();
-        output.abort();
+        server.start().await.unwrap().adopt(&shutdown);
     });
-    run.block_on(wait_shutdown());
-    info!("shutting down in 30s");
+    run.block_on(fut);
+    info!("shutdown in 30s");
     run.shutdown_timeout(Duration::from_secs(30));
     Ok(())
 }
