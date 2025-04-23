@@ -47,17 +47,13 @@ export function LoginForm({
               const pass = data.get('pass')?.toString()
               if (user == undefined || pass == undefined)
                 throw new Error('impossible')
-              try {
-                const res = await grabToken(user, pass)
-                if (!res.ok) {
-                  setWrongCredentials(true)
-                  return
-                }
-                setUsername(user)
-                router.replace('/game')
-              } catch (error) {
-                console.error('Login failed:', error)
+              const res = await grabToken(user, pass)
+              if (!res.ok) {
+                setWrongCredentials(true)
+                return
               }
+              setUsername(user)
+              router.replace('/game')
             }}
           >
             <div className="flex flex-col gap-6">

@@ -34,10 +34,8 @@ export const Chatbox = () => {
 
     let eventSource: EventSource | null = null
 
-    const connectToSSE = () => {
+    const subscribe = () => {
       // The browser automatically sets Accept: text/event-stream for EventSource connections
-      console.debug('Establishing SSE connection to', hostname)
-
       eventSource = new EventSource(`https://${hostname}/api/chat`)
 
       window.addEventListener('beforeunload', () => eventSource?.close())
@@ -55,22 +53,24 @@ export const Chatbox = () => {
         if (eventSource?.readyState == EventSource.CLOSED) {
           connectAttempts.current += 1
           console.debug(
-            `Connection closed. Attempt ${connectAttempts.current}/3`
+            `Connection closed. Reconnect attempt ${connectAttempts.current}/3`
           )
 
           if (connectAttempts.current >= 3) {
             console.debug(
-              'Maximum connection attempts reached. Redirecting to login.'
+              'Max reconnection attempt reached, redirecting to login'
             )
+            eventSource?.close()
             router.replace('/login')
+            return
           }
 
-          setTimeout(connectToSSE, 3000) // Reconnect after 3 seconds
+          setTimeout(subscribe, 3000) // Reconnect after 3 seconds
         }
       })
     }
 
-    connectToSSE()
+    subscribe()
 
     return () => eventSource?.close()
   }, [hostname, router])

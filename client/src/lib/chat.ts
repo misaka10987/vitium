@@ -21,22 +21,19 @@ export const setSSEListener = (
     messagesDispatch(update)
   })
 
-  es.addEventListener('error', (event) => {
-    console.error('Error in SSE:', event)
-    es.close()
-  })
+  es.addEventListener('error', console.error)
 }
 
 export const sendMessage = async (message: string) => {
   console.info('Sending chat message: ', message)
   const hostname = hostStore.getState().hostname
   if (!hostname?.trim()) {
-    console.error('Hostname is not set.')
+    console.error('Hostname not set')
     return
   }
   const username = userStore.getState().username
   if (!username?.trim()) {
-    console.error('Username is not set.')
+    console.error('Username not set')
     return
   }
   const res = await fetch(`https://${hostname}/api/chat`, {
