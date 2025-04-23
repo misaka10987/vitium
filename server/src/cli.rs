@@ -22,6 +22,7 @@ pub fn start(server: Server) -> anyhow::Result<()> {
                     rl.add_history_entry(line.as_str()).unwrap();
                     let server = server.clone();
                     runtime::Builder::new_current_thread()
+                        .enable_all()
                         .build()
                         .unwrap()
                         .block_on(async move {
