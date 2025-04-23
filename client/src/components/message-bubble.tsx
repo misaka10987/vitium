@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Message } from 'vitium-api'
 
-export const Chatbubble = ({
+export const MessageBubble = ({
   sender,
   time,
   content,
@@ -31,7 +31,7 @@ export const Chatbubble = ({
           </AvatarFallback>
         </Avatar>
       </div>
-      <div className={cn('flex-grow', variant == 'send' ? 'ml-4' : 'mr-4')}>
+      <div className="flex-grow">
         <div className="flex flex-col gap-1">
           <div
             className={cn(
@@ -48,7 +48,7 @@ export const Chatbubble = ({
                 minute: '2-digit',
               })}
             </Badge>
-            <span className="flex text-sm font-medium align-middle text-muted-foreground truncate select-none">
+            <span className="flex text-sm font-medium align-middle text-muted-foreground select-none">
               {sender}
             </span>
           </div>
@@ -73,6 +73,7 @@ export const Chatbubble = ({
           </div>
         </div>
       </div>
+      <div className="mx-2" />
     </div>
   )
 }

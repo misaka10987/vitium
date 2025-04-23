@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Textarea } from '@/components/ui/textarea'
-import { Chatbubble } from '@/components/chatbubble'
+import { MessageBubble } from '@/components/message-bubble'
 import { Button } from '@/components/ui/button'
 import { sendMessage, setSSEListener } from '@/lib/chat'
 import {
@@ -130,7 +130,7 @@ export const Chatbox = () => {
         >
           {messages.map((msg, index) => (
             <div className="flex w-full" key={index}>
-              <Chatbubble {...msg} />
+              <MessageBubble {...msg} />
             </div>
           ))}
         </div>
