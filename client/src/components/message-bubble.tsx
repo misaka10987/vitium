@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Message } from 'vitium-api'
+import DOMPurify from 'dompurify'
 
 export const MessageBubble = ({
   sender,
@@ -12,7 +13,7 @@ export const MessageBubble = ({
 }: Message & { variant?: 'default' | 'send' | 'receive' }) => {
   const renderedContent = html ? (
     <iframe sandbox="">
-      <div dangerouslySetInnerHTML={{ __html: content }} />
+      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
     </iframe>
   ) : (
     content
