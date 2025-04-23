@@ -1,8 +1,9 @@
 use basileus::Perm;
 use clap::Parser;
 use tracing::Level;
+use tracing_subscriber::filter::Targets;
 
-use crate::{log::FILTER, Server};
+use crate::{server::log::LogServer, Server};
 
 use super::Command;
 
@@ -18,11 +19,12 @@ pub struct LogLevel {
 }
 
 impl Command for LogLevel {
-    async fn exec(self, _: Server) -> anyhow::Result<String> {
-        FILTER.lock().unwrap().modify(|filter| match self.module {
+    async fn exec(self, s: Server) -> anyhow::Result<String> {
+        let setter = |filter: &mut Targets| match self.module {
             Some(m) => *filter = filter.clone().with_target(m, self.level),
             None => *filter = filter.clone().with_default(self.level),
-        })?;
+        };
+        s.reload_logger(setter)?;
         Ok(format!("set log level to {}", self.level))
     }
 

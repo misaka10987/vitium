@@ -1,6 +1,7 @@
 mod auth;
 mod chat;
 mod cmd;
+mod log;
 mod prelude;
 mod profile;
 mod proxy;
@@ -15,6 +16,7 @@ use axum::{
 use basileus::Basileus;
 use chat::ChatModule;
 use cmd::CommandModule;
+use log::LogModule;
 use proxy::ProxyServer;
 use serde::{Deserialize, Serialize};
 use shutup::ShutUp;
@@ -55,6 +57,7 @@ pub struct ServerInst {
     basileus: Basileus,
     chat: ChatModule,
     cmd: CommandModule,
+    log: LogModule,
 }
 
 /// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
@@ -84,6 +87,7 @@ impl Server {
         let pool = SqlitePool::connect_with(conn_opt).await?;
         query(DB_INIT_QUERY).execute(&pool).await?;
         let shutdown = ShutUp::new();
+        let log = LogModule::new(cfg.log.clone())?;
         let value = Self(Arc::new(ServerInst {
             cfg,
             shutdown,
@@ -92,6 +96,7 @@ impl Server {
             basileus: Basileus::new(Default::default()).await?,
             chat: ChatModule::new(),
             cmd: CommandModule::new(),
+            log,
         }));
         Ok(value)
     }
@@ -178,6 +183,12 @@ impl AsRef<CommandModule> for Server {
     }
 }
 
+impl AsRef<LogModule> for Server {
+    fn as_ref(&self) -> &LogModule {
+        &self.log
+    }
+}
+
 fn f() -> bool {
     false
 }
@@ -190,6 +201,8 @@ pub struct ServerConfig {
     pub direct_api: bool,
     pub proxy: proxy::Config,
     #[serde(default)]
+    pub log: log::Config,
+    #[serde(default)]
     pub motd: String,
 }
 
@@ -199,6 +212,7 @@ impl Default for ServerConfig {
             port: None,
             direct_api: false,
             proxy: Default::default(),
+            log: Default::default(),
             motd: String::new(),
         }
     }
