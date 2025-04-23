@@ -14,7 +14,7 @@ export const NavBar = () => {
     <NavigationMenu className="p-1 gap-2 items-start justify-start">
       <NavigationMenuList>
         <NavigationMenuItem>
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" asChild className="select-none">
             <div className="flex flex-row">
               <Link href="/">Vitium</Link>
             </div>
