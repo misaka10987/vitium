@@ -26,47 +26,50 @@ export const Chatbubble = ({
     >
       <div className="flex">
         <Avatar className="m-1">
-          <AvatarFallback className="text-sm select-none">
+          <AvatarFallback className="text-sm font-bold select-none">
             {sender?.substring(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
       </div>
-      <div className="flex-grow">
-        <div
-          className={cn(
-            'flex flex-row gap-1',
-            variant === 'send' && 'flex-row-reverse'
-          )}
-        >
-          <Badge
-            variant="outline"
-            className="flex text-[10px] py-0 px-1 h-auto mt-1 bg-transparent text-muted-foreground border-border flex-shrink-0 select-none"
-          >
-            {new Date(Number(time)).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Badge>
-          <span className="flex text-sm font-medium mt-1 text-muted-foreground truncate select-none">
-            {sender}
-          </span>
-        </div>
-        <div
-          className={cn(
-            'flex',
-            variant == 'send' && 'justify-end',
-            variant == 'receive' && 'justify-start'
-          )}
-        >
+      <div className={cn('flex-grow', variant == 'send' ? 'ml-4' : 'mr-4')}>
+        <div className="flex flex-col gap-1">
           <div
             className={cn(
-              'text-sm p-1 pl-2 pr-2 mt-1 rounded-lg max-w-md w-fit',
-              variant == 'default' && 'bg-secondary text-secondary-foreground',
-              variant == 'send' && 'bg-primary text-primary-foreground',
-              variant == 'receive' && 'bg-secondary text-secondary-foreground'
+              'flex flex-row gap-1',
+              variant == 'send' && 'flex-row-reverse'
             )}
           >
-            {renderedContent}
+            <Badge
+              variant="outline"
+              className="flex text-[10px] py-0 px-1 bg-transparent text-muted-foreground select-none"
+            >
+              {new Date(Number(time)).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Badge>
+            <span className="flex text-sm font-medium align-middle text-muted-foreground truncate select-none">
+              {sender}
+            </span>
+          </div>
+          <div
+            className={cn(
+              'flex',
+              variant == 'send' && 'justify-end',
+              variant == 'receive' && 'justify-start'
+            )}
+          >
+            <div
+              className={cn(
+                'py-1.5 px-2.5 rounded-lg',
+                variant == 'default' &&
+                  'bg-secondary text-secondary-foreground',
+                variant == 'send' && 'bg-primary text-primary-foreground',
+                variant == 'receive' && 'bg-secondary text-secondary-foreground'
+              )}
+            >
+              <p className="text-sm text-justify">{renderedContent}</p>
+            </div>
           </div>
         </div>
       </div>

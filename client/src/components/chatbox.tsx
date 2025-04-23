@@ -126,7 +126,7 @@ export const Chatbox = () => {
       <div className="flex flex-grow h-0 w-full rounded-md border">
         <div
           ref={container}
-          className="flex flex-col p-2 gap-1 w-full overflow-auto"
+          className="flex flex-col p-2 gap-2 w-full overflow-auto"
         >
           {messages.map((msg, index) => (
             <div className="flex w-full" key={index}>
