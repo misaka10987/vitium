@@ -7,8 +7,6 @@ pub use super::mart::Mart;
 pub use super::mat::Mat;
 pub use super::prof::Prof;
 pub use super::race::Race;
-pub use super::scena::Scena;
 pub use super::skill::Skill;
 pub use super::spell::Spell;
 pub use super::terra::Terra;
-pub use super::vehicle::Vehicle;

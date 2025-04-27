@@ -8,11 +8,9 @@ pub mod mat;
 pub mod prelude;
 pub mod prof;
 pub mod race;
-pub mod scena;
 pub mod skill;
 pub mod spell;
 pub mod terra;
-pub mod vehicle;
 
 use serde::{Deserialize, Serialize};
 
