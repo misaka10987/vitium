@@ -1,38 +1,42 @@
 mod cli;
+mod crash;
 mod dice;
 mod prelude;
 mod script;
 mod server;
 
 use clap::Parser;
-use std::{fs::read_to_string, path::PathBuf, time::Duration};
+use crash::{crash, exit};
+use std::{
+    fs::read_to_string,
+    panic::{self},
+    path::PathBuf,
+    time::Duration,
+};
 use tokio::runtime;
 use tracing::info;
 
 pub use prelude::*;
 
 #[derive(Parser, Debug)]
-#[command(version)]
+#[command(about, long_about, version, author)]
 struct Vitium {
     /// Path to the server configuration file.
-    #[arg(short, long)]
-    pub config: Option<PathBuf>,
+    #[arg(short, long, default_value = "config.toml")]
+    pub config: PathBuf,
 }
 
 fn main() -> anyhow::Result<()> {
     let args = Vitium::parse();
+    panic::set_hook(Box::new(crash));
     ctrlc::set_handler(|| shutup::ROOT.shut())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
-    let cfg = if let Some(path) = &args.config {
-        toml::from_str(&read_to_string(path)?)?
-    } else {
-        Default::default()
-    };
+    let cfg = toml::from_str(&read_to_string(&args.config).expect("load config failed")).unwrap();
     let server = run.block_on(Server::new(cfg))?;
     cli::start(server.clone())?;
     let shutdown = run.block_on(server.start())?;
     run.block_on(shutdown.wait());
     info!("shutdown in 30s");
     run.shutdown_timeout(Duration::from_secs(30));
-    Ok(())
+    exit()
 }

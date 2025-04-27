@@ -25,7 +25,7 @@ use std::{
     collections::HashMap,
     error::Error,
     net::{Ipv6Addr, SocketAddr},
-    ops::{Deref, DerefMut},
+    ops::Deref,
     sync::Arc,
     time::SystemTime,
 };
@@ -35,8 +35,6 @@ use tracing::{error, info};
 use vitium_api::user::UserProfile;
 
 pub use prelude::*;
-
-// use crate::game::{self, Game};
 
 const DB_INIT_QUERY: &'static str = r#"
 CREATE TABLE IF NOT EXISTS chat (
@@ -50,7 +48,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_time ON chat(time);
 "#;
 
 pub struct ServerInst {
-    pub cfg: ServerConfig,
+    pub cfg: Config,
     pub shutdown: ShutUp,
     db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
@@ -60,7 +58,7 @@ pub struct ServerInst {
     log: LogModule,
 }
 
-/// Defines the server. This is a more abstract one, see `crate::game` for specific game logics.
+/// Interface to the entire server.
 #[derive(Clone)]
 pub struct Server(Arc<ServerInst>);
 
@@ -72,15 +70,9 @@ impl Deref for Server {
     }
 }
 
-impl DerefMut for Server {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl Server {
     /// Create a server with specified configuration.
-    pub async fn new(cfg: ServerConfig) -> anyhow::Result<Self> {
+    pub async fn new(cfg: Config) -> anyhow::Result<Self> {
         let conn_opt = SqliteConnectOptions::new()
             .filename("./server.db")
             .create_if_missing(true);
@@ -132,9 +124,6 @@ impl Server {
         let proxy = proxy.start()?;
         self.shutdown.adopt(&proxy);
 
-        let fut = self.shutdown.wait();
-        let shutdown = self.shutdown.clone();
-
         let app = Router::new();
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());
@@ -147,10 +136,13 @@ impl Server {
             .nest("/profile", profile::rest())
             .fallback(any(StatusCode::NOT_FOUND))
             .layer(CorsLayer::very_permissive())
-            .layer(TraceLayer::new_for_http())
-            .with_state(self);
+            .layer(TraceLayer::new_for_http());
+
+        let fut = self.shutdown.wait();
+        let shutdown = self.shutdown.clone();
+
         tokio::spawn(async move {
-            axum::serve(listener, app)
+            axum::serve(listener, app.with_state(self))
                 .with_graceful_shutdown(fut)
                 .await
                 .unwrap()
@@ -195,18 +187,22 @@ fn f() -> bool {
 
 /// Server configuration.
 #[derive(Clone, Serialize, Deserialize)]
-pub struct ServerConfig {
+pub struct Config {
+    /// Port to start the API server on.
     pub port: Option<u16>,
+    /// Whether to allow direct access to the API server via HTTP from remote.
     #[serde(default = "f")]
     pub direct_api: bool,
+    /// Configurations for HTTP proxy.
     pub proxy: proxy::Config,
+    /// Configurations for logging.
     #[serde(default)]
     pub log: log::Config,
     #[serde(default)]
     pub motd: String,
 }
 
-impl Default for ServerConfig {
+impl Default for Config {
     fn default() -> Self {
         Self {
             port: None,
