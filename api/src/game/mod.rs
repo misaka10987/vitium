@@ -1,4 +1,3 @@
-pub mod act;
 pub mod attr;
 pub mod components;
 pub mod fight;

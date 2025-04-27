@@ -1,4 +1,3 @@
-pub use crate::game::Action;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// Describes a request.
