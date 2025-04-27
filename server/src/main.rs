@@ -19,7 +19,7 @@ use tracing::info;
 pub use prelude::*;
 
 #[derive(Parser, Debug)]
-#[command(about, long_about, version, author)]
+#[command(version)]
 struct Vitium {
     /// Path to the server configuration file.
     #[arg(short, long, default_value = "config.toml")]
@@ -31,7 +31,8 @@ fn main() -> anyhow::Result<()> {
     panic::set_hook(Box::new(crash));
     ctrlc::set_handler(|| shutup::ROOT.shut())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
-    let cfg = toml::from_str(&read_to_string(&args.config).expect("load config failed")).unwrap();
+    let cfg = toml::from_str(&read_to_string(&args.config).expect("failed to load config"))
+        .expect("failed to parse config");
     let server = run.block_on(Server::new(cfg))?;
     cli::start(server.clone())?;
     let shutdown = run.block_on(server.start())?;
