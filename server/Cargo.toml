@@ -1,7 +1,7 @@
 [package]
 name = "vitium-server"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["misaka10987 <misaka10987@outlook.com>"]
 description = "Utilities for TRPG."
 documentation = "https://github.com/misaka10987/vitium"
