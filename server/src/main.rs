@@ -1,32 +1,33 @@
 mod cli;
 mod dice;
-mod load;
 mod prelude;
 mod script;
 mod server;
 
 use clap::Parser;
-use load::try_load_toml;
-use std::{path::PathBuf, sync::LazyLock, time::Duration};
+use std::{fs::read_to_string, path::PathBuf, time::Duration};
 use tokio::runtime;
 use tracing::info;
 
 pub use prelude::*;
 
 #[derive(Parser, Debug)]
-struct Args {
+#[command(version)]
+struct Vitium {
     /// Path to the server configuration file.
-    #[arg(short, long, default_value = PathBuf::from("config.toml").into_os_string())]
-    pub config: PathBuf,
+    #[arg(short, long)]
+    pub config: Option<PathBuf>,
 }
 
-static ARG: LazyLock<Args> = LazyLock::new(Args::parse);
-
 fn main() -> anyhow::Result<()> {
-    info!("running with {:?}", *ARG);
+    let args = Vitium::parse();
     ctrlc::set_handler(|| shutup::ROOT.shut())?;
     let run = runtime::Builder::new_multi_thread().enable_all().build()?;
-    let cfg = run.block_on(try_load_toml(&ARG.config));
+    let cfg = if let Some(path) = &args.config {
+        toml::from_str(&read_to_string(path)?)?
+    } else {
+        Default::default()
+    };
     let server = run.block_on(Server::new(cfg))?;
     cli::start(server.clone())?;
     let shutdown = run.block_on(server.start())?;
