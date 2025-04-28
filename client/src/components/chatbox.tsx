@@ -11,7 +11,7 @@ import { panic } from '@/lib/util'
 
 export const Chatbox = () => {
   const [messages, setMessages] = useState<Message[]>([])
-  const { hostname } = useHostStore()
+  const { host } = useHostStore()
   const connectAttempts = useRef(0)
   const router = useRouter()
   const container = useRef<HTMLDivElement>(null)
@@ -22,13 +22,13 @@ export const Chatbox = () => {
   }, [messages])
 
   useEffect(() => {
-    if (!hostname) return
+    if (!host) return
 
     let eventSource: EventSource | null = null
 
     const subscribe = () => {
       // The browser automatically sets Accept: text/event-stream for EventSource connections
-      eventSource = new EventSource(`https://${hostname}/api/chat`)
+      eventSource = new EventSource(`https://${host}/api/chat`)
 
       window.addEventListener('beforeunload', () => eventSource?.close())
 
@@ -65,7 +65,7 @@ export const Chatbox = () => {
     subscribe()
 
     return () => eventSource?.close()
-  }, [hostname, router])
+  }, [host, router])
 
   return (
     <div className="flex flex-col-reverse h-full w-full gap-2">

@@ -26,7 +26,7 @@ export function LoginForm({
   const userInputId = useId()
   const passInputId = useId()
   const [wrongCredentials, setWrongCredentials] = useState(false)
-  const { setUsername } = useUserStore()
+  const { setUser } = useUserStore()
   const router = useRouter()
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -51,7 +51,7 @@ export function LoginForm({
                 setWrongCredentials(true)
                 return
               }
-              setUsername(user)
+              setUser(user)
               router.replace('/game')
             }}
           >

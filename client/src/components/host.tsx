@@ -15,12 +15,12 @@ import { useEffect, useId, useState } from 'react'
 import { persist } from 'zustand/middleware'
 
 export const useHostStore = create<{
-  hostname?: string
-  setHostname: (name: string) => void
+  host?: string
+  setHost: (name: string) => void
 }>()(
   persist(
     (set) => ({
-      setHostname: (name) => set(() => ({ hostname: name })),
+      setHost: (name) => set(() => ({ host: name })),
     }),
     {
       name: 'game-server',
@@ -31,7 +31,7 @@ export const useHostStore = create<{
 export const hostStore = useHostStore
 
 export const Host = () => {
-  const { hostname, setHostname } = useHostStore()
+  const { host, setHost } = useHostStore()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState<string>('')
   const formId = useId()
@@ -40,15 +40,15 @@ export const Host = () => {
   // wait 100ms for loading state from local storage
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (hostname == undefined) setOpen(true)
+      if (host == undefined) setOpen(true)
     }, 100)
     return () => clearTimeout(timer)
-  }, [hostname])
+  }, [host])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="link">{hostname}</Button>
+        <Button variant="link">{host}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -64,7 +64,7 @@ export const Host = () => {
             onSubmit={(e) => {
               e.preventDefault()
               setOpen(false)
-              setHostname(input)
+              setHost(input)
             }}
           >
             <Label htmlFor={inputId} className="text-right">

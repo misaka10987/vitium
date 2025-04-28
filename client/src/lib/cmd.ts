@@ -5,8 +5,8 @@ import { panic } from './util'
 import { json } from 'typia'
 
 export const sendCommand = async (line: string) => {
-  const host = hostStore.getState().hostname ?? panic('Missing hostname')
-  const user = userStore.getState().username ?? panic('Missing username')
+  const host = hostStore.getState().host ?? panic('Missing hostname')
+  const user = userStore.getState().user ?? panic('Missing username')
 
   const res = await fetch(`https://${host}/api/cmd`, {
     method: 'POST',

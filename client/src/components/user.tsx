@@ -4,12 +4,12 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware' // Import persist middleware
 
 export const useUserStore = create<{
-  username?: string
-  setUsername: (name: string) => void
+  user?: string
+  setUser: (name: string) => void
 }>()(
   persist(
     (set) => ({
-      setUsername: (username) => set(() => ({ username: username })),
+      setUser: (username) => set(() => ({ user: username })),
     }),
     {
       name: 'username',
@@ -20,6 +20,6 @@ export const useUserStore = create<{
 export const userStore = useUserStore
 
 export const User = () => {
-  const { username } = useUserStore()
-  return username
+  const { user } = useUserStore()
+  return user
 }

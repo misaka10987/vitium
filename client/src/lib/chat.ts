@@ -10,13 +10,13 @@ export const setSSEListener = (
 ) => {
   es.addEventListener('message', (event) => {
     const data = json.assertParse<Message>(event.data)
-    const username = userStore.getState().username
+    const user = userStore.getState().user
     // Add the received message to the messages state
     const update = (prev: Message[]) => [
       ...prev,
       {
         ...data,
-        variant: data.sender === username ? 'send' : 'receive',
+        variant: data.sender === user ? 'send' : 'receive',
       },
     ]
     messagesDispatch(update)
@@ -26,8 +26,8 @@ export const setSSEListener = (
 }
 
 export const sendMessage = async (content: string, html: boolean = false) => {
-  const host = hostStore.getState().hostname ?? panic('Missing hostname')
-  const user = userStore.getState().username ?? panic('Missing username')
+  const host = hostStore.getState().host ?? panic('Missing hostname')
+  const user = userStore.getState().user ?? panic('Missing username')
 
   const res = await fetch(`https://${host}/api/chat`, {
     method: 'POST',
