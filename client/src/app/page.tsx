@@ -24,7 +24,7 @@ export default function Page() {
           <p className="text-center">The TRPG Framework</p>
         </div>
         <div className="flex justify-center">
-          <Button asChild>
+          <Button asChild variant="secondary">
             <Link href="/login">Player Login</Link>
           </Button>
         </div>

@@ -26,7 +26,9 @@ export default function Layout({
             <div className="relative top-0">
               <NavBar />
             </div>
-            <div className="flex-1 flex-grow">{children}</div>
+            <div className="flex-1 flex-grow h-0 overflow-scroll">
+              {children}
+            </div>
           </div>
         </ThemeProvider>
       </body>
