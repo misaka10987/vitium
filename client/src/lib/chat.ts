@@ -4,27 +4,6 @@ import { Message } from 'vitium-api'
 import { json } from 'typia'
 import { panic } from './util'
 
-export const setSSEListener = (
-  es: EventSource,
-  messagesDispatch: (_: (_: Message[]) => Message[]) => void
-) => {
-  es.addEventListener('message', (event) => {
-    const data = json.assertParse<Message>(event.data)
-    const user = userStore.getState().user
-    // Add the received message to the messages state
-    const update = (prev: Message[]) => [
-      ...prev,
-      {
-        ...data,
-        variant: data.sender === user ? 'send' : 'receive',
-      },
-    ]
-    messagesDispatch(update)
-  })
-
-  es.addEventListener('error', console.error)
-}
-
 export const sendMessage = async (content: string, html: boolean = false) => {
   const host = hostStore.getState().host ?? panic('Missing hostname')
   const user = userStore.getState().user ?? panic('Missing username')

@@ -2,18 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { MessageBubble } from '@/components/message-bubble'
-import { setSSEListener } from '@/lib/chat'
-import { useHostStore } from '@/components/host'
-import { useRouter } from 'next/navigation'
 import { Message } from 'vitium-api'
 import { TurboInput } from '@/components/turbo-input'
 import { panic } from '@/lib/util'
+import { ChatSSE } from './chat-sse'
 
 export const Chatbox = () => {
   const [messages, setMessages] = useState<Message[]>([])
-  const { host } = useHostStore()
-  const connectAttempts = useRef(0)
-  const router = useRouter()
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -21,54 +16,11 @@ export const Chatbox = () => {
     curr.scrollTop = curr.scrollHeight
   }, [messages])
 
-  useEffect(() => {
-    if (!host) return
-
-    let eventSource: EventSource | null = null
-
-    const subscribe = () => {
-      // The browser automatically sets Accept: text/event-stream for EventSource connections
-      eventSource = new EventSource(`https://${host}/api/chat`)
-
-      window.addEventListener('beforeunload', () => eventSource?.close())
-
-      // Set up the SSE listener
-      setSSEListener(eventSource, setMessages)
-
-      // Reset attempts counter on successful connection
-      eventSource.addEventListener('open', () => {
-        connectAttempts.current = 0
-      })
-
-      // Handle reconnection if needed
-      eventSource.addEventListener('error', () => {
-        if (eventSource?.readyState == EventSource.CLOSED) {
-          connectAttempts.current += 1
-          console.debug(
-            `Connection closed. Reconnect attempt ${connectAttempts.current}/3`
-          )
-
-          if (connectAttempts.current >= 3) {
-            console.debug(
-              'Max reconnection attempt reached, redirecting to login'
-            )
-            eventSource?.close()
-            router.replace('/login')
-            return
-          }
-
-          setTimeout(subscribe, 3000) // Reconnect after 3 seconds
-        }
-      })
-    }
-
-    subscribe()
-
-    return () => eventSource?.close()
-  }, [host, router])
-
   return (
     <div className="flex flex-col-reverse h-full w-full gap-2">
+      <ChatSSE
+        downstream={(msg) => setMessages((prev) => prev.concat([msg]))}
+      />
       <div className="flex w-full">
         <TurboInput />
       </div>

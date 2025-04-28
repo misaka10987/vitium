@@ -23,7 +23,7 @@ export const useHostStore = create<{
       setHost: (name) => set(() => ({ host: name })),
     }),
     {
-      name: 'game-server',
+      name: 'host',
     }
   )
 )

@@ -3,14 +3,12 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { Message } from 'vitium-api'
 import DOMPurify from 'dompurify'
+import { useUserStore } from './user'
 
-export const MessageBubble = ({
-  sender,
-  time,
-  content,
-  html,
-  variant = 'default',
-}: Message & { variant?: 'default' | 'send' | 'receive' }) => {
+export const MessageBubble = ({ sender, time, content, html }: Message) => {
+  const { user } = useUserStore()
+  const send = user == sender
+
   const renderedContent = html ? (
     <p
       className="text-sm text-justify"
@@ -19,12 +17,10 @@ export const MessageBubble = ({
   ) : (
     <p className="text-sm text-justify">{content}</p>
   )
+
   return (
     <div
-      className={cn(
-        'flex flex-row gap-2 w-full',
-        variant == 'send' && 'flex-row-reverse'
-      )}
+      className={cn('flex flex-row gap-2 w-full', send && 'flex-row-reverse')}
     >
       <div className="flex">
         <Avatar className="m-1">
@@ -36,10 +32,7 @@ export const MessageBubble = ({
       <div className="flex-grow">
         <div className="flex flex-col gap-1">
           <div
-            className={cn(
-              'flex flex-row gap-1',
-              variant == 'send' && 'flex-row-reverse'
-            )}
+            className={cn('flex flex-row gap-1', send && 'flex-row-reverse')}
           >
             <Badge
               variant="outline"
@@ -54,20 +47,13 @@ export const MessageBubble = ({
               {sender}
             </span>
           </div>
-          <div
-            className={cn(
-              'flex',
-              variant == 'send' && 'justify-end',
-              variant == 'receive' && 'justify-start'
-            )}
-          >
+          <div className={cn('flex', send ? 'justify-end' : 'justify-start')}>
             <div
               className={cn(
                 'py-1.5 px-2.5 rounded-lg',
-                variant == 'default' &&
-                  'bg-secondary text-secondary-foreground',
-                variant == 'send' && 'bg-primary text-primary-foreground',
-                variant == 'receive' && 'bg-secondary text-secondary-foreground'
+                send
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground'
               )}
             >
               {renderedContent}
