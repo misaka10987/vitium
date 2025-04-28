@@ -45,7 +45,7 @@ fn print_info(cmd: &CommandLine, status: &anyhow::Result<String>) {
         eprintln!(
             "{} {} {}",
             user.purple().bold(),
-            ">".bright_blue().bold(),
+            ":".bright_blue().bold(),
             cmd.line
         )
     }
@@ -283,7 +283,7 @@ async fn create(
     Token(user): Token,
     Json(cmd): Json<CommandLine>,
 ) -> Result<(), StatusCode> {
-    if cmd.user.is_some_and(|x| x == user) {
+    if !cmd.user.is_some_and(|x| x == user) {
         return Err(StatusCode::FORBIDDEN);
     }
     s.run_cmd(&user, cmd.line).await;
