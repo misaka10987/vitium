@@ -1,23 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import { Textarea } from '@/components/ui/textarea'
+import { useState, useEffect, useRef } from 'react'
 import { MessageBubble } from '@/components/message-bubble'
-import { Button } from '@/components/ui/button'
-import { sendMessage, setSSEListener } from '@/lib/chat'
-import {
-  Send,
-  // due to an eslint bug, it requires you to provide an `alt` prop
-  // this is a walkaround
-  Image as Photo,
-} from 'lucide-react'
+import { setSSEListener } from '@/lib/chat'
 import { useHostStore } from '@/components/host'
 import { useRouter } from 'next/navigation'
 import { Message } from 'vitium-api'
+import { TurboInput } from '@/components/turbo-input'
+import { panic } from '@/lib/util'
 
 export const Chatbox = () => {
-  const msgForm = useRef<HTMLFormElement>(null)
-  const msgInput = useRef<HTMLTextAreaElement>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const { hostname } = useHostStore()
   const connectAttempts = useRef(0)
@@ -25,8 +17,8 @@ export const Chatbox = () => {
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (container.current != null)
-      container.current.scrollTop = container.current?.scrollHeight
+    const curr = container.current ?? panic()
+    curr.scrollTop = curr.scrollHeight
   }, [messages])
 
   useEffect(() => {
@@ -78,50 +70,7 @@ export const Chatbox = () => {
   return (
     <div className="flex flex-col-reverse h-full w-full gap-2">
       <div className="flex w-full">
-        <form
-          ref={msgForm}
-          className="flex gap-2 items-center w-full"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const form = new FormData(e.currentTarget)
-            const msg = form.get('msg')?.toString()
-            if (msg == undefined) throw Error()
-            sendMessage(msg)
-            if (msgInput?.current == null) throw Error()
-            msgInput.current.value = ''
-          }}
-        >
-          <Textarea
-            ref={msgInput}
-            name="msg"
-            className="h-full resize-none overflow-auto py-2"
-            placeholder="Type your message here..."
-            required
-            onKeyDown={(e) => {
-              if (e.key == 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                msgForm.current?.requestSubmit()
-              }
-            }}
-          />
-          <div className="flex flex-col gap-1">
-            <Button
-              className="h-[40px] px-4"
-              type="submit"
-              aria-label="Send message"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-            <Button
-              className="h-[40px] px-4 mt-1"
-              type="button"
-              variant="outline"
-              aria-label="Upload image"
-            >
-              <Photo className="h-4 w-4" />
-            </Button>
-          </div>
-        </form>
+        <TurboInput />
       </div>
       <div className="flex flex-grow h-0 w-full rounded-md border">
         <div

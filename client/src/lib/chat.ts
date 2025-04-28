@@ -2,6 +2,7 @@ import { hostStore } from '@/components/host'
 import { userStore } from '@/components/user'
 import { Message } from 'vitium-api'
 import { json } from 'typia'
+import { panic } from './util'
 
 export const setSSEListener = (
   es: EventSource,
@@ -24,33 +25,22 @@ export const setSSEListener = (
   es.addEventListener('error', console.error)
 }
 
-export const sendMessage = async (message: string) => {
-  console.info('Sending chat message: ', message)
-  const hostname = hostStore.getState().hostname
-  if (!hostname?.trim()) {
-    console.error('Hostname not set')
-    return
-  }
-  const username = userStore.getState().username
-  if (!username?.trim()) {
-    console.error('Username not set')
-    return
-  }
-  const res = await fetch(`https://${hostname}/api/chat`, {
+export const sendMessage = async (content: string) => {
+  const host = hostStore.getState().hostname ?? panic('Missing hostname')
+  const user = userStore.getState().username ?? panic('Missing username')
+
+  const res = await fetch(`https://${host}/api/chat`, {
     method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
+    body: json.assertStringify<Message>({
       time: Date.now(),
-      sender: username,
-      content: message,
+      sender: user,
+      content: content,
       html: false,
     }),
   })
-  if (!res.ok) {
-    console.error('HTTP error sending message:', res)
-  }
-  console.debug('Message sent successfully')
+  if (!res.ok) panic('HTTP error', res)
 }

@@ -17,6 +17,7 @@ import { useId, useState } from 'react'
 import Link from 'next/link'
 import { grabToken } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
+import { panic } from '@/lib/util'
 
 export function LoginForm({
   className,
@@ -43,10 +44,8 @@ export function LoginForm({
             onSubmit={async (e) => {
               e.preventDefault()
               const data = new FormData(e.currentTarget)
-              const user = data.get('user')?.toString()
-              const pass = data.get('pass')?.toString()
-              if (user == undefined || pass == undefined)
-                throw new Error('impossible')
+              const user = data.get('user')?.toString() ?? panic()
+              const pass = data.get('pass')?.toString() ?? panic()
               const res = await grabToken(user, pass)
               if (!res.ok) {
                 setWrongCredentials(true)
