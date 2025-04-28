@@ -2,6 +2,7 @@ mod clear;
 mod echo;
 mod kill;
 mod loglevel;
+mod roll;
 mod say;
 mod shutdown;
 
@@ -20,6 +21,7 @@ use colored::Colorize;
 use echo::Echo;
 use kill::Kill;
 use loglevel::LogLevel;
+use roll::Roll;
 use say::Say;
 use shutdown::Shutdown;
 use shutup::ShutUp;
@@ -139,6 +141,7 @@ impl CommandModule {
         init.register_cmd::<Say>();
         init.register_cmd::<Kill>();
         init.register_cmd::<LogLevel>();
+        init.register_cmd::<Roll>();
         init
     }
     pub fn register_cmd<T: Command>(&mut self) {

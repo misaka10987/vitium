@@ -1,6 +1,5 @@
 mod cli;
 mod crash;
-mod dice;
 mod prelude;
 mod script;
 mod server;
