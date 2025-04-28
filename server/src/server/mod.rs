@@ -27,7 +27,7 @@ use std::{
     net::{Ipv6Addr, SocketAddr},
     ops::Deref,
     path::PathBuf,
-    sync::Arc,
+    sync::{Arc, atomic::AtomicBool},
     time::SystemTime,
 };
 use tokio::{net::TcpListener, sync::RwLock};
@@ -51,6 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_time ON chat(time);
 pub struct ServerInst {
     pub cfg: Config,
     pub shutdown: ShutUp,
+    started: AtomicBool,
     db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
     basileus: Basileus,
@@ -84,6 +85,7 @@ impl Server {
         let val = Self(Arc::new(ServerInst {
             cfg,
             shutdown,
+            started: AtomicBool::new(false),
             db,
             player: RwLock::const_new(HashMap::new()),
             basileus: Basileus::new(Default::default()).await?,
@@ -92,6 +94,10 @@ impl Server {
             log,
         }));
         Ok(val)
+    }
+
+    pub fn started(&self) -> bool {
+        self.started.load(std::sync::atomic::Ordering::Relaxed)
     }
 
     #[cfg(debug_assertions)]
@@ -106,6 +112,12 @@ impl Server {
 
     /// Consumes `self` and start the server.
     pub async fn start(self) -> anyhow::Result<ShutUp> {
+        if self.started() {
+            panic!("can not start server for multiple times")
+        }
+        self.started
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+
         #[cfg(debug_assertions)]
         self.dev_hooks().await?;
 
