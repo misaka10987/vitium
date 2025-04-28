@@ -1,6 +1,5 @@
 mod clear;
 mod echo;
-mod help;
 mod kill;
 mod loglevel;
 mod say;
@@ -19,7 +18,6 @@ use clap::Parser;
 use clear::Clear;
 use colored::Colorize;
 use echo::Echo;
-use help::Help;
 use kill::Kill;
 use loglevel::LogLevel;
 use say::Say;
@@ -138,7 +136,6 @@ impl CommandModule {
         init.register_cmd::<Shutdown>();
         init.register_cmd::<Echo>();
         init.register_cmd::<Clear>();
-        init.register_cmd::<Help>();
         init.register_cmd::<Say>();
         init.register_cmd::<Kill>();
         init.register_cmd::<LogLevel>();
