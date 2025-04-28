@@ -1,14 +1,14 @@
-use axum::{extract::State, http::StatusCode, routing::get, Form, Router};
+use axum::{Form, Router, extract::State, http::StatusCode, routing::get};
 use axum_extra::extract::{
-    cookie::{Cookie, SameSite},
     CookieJar,
+    cookie::{Cookie, SameSite},
 };
 
-use basileus::{pass::PassManage, token::TokenManage, user::UserManage, Basileus};
+use basileus::{Basileus, pass::PassManage, token::TokenManage, user::UserManage};
 use tracing::error;
 use vitium_api::net;
 
-use super::{internal_server_error, Server};
+use super::{Server, internal_server_error};
 
 use axum::{
     extract::FromRequestParts,
@@ -36,11 +36,7 @@ where
             Some(_) => return Err(StatusCode::BAD_REQUEST),
             None => return Err(StatusCode::UNAUTHORIZED),
         };
-        match state
-            .as_ref()
-            .verify_pass(&cred.user_id, &cred.password)
-            .await
-        {
+        match state.verify_pass(&cred.user_id, &cred.password).await {
             Ok(true) => Ok(Password(cred.user_id)),
             Ok(false) | Err(basileus::err::VerifyPassError::UserNotExist(_)) => {
                 Err(StatusCode::UNAUTHORIZED)
@@ -67,7 +63,7 @@ where
             Some(x) => x.value(),
             None => return Err(StatusCode::UNAUTHORIZED),
         };
-        let user = match state.as_ref().verify_token(token) {
+        let user = match state.verify_token(token) {
             Some(x) => x,
             None => return Err(StatusCode::UNAUTHORIZED),
         };
@@ -81,7 +77,7 @@ pub fn rest() -> Router<Server> {
 }
 
 async fn read(State(s): State<Server>, Password(user): Password) -> CookieJar {
-    let token = s.basileus.issue_token(&user);
+    let token = s.issue_token(&user);
     let mut cookie = Cookie::new("token", token);
     cookie.set_http_only(true);
     cookie.set_partitioned(true);
@@ -92,15 +88,11 @@ async fn read(State(s): State<Server>, Password(user): Password) -> CookieJar {
 }
 
 async fn create(State(s): State<Server>, Form(form): Form<net::SignUp>) -> Result<(), StatusCode> {
-    s.basileus
-        .create_user(&form.user)
-        .await
-        .map_err(|e| match e {
-            basileus::err::CreateUserError::UserAlreadyExist(_) => StatusCode::CONFLICT,
-            e => internal_server_error(e),
-        })?;
-    s.basileus
-        .update_pass(&form.user, &form.pass)
+    s.create_user(&form.user).await.map_err(|e| match e {
+        basileus::err::CreateUserError::UserAlreadyExist(_) => StatusCode::CONFLICT,
+        e => internal_server_error(e),
+    })?;
+    s.update_pass(&form.user, &form.pass)
         .await
         .map_err(internal_server_error)?;
     Ok(())
@@ -111,17 +103,14 @@ async fn update(
     Password(user): Password,
     Form(form): Form<net::EditPass>,
 ) -> Result<(), StatusCode> {
-    s.basileus
-        .update_pass(&user, &form.0)
-        .await
-        .map_err(|e| match e {
-            basileus::err::UpdatePassError::UserNotExist(_) => StatusCode::NOT_FOUND,
-            e => internal_server_error(e),
-        })
+    s.update_pass(&user, &form.0).await.map_err(|e| match e {
+        basileus::err::UpdatePassError::UserNotExist(_) => StatusCode::NOT_FOUND,
+        e => internal_server_error(e),
+    })
 }
 
 async fn delete(State(s): State<Server>, Password(user): Password) -> Result<(), StatusCode> {
-    s.basileus.delete_user(&user).await.map_err(|e| match e {
+    s.delete_user(&user).await.map_err(|e| match e {
         basileus::err::DeleteUserError::UserNotExist(_) => StatusCode::NOT_FOUND,
         e => internal_server_error(e),
     })

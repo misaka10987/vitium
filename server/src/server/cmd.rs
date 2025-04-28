@@ -8,13 +8,13 @@ mod shutdown;
 
 use anyhow::{anyhow, bail};
 use axum::{
+    Json, Router,
     extract::State,
     http::{HeaderMap, StatusCode},
-    response::{sse::Event, IntoResponse, Sse},
+    response::{IntoResponse, Sse, sse::Event},
     routing::get,
-    Json, Router,
 };
-use basileus::{perm::PermManage, Perm};
+use basileus::{Perm, perm::PermManage};
 use clap::Parser;
 use clear::Clear;
 use colored::Colorize;
@@ -190,7 +190,7 @@ fn resolve_cmd<'a>(server: &'a Server, line: &str) -> anyhow::Result<&'a Command
 
 async fn run_cmd_checked(server: &Server, user: &str, line: String) -> anyhow::Result<String> {
     let cmd = resolve_cmd(server, &line)?;
-    if !server.basileus.check_perm(user, &cmd.perm).await? {
+    if !server.check_perm(user, &cmd.perm).await? {
         bail!("permission denied");
     }
     cmd.run(line, server.clone()).await
