@@ -25,7 +25,7 @@ export const setSSEListener = (
   es.addEventListener('error', console.error)
 }
 
-export const sendMessage = async (content: string) => {
+export const sendMessage = async (content: string, html: boolean = false) => {
   const host = hostStore.getState().hostname ?? panic('Missing hostname')
   const user = userStore.getState().username ?? panic('Missing username')
 
@@ -38,8 +38,8 @@ export const sendMessage = async (content: string) => {
     body: json.assertStringify<Message>({
       time: Date.now(),
       sender: user,
-      content: content,
-      html: false,
+      content,
+      html,
     }),
   })
   if (!res.ok) panic('HTTP error', res)

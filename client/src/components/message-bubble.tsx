@@ -12,11 +12,12 @@ export const MessageBubble = ({
   variant = 'default',
 }: Message & { variant?: 'default' | 'send' | 'receive' }) => {
   const renderedContent = html ? (
-    <iframe sandbox="">
-      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
-    </iframe>
+    <p
+      className="text-sm text-justify"
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+    />
   ) : (
-    content
+    <p className="text-sm text-justify">{content}</p>
   )
   return (
     <div
@@ -69,7 +70,7 @@ export const MessageBubble = ({
                 variant == 'receive' && 'bg-secondary text-secondary-foreground'
               )}
             >
-              <p className="text-sm text-justify">{renderedContent}</p>
+              {renderedContent}
             </div>
           </div>
         </div>

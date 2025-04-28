@@ -1,19 +1,14 @@
 import { Textarea } from '@/components/ui/textarea'
 import { sendMessage } from '@/lib/chat'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import {
-  Send,
-  // due to an eslint bug, it requires you to provide an `alt` prop
-  // this is a walkaround
-  Image as Photo,
-} from 'lucide-react'
-import { sendCommand } from '@/lib/cmd'
+import { Send, Code2 } from 'lucide-react'
 import { panic } from '@/lib/util'
 
 export const TurboInput = ({}: {}) => {
   const msgForm = useRef<HTMLFormElement>(null)
   const msgInput = useRef<HTMLTextAreaElement>(null)
+  const [enableHTML, setEnableHTML] = useState(false)
   return (
     <form
       ref={msgForm}
@@ -22,7 +17,7 @@ export const TurboInput = ({}: {}) => {
         e.preventDefault()
         const form = new FormData(e.currentTarget)
         const content = form.get('msg')?.toString() ?? panic()
-        sendMessage(content)
+        sendMessage(content, enableHTML)
         const curr = msgInput?.current ?? panic()
         curr.value = ''
       }}
@@ -41,20 +36,16 @@ export const TurboInput = ({}: {}) => {
         }}
       />
       <div className="flex flex-col gap-1">
-        <Button
-          className="h-[40px] px-4"
-          type="submit"
-          aria-label="Send message"
-        >
+        <Button className="h-[40px]" type="submit" aria-label="Send message">
           <Send className="h-4 w-4" />
         </Button>
         <Button
-          className="h-[40px] px-4 mt-1"
+          className="h-[40px] mt-1 ease-in-out"
           type="button"
-          variant="outline"
-          aria-label="Upload image"
+          variant={enableHTML ? 'default' : 'secondary'}
+          onClick={() => setEnableHTML((enabled) => !enabled)}
         >
-          <Photo className="h-4 w-4" />
+          <Code2 className="h-4 w-4" />
         </Button>
       </div>
     </form>
