@@ -1,9 +1,9 @@
 use std::thread;
 
-use rustyline::{error::ReadlineError, DefaultEditor};
+use rustyline::{DefaultEditor, error::ReadlineError};
 use tokio::runtime;
 
-use crate::{server::CommandServer, Server};
+use crate::{Server, server::CommandServer};
 
 pub fn start(server: Server) -> anyhow::Result<()> {
     let mut rl = DefaultEditor::new()?;
@@ -33,10 +33,7 @@ pub fn start(server: Server) -> anyhow::Result<()> {
                     shutup::ROOT.shut();
                     break;
                 }
-                Err(e) => {
-                    shutup::ROOT.shut();
-                    panic!("{e:?}")
-                }
+                Err(e) => panic!("{e}"),
             }
         }
     });

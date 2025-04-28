@@ -7,12 +7,7 @@ mod server;
 
 use clap::Parser;
 use crash::{crash, crashed};
-use std::{
-    fs::read_to_string,
-    panic::{self},
-    path::PathBuf,
-    time::Duration,
-};
+use std::{fs::read_to_string, panic, path::PathBuf, time::Duration};
 use tokio::runtime;
 use tracing::info;
 
@@ -35,7 +30,7 @@ fn main() -> Result<(), ()> {
     let run = builder.build().expect("runtime setup");
     let cfg = read_to_string(&args.config).expect("load config");
     let cfg = toml::from_str(&cfg).expect("parse config");
-    let server = run.block_on(Server::new(cfg)).expect("initialization");
+    let server = run.block_on(Server::new(cfg)).expect("initialize");
     cli::start(server.clone()).expect("start command REPL");
     let shutdown = run.block_on(server.start()).expect("server start");
     run.block_on(shutdown.wait());
