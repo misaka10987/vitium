@@ -1,6 +1,6 @@
 import { hostStore } from '@/components/host'
 import { userStore } from '@/components/user'
-import { CommandLine, Message } from 'vitium-api'
+import { CommandLine } from 'vitium-api'
 import { panic } from './util'
 import { json } from 'typia'
 

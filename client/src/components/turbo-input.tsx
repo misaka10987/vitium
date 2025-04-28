@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Send, Code2 } from 'lucide-react'
 import { panic } from '@/lib/util'
 
-export const TurboInput = ({}: {}) => {
+export const TurboInput = () => {
   const msgForm = useRef<HTMLFormElement>(null)
   const msgInput = useRef<HTMLTextAreaElement>(null)
   const [enableHTML, setEnableHTML] = useState(false)
