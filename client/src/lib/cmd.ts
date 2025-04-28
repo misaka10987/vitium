@@ -8,8 +8,6 @@ export const sendCommand = async (line: string) => {
   const host = hostStore.getState().hostname ?? panic('Missing hostname')
   const user = userStore.getState().username ?? panic('Missing username')
 
-  console.info(user)
-
   const res = await fetch(`https://${host}/api/cmd`, {
     method: 'POST',
     credentials: 'include',
