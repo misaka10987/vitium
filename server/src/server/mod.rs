@@ -9,9 +9,9 @@ mod proxy;
 mod test;
 
 use axum::{
+    Json, Router,
     http::StatusCode,
     routing::{any, get},
-    Json, Router,
 };
 use basileus::Basileus;
 use chat::ChatModule;
@@ -20,12 +20,13 @@ use log::LogModule;
 use proxy::ProxyServer;
 use serde::{Deserialize, Serialize};
 use shutup::ShutUp;
-use sqlx::{query, sqlite::SqliteConnectOptions, SqlitePool};
+use sqlx::{SqlitePool, query, sqlite::SqliteConnectOptions};
 use std::{
     collections::HashMap,
     error::Error,
     net::{Ipv6Addr, SocketAddr},
     ops::Deref,
+    path::PathBuf,
     sync::Arc,
     time::SystemTime,
 };
@@ -74,32 +75,32 @@ impl Server {
     /// Create a server with specified configuration.
     pub async fn new(cfg: Config) -> anyhow::Result<Self> {
         let conn_opt = SqliteConnectOptions::new()
-            .filename("./server.db")
+            .filename(&cfg.db)
             .create_if_missing(true);
-        let pool = SqlitePool::connect_with(conn_opt).await?;
-        query(DB_INIT_QUERY).execute(&pool).await?;
+        let db = SqlitePool::connect_with(conn_opt).await?;
+        query(DB_INIT_QUERY).execute(&db).await?;
         let shutdown = ShutUp::new();
         let log = LogModule::new(cfg.log.clone())?;
-        let value = Self(Arc::new(ServerInst {
+        let val = Self(Arc::new(ServerInst {
             cfg,
             shutdown,
-            db: pool.clone(),
+            db,
             player: RwLock::const_new(HashMap::new()),
             basileus: Basileus::new(Default::default()).await?,
             chat: ChatModule::new(),
             cmd: CommandModule::new(),
             log,
         }));
-        Ok(value)
+        Ok(val)
     }
 
     #[cfg(debug_assertions)]
     async fn dev_hooks(&self) -> anyhow::Result<()> {
         use basileus::{pass::PassManage, user::UserManage};
-        if !self.basileus.exist_user("dev").await? {
-            self.basileus.create_user("dev").await?;
+        if !self.exist_user("dev").await? {
+            self.create_user("dev").await?;
         }
-        self.basileus.update_pass("dev", "dev").await?;
+        self.update_pass("dev", "dev").await?;
         Ok(())
     }
 
@@ -117,8 +118,10 @@ impl Server {
             Ipv6Addr::LOCALHOST
         };
         let addr = SocketAddr::from((ip, port));
+
         let listener = TcpListener::bind(addr).await?;
         info!("start API server on {}", listener.local_addr()?);
+
         let port = listener.local_addr()?.port();
         let proxy = ProxyServer::new(self.cfg.proxy.clone(), port);
         let proxy = proxy.start()?;
@@ -190,6 +193,8 @@ fn f() -> bool {
 pub struct Config {
     /// Port to start the API server on.
     pub port: Option<u16>,
+    /// Path to the server database.
+    pub db: PathBuf,
     /// Whether to allow direct access to the API server via HTTP from remote.
     #[serde(default = "f")]
     pub direct_api: bool,
@@ -206,6 +211,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             port: None,
+            db: "./server.db".into(),
             direct_api: false,
             proxy: Default::default(),
             log: Default::default(),
