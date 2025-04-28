@@ -1,26 +1,24 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { MessageBubble } from '@/components/message-bubble'
-import { Message } from 'vitium-api'
+import { CommandLine, Message } from 'vitium-api'
 import { TurboInput } from '@/components/turbo-input'
 import { panic } from '@/lib/util'
 import { ChatSSE } from './chat-sse'
+import { Bubble } from './bubble'
 
 export const Chatbox = () => {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [entries, setEntries] = useState<(Message | CommandLine)[]>([])
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const curr = container.current ?? panic()
     curr.scrollTop = curr.scrollHeight
-  }, [messages])
+  }, [entries])
 
   return (
     <div className="flex flex-col-reverse h-full w-full gap-2">
-      <ChatSSE
-        downstream={(msg) => setMessages((prev) => prev.concat([msg]))}
-      />
+      <ChatSSE downstream={(msg) => setEntries((prev) => prev.concat([msg]))} />
       <div className="flex w-full">
         <TurboInput />
       </div>
@@ -29,9 +27,9 @@ export const Chatbox = () => {
           ref={container}
           className="flex flex-col p-2 gap-2 w-full overflow-auto"
         >
-          {messages.map((msg, index) => (
-            <div className="flex w-full" key={index}>
-              <MessageBubble {...msg} />
+          {entries.map((content, idx) => (
+            <div className="flex w-full" key={idx}>
+              <Bubble content={content} />
             </div>
           ))}
         </div>
