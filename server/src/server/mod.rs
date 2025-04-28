@@ -19,6 +19,7 @@ use cmd::CommandModule;
 use log::LogModule;
 use proxy::ProxyServer;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 use shutup::ShutUp;
 use sqlx::{SqlitePool, query, sqlite::SqliteConnectOptions};
 use std::{
@@ -196,21 +197,20 @@ impl AsRef<LogModule> for Server {
     }
 }
 
-fn f() -> bool {
-    false
-}
-
 /// Server configuration.
+#[serde_inline_default]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Config {
     /// Port to start the API server on.
     pub port: Option<u16>,
     /// Path to the server database.
+    #[serde_inline_default("./server.db".into())]
     pub db: PathBuf,
     /// Whether to allow direct access to the API server via HTTP from remote.
-    #[serde(default = "f")]
+    #[serde_inline_default(false)]
     pub direct_api: bool,
     /// Configurations for HTTP proxy.
+    #[serde(default)]
     pub proxy: proxy::Config,
     /// Configurations for logging.
     #[serde(default)]
