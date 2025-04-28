@@ -9,12 +9,11 @@ export function ChatSSE({ downstream }: { downstream: (_: Message) => void }) {
     if (host == undefined) return
     const url = `https://${host}/api/chat`
     const es = new EventSource(url)
-    window.addEventListener('beforeunload', es.close)
     es.addEventListener('message', (evt) => {
       const data = json.assertParse<Message>(evt.data)
       downstream(data)
     })
-    return es.close
+    return () => es.close()
   }, [host, downstream])
   return undefined
 }
