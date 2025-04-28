@@ -1,5 +1,5 @@
 use super::{Attr, Obj};
-use fe3o4::{def_regtab, Id};
+use fe3o4::Id;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -18,8 +18,6 @@ pub struct Skill {
     /// Attributions that can give bonus to this skill.
     pub attr: HashSet<Id<Attr>>,
 }
-
-def_regtab!(Skill, R_SKILL);
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SkillAction {

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use fe3o4::{def_regtab, Id};
+use fe3o4::Id;
 
 use super::{Mart, Spell};
 
@@ -24,5 +24,3 @@ pub struct Race {
     /// Spells automatically learnt.
     pub spell: HashSet<Id<Spell>>,
 }
-
-def_regtab!(Race, R_RACE);

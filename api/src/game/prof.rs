@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-use fe3o4::{def_regtab, Id};
+use fe3o4::Id;
 
 use super::{Attr, Mart, Spell};
 
@@ -26,5 +26,3 @@ pub struct Prof {
     // /// Initial items given by this profession.
     // pub item: Vec<Id<Item>>,
 }
-
-def_regtab!(Prof, REG_PROF);

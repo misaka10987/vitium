@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use fe3o4::def_regtab;
-
 #[derive(Serialize, Deserialize, Clone)]
 #[cfg_attr(target_family = "wasm", derive(tsify_next::Tsify))]
 #[cfg_attr(
@@ -16,5 +14,3 @@ pub struct Terra {
     /// [0,1], 0 for completely transparently and 1 for completely opaque.
     pub opaque: f32,
 }
-
-def_regtab!(Terra, R_TERRA);

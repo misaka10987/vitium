@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use fe3o4::def_regtab;
-
 use super::DmgType;
 use std::collections::HashMap;
 
@@ -17,5 +15,3 @@ pub struct Mat {
     /// Per-milimetre resistance to damage.
     pub resist: HashMap<DmgType, f32>,
 }
-
-def_regtab!(Mat, R_MAT);
