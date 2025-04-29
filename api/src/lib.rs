@@ -1,3 +1,4 @@
+pub mod chat;
 pub mod cmd;
 pub mod game;
 pub mod net;
