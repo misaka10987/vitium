@@ -4532,7 +4532,7 @@ version = "0.1.0"
 
 [[package]]
 name = "vitium-api"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy_ecs",
  "fe3o4",
