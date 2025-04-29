@@ -1,19 +1,19 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::{HeaderMap, StatusCode},
-    response::{sse::Event, IntoResponse, Sse},
+    response::{IntoResponse, Sse, sse::Event},
     routing::get,
-    Json, Router,
 };
-use sqlx::{query, Row, SqlitePool};
+use sqlx::{Row, SqlitePool, query};
 use tokio::sync::watch;
 use tokio_stream::{Stream, StreamExt};
 use tracing::{error, info};
-use vitium_api::net::{self, Message};
+use vitium_api::chat::Message;
 
-use super::{auth::Token, Server};
+use super::{Server, auth::Token};
 
 fn mili_timestamp(time: SystemTime) -> u64 {
     time.duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
@@ -68,7 +68,7 @@ async fn read(
 async fn create(
     State(s): State<Server>,
     Token(user): Token,
-    Json(chat): Json<net::Message>,
+    Json(chat): Json<Message>,
 ) -> Result<(), StatusCode> {
     if chat.sender != Some(user) {
         return Err(StatusCode::FORBIDDEN);

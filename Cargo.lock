@@ -4544,6 +4544,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "vitium-api"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0059a9035ab3d97b69838e68e5200680a76768378eb131c215e66e737c1ea1fa"
+dependencies = [
+ "bevy_ecs",
+ "fe3o4",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "tsify-next",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "vitium-server"
 version = "0.1.0"
 dependencies = [
@@ -4575,7 +4590,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "vitium-api",
+ "vitium-api 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
