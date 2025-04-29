@@ -1,4 +1,4 @@
-name: Vitium core crates
+name: Build Rust
 
 on:
   push:
@@ -17,4 +17,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Compile crates
-      run: cargo check
+      run: cargo build
