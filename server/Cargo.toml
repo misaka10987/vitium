@@ -3,12 +3,12 @@ name = "vitium-server"
 version = "0.1.0"
 edition = "2024"
 authors = ["misaka10987 <misaka10987@outlook.com>"]
-description = "Utilities for TRPG."
+description = "Backend server for Vitium, the TRPG framework"
 documentation = "https://github.com/misaka10987/vitium"
 homepage = "https://github.com/misaka10987/vitium"
 repository = "https://github.com/misaka10987/vitium"
 readme = "README.md"
-keywords = ["vitium", "game", "trpg"]
+keywords = ["vitium", "game", "trpg", "server"]
 license = "GPL-3.0-only"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

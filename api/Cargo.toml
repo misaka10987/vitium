@@ -2,6 +2,14 @@
 name = "vitium-api"
 version = "0.1.0"
 edition = "2024"
+authors = ["misaka10987 <misaka10987@outlook.com>"]
+description = "APIs for Vitium"
+documentation = "https://github.com/misaka10987/vitium"
+homepage = "https://github.com/misaka10987/vitium"
+repository = "https://github.com/misaka10987/vitium"
+readme = "README.md"
+keywords = ["vitium", "api", "game"]
+license = "GPL-3.0-or-later"
 
 [lib]
 crate-type = ["rlib", "cdylib"]
