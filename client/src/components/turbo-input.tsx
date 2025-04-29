@@ -6,7 +6,12 @@ import { Send, Code2, ChevronsRight } from 'lucide-react'
 import { panic } from '@/lib/util'
 import { cn } from '@/lib/utils'
 import { sendCommand } from '@/lib/cmd'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip'
 
 export const TurboInput = () => {
   const msgForm = useRef<HTMLFormElement>(null)
@@ -50,39 +55,43 @@ export const TurboInput = () => {
       />
       <div className="flex flex-col gap-2">
         <div className="flex flex-1/2">
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Button
-                className="h-10 w-10 ease-in-out"
-                type="submit"
-                aria-label="Send message"
-              >
-                {isCommand ? <ChevronsRight /> : <Send />}
-              </Button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-fit h-fit py-2 px-3">
-              <span className="text-sm">
-                {isCommand ? 'Send Command' : 'Send Message'}
-              </span>
-            </HoverCardContent>
-          </HoverCard>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="h-10 w-10 ease-in-out"
+                  type="submit"
+                  aria-label="Send message"
+                >
+                  {isCommand ? <ChevronsRight /> : <Send />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="select-none">
+                  {isCommand ? 'Send Command' : 'Send Message'}
+                </span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <div className="flex">
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Button
-                className="h-10 w-10 ease-in-out"
-                type="button"
-                variant={enableHTML ? 'default' : 'secondary'}
-                onClick={() => setEnableHTML((enabled) => !enabled)}
-              >
-                <Code2 />
-              </Button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-fit h-fit py-2 px-3">
-              <span className="text-sm">Enable HTML</span>
-            </HoverCardContent>
-          </HoverCard>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="h-10 w-10 ease-in-out"
+                  type="button"
+                  variant={enableHTML ? 'default' : 'secondary'}
+                  onClick={() => setEnableHTML((enabled) => !enabled)}
+                >
+                  <Code2 />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <span className="select-none">Enable HTML</span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     </form>
