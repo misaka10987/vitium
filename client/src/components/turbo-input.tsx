@@ -21,13 +21,13 @@ export const TurboInput = () => {
   return (
     <form
       ref={msgForm}
-      className="flex gap-2 items-center w-full"
+      className="flex flex-row-reverse gap-2 h-full w-full"
       onSubmit={(e) => {
         e.preventDefault()
         const form = new FormData(e.currentTarget)
         const content = form.get('content')?.toString() ?? panic()
         if (isCommand) {
-          sendCommand(content.substring(1))
+          sendCommand(content)
         } else {
           sendMessage(content, enableHTML)
         }
@@ -36,33 +36,12 @@ export const TurboInput = () => {
         setIsCommand(false)
       }}
     >
-      <Textarea
-        ref={msgInput}
-        name="content"
-        className={cn(
-          'h-full resize-none overflow-auto py-2',
-          isCommand && 'font-bold font-mono'
-        )}
-        placeholder="Type your message here..."
-        required
-        onChange={(e) => setIsCommand(e.currentTarget.value.startsWith(':'))}
-        onKeyDown={(e) => {
-          if (e.key == 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            msgForm.current?.requestSubmit()
-          }
-        }}
-      />
       <div className="flex flex-col gap-2">
         <div className="flex flex-1/2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  className="h-10 w-10 ease-in-out"
-                  type="submit"
-                  aria-label="Send message"
-                >
+                <Button className="h-10 w-10 ease-in-out" type="submit">
                   {isCommand ? <ChevronsRight /> : <Send />}
                 </Button>
               </TooltipTrigger>
@@ -74,13 +53,12 @@ export const TurboInput = () => {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div className="flex">
+        <div className="flex flex-1/2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   className="h-10 w-10 ease-in-out"
-                  type="button"
                   variant={enableHTML ? 'default' : 'secondary'}
                   onClick={() => setEnableHTML((enabled) => !enabled)}
                 >
@@ -93,6 +71,35 @@ export const TurboInput = () => {
             </Tooltip>
           </TooltipProvider>
         </div>
+      </div>
+
+      <div className="flex flex-grow w-0 h-full">
+        <Textarea
+          ref={msgInput}
+          name="content"
+          className={cn(
+            'resize-none overflow-auto py-2',
+            isCommand && 'font-bold font-mono'
+          )}
+          placeholder={isCommand ? 'Type Command' : 'Type Message'}
+          required
+          onKeyDown={(e) => {
+            if (e.key == 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              msgForm.current?.requestSubmit()
+            }
+            if (e.currentTarget.value == '') {
+              if (e.key == 'Backspace' && isCommand) {
+                e.preventDefault()
+                setIsCommand(false)
+              }
+              if (e.key == ':' && !isCommand) {
+                e.preventDefault()
+                setIsCommand(true)
+              }
+            }
+          }}
+        />
       </div>
     </form>
   )
