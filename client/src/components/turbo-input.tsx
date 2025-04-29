@@ -59,6 +59,7 @@ export const TurboInput = () => {
               <TooltipTrigger asChild>
                 <Button
                   className="h-10 w-10 ease-in-out"
+                  type="button"
                   variant={enableHTML ? 'default' : 'secondary'}
                   onClick={() => setEnableHTML((enabled) => !enabled)}
                 >
