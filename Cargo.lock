@@ -448,9 +448,9 @@ checksum = "89e25b6adfb930f02d1981565a6e5d9c547ac15a96606256d3b59040e5cd4ca3"
 
 [[package]]
 name = "basileus"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b8a3c21465bf8754ae7312a7736efaccde29e5dcafaa3389cd314c2de54b1a3"
+checksum = "75a41b6c0c27ec7161071be318452ea082d25f53336ced8257484ac785855899"
 dependencies = [
  "base64 0.22.1",
  "getrandom 0.3.2",

@@ -15,7 +15,7 @@ license = "GPL-3.0-only"
 
 [dependencies]
 vitium-api = { path = "../api" }
-basileus = "0.1.4"
+basileus = "0.1.5"
 axum = { version = "0.8.3", features = ["macros", "tokio", "http2", "ws"] }
 tokio = { version = "1.44.2", features = [
     "rt-multi-thread",
