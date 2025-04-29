@@ -3521,9 +3521,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "shutup"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af498a0dfd93e5f9d53f8bda6d2c3203a49cd346cb88d6dd915ce8d5ceb364fa"
+checksum = "7c0921ab8f91022a7980e41da6da0abf2929098114d22d3b2323c92d96741c14"
 dependencies = [
  "tokio",
 ]

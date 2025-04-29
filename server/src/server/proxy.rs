@@ -6,7 +6,7 @@ use http::{
 use pingora::{
     http::{ResponseHeader, StatusCode},
     listeners::tls::TlsSettings,
-    proxy::{http_proxy_service, ProxyHttp, Session},
+    proxy::{ProxyHttp, Session, http_proxy_service},
     services::Service,
     upstreams::peer::HttpPeer,
 };
@@ -86,12 +86,7 @@ impl ProxyServer {
 
         let (send, recv) = watch::channel(false);
 
-        let fut = shutdown.wait();
-
-        tokio::spawn(async move {
-            fut.await;
-            let _ = send.send(true);
-        });
+        shutdown.register_hook(move || send.send(true).expect("shutdown HTTP proxy"));
 
         tokio::spawn(async move {
             proxy.start_service(None, recv).await;
