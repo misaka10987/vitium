@@ -15,7 +15,7 @@ export const MessageBubble = ({ sender, time, content, html }: Message) => {
       dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
     />
   ) : (
-    <p className="text-sm text-justify">{content}</p>
+    <p className="text-sm text-justify whitespace-pre-wrap">{content}</p>
   )
 
   return (
