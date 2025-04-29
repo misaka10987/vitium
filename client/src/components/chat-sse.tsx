@@ -15,15 +15,13 @@ export function ChatSSE({ downstream }: { downstream: (_: Message) => void }) {
   }, [host])
 
   useEffect(() => {
-    if (es.current == null) return
-    es.current.onmessage = (evt) => {
+    const handle = (evt: { data: string }) => {
       const data = json.assertParse<Message>(evt.data)
       downstream(data)
     }
-    return () => {
-      if (es.current != null) es.current.onmessage = () => {}
-    }
-  }, [es, downstream])
+    es.current?.addEventListener('message', handle)
+    return () => es.current?.removeEventListener('message', handle)
+  }, [host, downstream])
 
   return null
 }
