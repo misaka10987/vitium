@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useEffect, useId, useState } from 'react'
 import { persist } from 'zustand/middleware'
+import { panic } from '@/lib/util'
 
 export const useHostStore = create<{
   host?: string
@@ -33,7 +34,6 @@ export const hostStore = useHostStore
 export const Host = () => {
   const { host, setHost } = useHostStore()
   const [open, setOpen] = useState(false)
-  const [input, setInput] = useState<string>('')
   const formId = useId()
   const inputId = useId()
 
@@ -63,8 +63,10 @@ export const Host = () => {
             className="grid grid-cols-4 items-center gap-4"
             onSubmit={(e) => {
               e.preventDefault()
+              const form = new FormData(e.currentTarget)
+              const host = form.get('host')?.toString() ?? panic()
               setOpen(false)
-              setHost(input)
+              setHost(host)
             }}
           >
             <Label htmlFor={inputId} className="text-right">
@@ -72,10 +74,10 @@ export const Host = () => {
             </Label>
             <Input
               id={inputId}
+              name='host'
               placeholder="host:port"
               className="col-span-3"
               required
-              onChange={(e) => setInput(e.currentTarget.value)}
             />
           </form>
         </div>
