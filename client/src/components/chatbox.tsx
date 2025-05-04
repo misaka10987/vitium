@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { CommandLine, Message } from 'vitium-api'
 import { TurboInput } from '@/components/turbo-input'
 import { panic } from '@/lib/util'
@@ -8,7 +8,8 @@ import { ChatSSE } from './chat-sse'
 import { Bubble } from './bubble'
 
 export const Chatbox = () => {
-  const [entries, setEntries] = useState<(Message | CommandLine)[]>([])
+  type Entry = Message | CommandLine
+  const [entries, setEntries] = useState<Entry[]>([])
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -16,9 +17,11 @@ export const Chatbox = () => {
     curr.scrollTop = curr.scrollHeight
   }, [entries])
 
+  const handle = useCallback((incoming: Entry) => setEntries((prev) => prev.concat([incoming])), [setEntries])
+
   return (
     <div className="flex flex-col-reverse h-full w-full gap-2">
-      <ChatSSE downstream={(msg) => setEntries((prev) => prev.concat([msg]))} />
+      <ChatSSE downstream={handle} />
       <div className="flex w-full">
         <TurboInput />
       </div>
