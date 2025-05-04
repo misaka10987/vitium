@@ -32,3 +32,7 @@ pub struct CommandLine {
 /// Therefore, it is recommended to perform corresponding checks before printing the message.
 #[cfg_attr(target_family = "wasm", tsify_next::declare)]
 pub type CommandStatus = Result<String, String>;
+
+/// Denotes a certain command execution recorded by the server.
+#[cfg_attr(target_family = "wasm", tsify_next::declare)]
+pub type CommandRecord = (CommandLine, CommandStatus);
