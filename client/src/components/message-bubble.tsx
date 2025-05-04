@@ -36,9 +36,9 @@ export const MessageBubble = ({ sender, time, content, html }: Message) => {
           >
             <Badge
               variant="outline"
-              className="flex text-[10px] py-0 px-1 bg-transparent text-muted-foreground select-none"
+              className="flex text-xs py-0 px-1 bg-transparent text-muted-foreground select-none"
             >
-              {new Date(Number(time)).toLocaleTimeString([], {
+              {new Date(time).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
