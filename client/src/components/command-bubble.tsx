@@ -1,26 +1,26 @@
 import { CommandRecord } from "vitium-api";
 
-export const CommandBubble = (content: CommandRecord) => {
-    if ('Ok' in content[1]) {
+export const CommandBubble = ([content_line, content_status]: CommandRecord) => {
+    if ('Ok' in content_status) {
         return (
             <div className="flex-row text-sm text-muted-foreground items-center justify-center gap-2 w-full wrap-break-word">
                 <div>
-                    {content[0].user ?? 'System'}'s command executed successfully.
+                    {content_line.user ?? 'System'}'s command executed successfully.
                 </div>
                 <div>
-                    {content[1].Ok}
+                    {content_status.Ok}
                 </div>
             </div>
         )
     }
-    else if ('Err' in content[1]) {
+    else if ('Err' in content_status) {
         return (
             <div className="flex-row text-sm text-destructive items-center justify-center gap-2 w-full wrap-break-word">
                 <div>
-                    {content[0].user ?? 'System'}'s command:"{content[0].line}" failed.
+                    {content_line.user ?? 'System'}'s command:"{content_line.line}" failed.
                 </div>
                 <div>
-                    {content[1].Err}
+                    {content_status.Err}
                 </div>
             </div>
         )
