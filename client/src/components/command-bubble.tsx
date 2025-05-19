@@ -10,28 +10,32 @@ export const CommandBubble = ({
   record: CommandRecord
 }) => {
   const ansi = new ANSI()
-  const issuer = line.user ?? <span className="font-bold">Server</span>
+  const issuer = line.user ? (
+    <span className="italic">{line.user}</span>
+  ) : (
+    <span className="font-bold">Server</span>
+  )
   const [head, content] = match(status)
     .with({ Ok: P.string }, ({ Ok: status }) => [
       <span className="text-muted-foreground">
-        {issuer}: <code>{line.line}</code>
+        {issuer} : <code>{line.line}</code>
       </span>,
       ansi.toHtml(status),
     ])
     .with({ Err: P.string }, ({ Err: status }) => [
       <span className="text-destructive">
-        {issuer}: <code>{line.line}</code>
+        {issuer} : <code>{line.line}</code>
       </span>,
       ansi.toHtml(status),
     ])
     .exhaustive()
   return (
-    <div className="flex-col text-sm items-center justify-center gap-2 w-full wrap-break-word m-1">
-      <div className="align-middle">{head}</div>
+    <div className="text-sm gap-2 w-full p-0.5 m-0.5">
+      <div className="align-middle break-all">{head}</div>
       <div
         className="whitespace-pre-wrap"
         dangerouslySetInnerHTML={{ __html: content.toString() }}
-      ></div>
+      />
     </div>
   )
 }
