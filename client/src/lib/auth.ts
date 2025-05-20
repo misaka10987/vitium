@@ -35,3 +35,20 @@ export const login = async (user: string, pass: string) => {
 
   return res
 }
+
+export const signup = async (user: string, pass: string) => {
+  const host = hostStore.getState().host
+  const url = `https://${host}/api/auth`
+
+  //@todo
+  const header = basicAuthHeader(user, pass)
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: header,
+    credentials: 'include',
+  })
+  // the above code below @todo is just a placeholder, still not implemented
+
+  return res
+}

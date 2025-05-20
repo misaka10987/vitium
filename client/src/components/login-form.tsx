@@ -32,10 +32,10 @@ export const LoginForm = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            Login to: <Host />
+            Connect to: <Host />
           </CardTitle>
           <CardDescription>
-            Login to the above game server with your username and password
+            Connect to the above game server with your username and password
           </CardDescription>
         </CardHeader>
         <CardContent>
