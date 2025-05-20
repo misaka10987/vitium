@@ -8,6 +8,9 @@ pub mod user;
 
 pub use prelude::*;
 
+/// An RPG dice expression, e.g. `1d6+3`.
+///
+/// See [`dicexp`](https://crates.io/crates/dicexp) for specifications for expression validity.
 #[cfg_attr(target_family = "wasm", tsify_next::declare)]
 pub type Dice = String;
 
