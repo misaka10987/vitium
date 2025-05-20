@@ -26,7 +26,7 @@ Version 0.1 is the first development release version of vitium, which we are cur
 
 - Experience of user interaction matters
 
-## Contributors
+## Developer Team
 
 [misaka10987](mailto:misaka10987@outlook.com)
 [matthew](mailto:matthew_1115@outlook.com)
