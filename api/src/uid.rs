@@ -9,8 +9,3 @@ use serde::{Deserialize, Serialize};
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct UId(pub u64);
-
-#[cfg_attr(target_family = "wasm", wasm_bindgen::prelude::wasm_bindgen)]
-pub fn test() -> UId {
-    UId(12345678901234567890)
-}

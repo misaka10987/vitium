@@ -11,8 +11,11 @@ pub use prelude::*;
 #[cfg_attr(target_family = "wasm", tsify_next::declare)]
 pub type Dice = String;
 
-/// This is some documentation.
+/// Tests WASM bigint functionality.
+///
+/// This function prints "Hello, WASM!" to the console and returns 42 as a 64-bit integer.
 #[cfg_attr(target_family = "wasm", wasm_bindgen::prelude::wasm_bindgen)]
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+pub fn test() -> u64 {
+    println!("Hello, WASM!");
+    42
 }

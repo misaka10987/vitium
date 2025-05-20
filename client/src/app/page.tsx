@@ -3,12 +3,13 @@
 import { Icon } from '@/components/icon'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { add, test } from 'vitium-api'
+import { assert } from 'typia'
+import { test } from 'vitium-api'
 
 export default function Page() {
-  console.debug('WASM initialized: 2+3=', add(2, 3))
-  const res = test()
-  console.debug('BigInt from WASM test:', res)
+  const big = test()
+  assert<bigint>(big)
+  console.assert(big == BigInt(42))
   return (
     <div className="flex h-full w-full align-top justify-center">
       <div className="flex flex-col gap-8 align-middle m-4">
