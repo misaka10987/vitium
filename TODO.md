@@ -1,31 +1,33 @@
 # Vitium 0.1 TODOs
 
-- [x] Implement ECS engine
+Planned release date: 6/30.
 
-- [ ] Most data structure definitions
+## Basic User Interface
 
-- [ ] Client map rendering & item information display
+- [x] Homepage
 
-- [ ] Communication protocol
+- [x] Login page
 
-- [ ] Basic interactions (walking, sleeping, etc.)
+- [ ] Signup page
 
-- [ ] A set of commands for DM
+- [x] Gaming page
 
-- [ ] Mod loading
+## Text-based Interactions
 
-**Not in Vitium 0.1, but will be included later:**
+- [x] Instant messaging
 
-- Stabilized mod format (will provide a converter for former ones)
+- [ ] Sending images
 
-- WASM-based Turing-complete modding
+- [x] Basic RPG dice support
 
-- HTTP/3 and HTTPS support
+- [ ] (Temporary Support) DnD ruleset lookup
 
-- Multithreaded server
+## Deploy
 
-**Makes no guarantees:**
+- [ ] Vercel
 
-- GUI
+## Meta
 
-- LLM-plugin
+- [ ] Build workflow
+
+- [ ] Code style guide
