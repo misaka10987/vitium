@@ -5,15 +5,26 @@ import { CommandBubble } from './command-bubble'
 import { match, P } from 'ts-pattern'
 import { panic } from '@/lib/util'
 
-export const Bubble = ({ content }: { content: Message | CommandRecord }) => {
-  return match(content)
+/// The entry to display in a bubble.
+export type Entry = Message | CommandRecord
+
+/**
+ * A bubble component for displaying chat entries (either chat message or a command).
+ *
+ * This component determines which type of entry to render runtime based on the type of parameter passed to it.
+ *
+ * @param entry the entry to display
+ * @returns either a {@link MessageBubble} or a {@link CommandBubble}
+ */
+export const Bubble = ({ entry: entry }: { entry: Entry }) => {
+  return match(entry)
     .with(
       P.when((x) => is<Message>(x)),
-      (content) => <MessageBubble {...content} />
+      (msg) => <MessageBubble {...msg} />
     )
     .with(
       P.when((x) => is<CommandRecord>(x)),
-      (content) => <CommandBubble record={content} />
+      (record) => <CommandBubble record={record} />
     )
     .otherwise(() => panic())
 }

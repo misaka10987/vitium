@@ -4,6 +4,12 @@ import { Message } from 'vitium-api'
 import { json } from 'typia'
 import { panic } from './util'
 
+/**
+ * Send a chat message to the game server with current username.
+ *
+ * @param content content of the message
+ * @param html if HTML message is enabled (default: `false`)
+ */
 export const sendMessage = async (content: string, html: boolean = false) => {
   const host = hostStore.getState().host ?? panic('Missing hostname')
   const user = userStore.getState().user ?? panic('Missing username')

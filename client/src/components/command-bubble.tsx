@@ -1,9 +1,15 @@
+// react/jsx-key incorrectly assume jsx elements in match branches are an array
 /* eslint react/jsx-key: 0 */
 
 import { CommandRecord } from 'vitium-api'
 import { match, P } from 'ts-pattern'
 import ANSI from 'ansi-to-html'
 
+/**
+ * A bubble for displaying a certain command record.
+ *
+ * @param record the command to display
+ */
 export const CommandBubble = ({
   record: [line, status],
 }: {

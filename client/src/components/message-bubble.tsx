@@ -5,6 +5,15 @@ import { Message } from 'vitium-api'
 import DOMPurify from 'dompurify'
 import { useUserStore } from './user'
 
+/**
+ * A bubble for displaying a certain chat message.
+ *
+ * See {@link Message} for parameter definitions.
+ * @param sender
+ * @param time
+ * @param content
+ * @param html
+ */
 export const MessageBubble = ({ sender, time, content, html }: Message) => {
   const { user } = useUserStore()
   const send = user == sender

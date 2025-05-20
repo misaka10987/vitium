@@ -13,6 +13,9 @@ import {
   TooltipTrigger,
 } from './ui/tooltip'
 
+/**
+ * A multifunction input area for chat message and command input.
+ */
 export const TurboInput = () => {
   const msgForm = useRef<HTMLFormElement>(null)
   const msgInput = useRef<HTMLTextAreaElement>(null)

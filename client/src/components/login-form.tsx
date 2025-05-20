@@ -1,6 +1,5 @@
 'use client'
 
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -15,21 +14,21 @@ import { Host } from '@/components/host'
 import { useUserStore } from '@/components/user'
 import { useId, useState } from 'react'
 import Link from 'next/link'
-import { grabToken } from '@/lib/auth'
+import { login } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
 import { panic } from '@/lib/util'
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
+/**
+ * User interface for logging in to a certain game server.
+ */
+export const LoginForm = () => {
   const userInputId = useId()
   const passInputId = useId()
   const [wrongCredentials, setWrongCredentials] = useState(false)
   const { setUser } = useUserStore()
   const router = useRouter()
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>
@@ -46,7 +45,7 @@ export function LoginForm({
               const data = new FormData(e.currentTarget)
               const user = data.get('user')?.toString() ?? panic()
               const pass = data.get('pass')?.toString() ?? panic()
-              const res = await grabToken(user, pass)
+              const res = await login(user, pass)
               if (!res.ok) {
                 setWrongCredentials(true)
                 return

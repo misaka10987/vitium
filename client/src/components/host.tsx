@@ -16,7 +16,15 @@ import { persist } from 'zustand/middleware'
 import { panic } from '@/lib/util'
 
 export const useHostStore = create<{
+  /**
+   * Address of the game server.
+   */
   host?: string
+  /**
+   * Update the address of the game server.
+   *
+   * @param name new game server
+   */
   setHost: (name: string) => void
 }>()(
   persist(
@@ -29,8 +37,18 @@ export const useHostStore = create<{
   )
 )
 
+/**
+ * A non-hook api for acessing address of the game server outside of React components.
+ *
+ * Use `.getState()` for visiting the game server.
+ */
 export const hostStore = useHostStore
 
+/**
+ * An editable display for the address of the game server.
+ *
+ * Would automatically pop up if the address is not set.
+ */
 export const Host = () => {
   const { host, setHost } = useHostStore()
   const [open, setOpen] = useState(false)
@@ -74,7 +92,7 @@ export const Host = () => {
             </Label>
             <Input
               id={inputId}
-              name='host'
+              name="host"
               placeholder="host:port"
               className="col-span-3"
               required

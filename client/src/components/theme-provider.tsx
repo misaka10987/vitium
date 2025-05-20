@@ -1,3 +1,5 @@
+// https://www.shadcn-ui.cn/docs/dark-mode/next
+
 'use client'
 
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
