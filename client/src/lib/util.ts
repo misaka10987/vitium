@@ -3,7 +3,7 @@
  *
  * This function never returns.
  */
-export const panic = <T>(msg: string = '', ...payload: T[]): never => {
+export const panic = (msg: string = '', ...payload: unknown[]): never => {
   console.warn(msg, ...payload)
   throw Error(msg)
 }
