@@ -9,6 +9,14 @@ export const panic = <T>(msg: string = '', ...payload: T[]): never => {
 }
 
 /**
+ * Indicates unreachable code to make the compiler happy.
+ *
+ * This function {@link panic}s if actually called.
+ */
+export const unreachable = (..._: unknown[]): never =>
+  panic('Unreachable code reached')
+
+/**
  * Helper for formatting string with nullable arguments.
  *
  * This function would return `undefined` if any of arguments is `undefined`,
