@@ -82,11 +82,11 @@ export const Host = () => {
       <DialogTrigger asChild>
         <Button variant="link">{host}</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] select-none">
         <DialogHeader>
           <DialogTitle>Connect to server</DialogTitle>
           <DialogDescription>
-            Enter hostname of the game server to connect to.
+            Enter hostname of the game server to connect to
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -107,6 +107,7 @@ export const Host = () => {
             <Input
               id={inputId}
               name="host"
+              defaultValue={host}
               placeholder="host:port"
               className="col-span-3"
               required
