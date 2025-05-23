@@ -89,7 +89,7 @@ impl ProxyServer {
         shutdown.register_hook(move || send.send(true).expect("shutdown HTTP proxy"));
 
         tokio::spawn(async move {
-            proxy.start_service(None, recv).await;
+            proxy.start_service(None, recv, 1).await;
         });
         Ok(shutdown)
     }
