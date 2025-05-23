@@ -1,5 +1,5 @@
-import { hostStore } from '@/components/host'
-import { userStore } from '@/components/user'
+import { useHostStore } from '@/components/host'
+import { useUserStore } from '@/components/user'
 import { Message } from 'vitium-api'
 import { json } from 'typia'
 import { panic } from './util'
@@ -11,8 +11,8 @@ import { panic } from './util'
  * @param html if HTML message is enabled (default: `false`)
  */
 export const sendMessage = async (content: string, html: boolean = false) => {
-  const host = hostStore.getState().host ?? panic('Missing hostname')
-  const user = userStore.getState().user ?? panic('Missing username')
+  const host = useHostStore.getState().host ?? panic('Missing hostname')
+  const user = useUserStore.getState().user ?? panic('Missing username')
 
   const res = await fetch(`https://${host}/api/chat`, {
     method: 'POST',

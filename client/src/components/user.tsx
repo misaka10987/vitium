@@ -5,6 +5,8 @@ import { persist } from 'zustand/middleware' // Import persist middleware
 
 /**
  * React hook for accessing the username stored.
+ * 
+ * To use outside of React components, use `.getState()`.
  */
 export const useUserStore = create<{
   /**
@@ -26,13 +28,6 @@ export const useUserStore = create<{
     }
   )
 )
-
-/**
- * A non-hook api for acessing the username outside of React components.
- *
- * Use `.getState()` for visiting the username.
- */
-export const userStore = useUserStore
 
 /**
  * A component that displays the current username (or empty if undefined).

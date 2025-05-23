@@ -15,6 +15,11 @@ import { useEffect, useId, useState } from 'react'
 import { persist } from 'zustand/middleware'
 import { panic } from '@/lib/util'
 
+/**
+ * React hook for accessing the address of game server.
+ * 
+ * To use outside of React components, use `.getState()`.
+ */
 export const useHostStore = create<{
   /**
    * Address of the game server.
@@ -36,13 +41,6 @@ export const useHostStore = create<{
     }
   )
 )
-
-/**
- * A non-hook api for acessing address of the game server outside of React components.
- *
- * Use `.getState()` for visiting the game server.
- */
-export const hostStore = useHostStore
 
 /**
  * An editable display for the address of the game server.

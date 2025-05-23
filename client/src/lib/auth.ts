@@ -1,4 +1,4 @@
-import { hostStore } from '@/components/host'
+import { useHostStore } from '@/components/host'
 
 /**
  * Generate HTTP header for [Basic](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Authorization#basic_authentication) authorization.
@@ -22,7 +22,7 @@ export const basicAuthHeader = (user: string, pass: string) => {
  * @returns response for this login request
  */
 export const login = async (user: string, pass: string) => {
-  const host = hostStore.getState().host
+  const host = useHostStore.getState().host
   const url = `https://${host}/api/auth`
   const header = basicAuthHeader(user, pass)
   console.debug(`Fetching token from ${url}`)
