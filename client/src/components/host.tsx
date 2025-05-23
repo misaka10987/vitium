@@ -17,7 +17,7 @@ import { panic } from '@/lib/util'
 
 /**
  * React hook for accessing the address of game server.
- * 
+ *
  * To use outside of React components, use `.getState()`.
  */
 export const useHostStore = create<{
@@ -25,19 +25,38 @@ export const useHostStore = create<{
    * Address of the game server.
    */
   host?: string
+
   /**
    * Update the address of the game server.
    *
-   * @param name new game server
+   * @param host new game server
    */
-  setHost: (name: string) => void
+  setHost: (host: string) => void
+
+  /**
+   * Whether the state has been loaded from the storage.
+   */
+  loaded: boolean
+
+  /**
+   * Set the loading status.
+   *
+   * @param loaded whether the state has been loaded
+   */
+  setLoaded: (loaded: boolean) => void
 }>()(
   persist(
     (set) => ({
-      setHost: (name) => set(() => ({ host: name })),
+      setHost: (host) => set({ host }),
+      loaded: false,
+      setLoaded: (loaded) => set({ loaded }),
     }),
     {
       name: 'host',
+      onRehydrateStorage:
+        ({ setLoaded }) =>
+        () =>
+          setLoaded(true),
     }
   )
 )
@@ -48,18 +67,15 @@ export const useHostStore = create<{
  * Would automatically pop up if the address is not set.
  */
 export const Host = () => {
-  const { host, setHost } = useHostStore()
+  const { host, setHost, loaded } = useHostStore()
   const [open, setOpen] = useState(false)
   const formId = useId()
   const inputId = useId()
 
-  // wait 100ms for loading state from local storage
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (host == undefined) setOpen(true)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [host])
+    if (!loaded) return
+    if (host == undefined) setOpen(true)
+  }, [loaded, host])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
