@@ -11,6 +11,7 @@ mod test;
 use axum::{
     Json, Router,
     http::StatusCode,
+    response::Redirect,
     routing::{any, get},
 };
 use basileus::Basileus;
@@ -146,6 +147,7 @@ impl Server {
         let app = app
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
             .route("/hello", get("Hello, world!"))
+            .route("/contact", get(Redirect::temporary(&self.cfg.contact)))
             .nest("/auth", auth::rest())
             .nest("/chat", chat::rest())
             .nest("/cmd", cmd::rest())
@@ -215,8 +217,12 @@ pub struct Config {
     /// Configurations for logging.
     #[serde(default)]
     pub log: log::Config,
+    /// Message of the day.
     #[serde(default)]
     pub motd: String,
+    /// URL to contact the game server administrator, e.g. `mailto:example@example.org`.
+    #[serde(default)]
+    pub contact: String,
 }
 
 impl Default for Config {
@@ -228,6 +234,7 @@ impl Default for Config {
             proxy: Default::default(),
             log: Default::default(),
             motd: String::new(),
+            contact: Default::default(),
         }
     }
 }
