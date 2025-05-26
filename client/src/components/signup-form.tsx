@@ -11,13 +11,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Host } from '@/components/host'
-import { useUserStore } from '@/components/user'
 import { useId, useState } from 'react'
-import Link from 'next/link'
 import { signup } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
 import { panic } from '@/lib/util'
-import { SignUp } from 'vitium-api'
 
 /**
  * User interface for signing up to a certain game server.
@@ -51,11 +48,7 @@ export const SignupForm = () => {
                                 setpasswordMismatch(true)
                                 return
                             }
-                            var signupInfo = {
-                                user,
-                                pass,
-                            }
-                            const res = await signup(signupInfo)
+                            const res = await signup({ user, pass })
                             if (res.ok) {
                                 // todo - change alert to toast or popover
                                 alert('Account created successfully')
