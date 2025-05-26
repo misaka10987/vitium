@@ -26,7 +26,7 @@ export const SignupForm = () => {
     const userInputId = useId()
     const passInputId = useId()
     const passInputId2 = useId()
-    const [NotsamePassword, setNotsamePassword] = useState(false)
+    const [passwordMismatch, setpasswordMismatch] = useState(false)
     const router = useRouter()
     return (
         <div className="flex flex-col gap-6">
@@ -48,7 +48,7 @@ export const SignupForm = () => {
                             const pass = data.get('pass')?.toString() ?? panic()
                             const pass2 = data.get('pass2')?.toString() ?? panic()
                             if (pass !== pass2) {
-                                setNotsamePassword(true)
+                                setpasswordMismatch(true)
                                 return
                             }
                             var signupInfo = {
@@ -88,7 +88,7 @@ export const SignupForm = () => {
                                 <Input id={passInputId2} name="pass2" type="password" required />
                             </div>
                             <div className="flex h-0 items-center">
-                                {NotsamePassword && (
+                                {passwordMismatch && (
                                     <p className="text-sm text-red-600">
                                         The passwords do not match
                                     </p>
