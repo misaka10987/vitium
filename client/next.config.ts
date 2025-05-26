@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   crossOrigin: 'anonymous',
   webpack: (config, { isServer }) => {
     config.experiments.asyncWebAssembly = true
+
+    // to make yargs-parser work in browser
+    config.resolve.fallback = { ...config.resolve.fallback, fs: false }
+
     // walkaround for wasm loading
     // https://github.com/vercel/next.js/issues/25852#issuecomment-1057059000
     config.plugins.push(
