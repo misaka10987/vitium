@@ -20,7 +20,7 @@ Planned release date: 6/30.
 
 - [x] Basic RPG dice support
 
-- [ ] (Temporary Support) DnD ruleset lookup
+- [x] (Temporary Support) DnD ruleset lookup
 
 ## Deploy
 
@@ -28,6 +28,6 @@ Planned release date: 6/30.
 
 ## Meta
 
-- [ ] Build workflow
+- [x] Build workflow
 
 - [ ] Code style guide
