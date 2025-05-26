@@ -3,7 +3,7 @@ import { CommandRecord, Message } from 'vitium-api'
 import { MessageBubble } from './message-bubble'
 import { CommandBubble } from './command-bubble'
 import { match, P } from 'ts-pattern'
-import { panic } from '@/lib/util'
+import { unreachable } from '@/lib/util'
 
 /// The entry to display in a bubble.
 export type Entry = Message | CommandRecord
@@ -26,5 +26,5 @@ export const Bubble = ({ entry: entry }: { entry: Entry }) => {
       P.when((x) => is<CommandRecord>(x)),
       (record) => <CommandBubble record={record} />
     )
-    .otherwise(() => panic())
+    .otherwise(unreachable)
 }

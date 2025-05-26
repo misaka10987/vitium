@@ -15,34 +15,51 @@ import { useEffect, useId, useState } from 'react'
 import { persist } from 'zustand/middleware'
 import { panic } from '@/lib/util'
 
+/**
+ * React hook for accessing the address of game server.
+ *
+ * To use outside of React components, use `.getState()`.
+ */
 export const useHostStore = create<{
   /**
    * Address of the game server.
    */
   host?: string
+
   /**
    * Update the address of the game server.
    *
-   * @param name new game server
+   * @param host new game server
    */
-  setHost: (name: string) => void
+  setHost: (host: string) => void
+
+  /**
+   * Whether the state has been loaded from the storage.
+   */
+  loaded: boolean
+
+  /**
+   * Set the loading status.
+   *
+   * @param loaded whether the state has been loaded
+   */
+  setLoaded: (loaded: boolean) => void
 }>()(
   persist(
     (set) => ({
-      setHost: (name) => set(() => ({ host: name })),
+      setHost: (host) => set({ host }),
+      loaded: false,
+      setLoaded: (loaded) => set({ loaded }),
     }),
     {
       name: 'host',
+      onRehydrateStorage:
+        ({ setLoaded }) =>
+        () =>
+          setLoaded(true),
     }
   )
 )
-
-/**
- * A non-hook api for acessing address of the game server outside of React components.
- *
- * Use `.getState()` for visiting the game server.
- */
-export const hostStore = useHostStore
 
 /**
  * An editable display for the address of the game server.
@@ -50,29 +67,26 @@ export const hostStore = useHostStore
  * Would automatically pop up if the address is not set.
  */
 export const Host = () => {
-  const { host, setHost } = useHostStore()
+  const { host, setHost, loaded } = useHostStore()
   const [open, setOpen] = useState(false)
   const formId = useId()
   const inputId = useId()
 
-  // wait 100ms for loading state from local storage
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (host == undefined) setOpen(true)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [host])
+    if (!loaded) return
+    if (host == undefined) setOpen(true)
+  }, [loaded, host])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="link">{host}</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] select-none">
         <DialogHeader>
           <DialogTitle>Connect to server</DialogTitle>
           <DialogDescription>
-            Enter hostname of the game server to connect to.
+            Enter hostname of the game server to connect to
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -93,6 +107,7 @@ export const Host = () => {
             <Input
               id={inputId}
               name="host"
+              defaultValue={host}
               placeholder="host:port"
               className="col-span-3"
               required

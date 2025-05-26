@@ -3,10 +3,18 @@
  *
  * This function never returns.
  */
-export const panic = <T>(msg: string = '', ...payload: T[]): never => {
+export const panic = (msg: string = '', ...payload: unknown[]): never => {
   console.warn(msg, ...payload)
   throw Error(msg)
 }
+
+/**
+ * Indicates unreachable code to make the compiler happy.
+ *
+ * This function {@link panic}s if actually called.
+ */
+export const unreachable = (..._: unknown[]): never =>
+  panic('Unreachable code reached')
 
 /**
  * Helper for formatting string with nullable arguments.
@@ -70,3 +78,25 @@ export const some = (
  * @returns the same as input
  */
 export const identity = <T>(x: T): T => x
+
+/**
+ * Assert some expression values true and {@link panic}s if not so.
+ * 
+ * @param assertion some assertion
+ */
+export const assert = (assertion: boolean) => {
+  console.assert(assertion)
+  if (!assertion) panic('Assertion failed')
+}
+
+/**
+ * Assert two values are strictly equal (i.e. `===`) and {@link panic}s if not so.
+ * 
+ * @param lhs some value to compare
+ * @param rhs some value to compare
+ */
+export const assertEq = (lhs: unknown, rhs: unknown) => {
+  const eq = lhs === rhs
+  console.assert(eq)
+  if (!eq) panic('Assertion failed: ', lhs, ' does not equal to ', rhs)
+}
