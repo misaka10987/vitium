@@ -86,6 +86,7 @@ export const TurboInput = () => {
             isCommand && 'font-bold font-mono'
           )}
           placeholder={isCommand ? 'Type Command' : 'Type Message'}
+          spellCheck={!isCommand}
           required
           onKeyDown={(e) => {
             if (e.key == 'Enter' && !e.shiftKey) {
