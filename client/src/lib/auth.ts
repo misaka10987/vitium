@@ -1,4 +1,6 @@
 import { useHostStore } from '@/components/host'
+import { SignUp } from 'vitium-api'
+import { json } from 'typia'
 
 /**
  * Generate HTTP header for [Basic](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Authorization#basic_authentication) authorization.
@@ -36,19 +38,18 @@ export const login = async (user: string, pass: string) => {
   return res
 }
 
-export const signup = async (user: string, pass: string) => {
-  const host = hostStore.getState().host
+export const signup = async (signupInfo: SignUp) => {
+  const host = useHostStore.getState().host
   const url = `https://${host}/api/auth`
-
-  //@todo
-  const header = basicAuthHeader(user, pass)
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: header,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: json.stringify<SignUp>(signupInfo),
     credentials: 'include',
   })
-  // the above code below @todo is just a placeholder, still not implemented
 
   return res
 }

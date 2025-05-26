@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { signup } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
 import { panic } from '@/lib/util'
+import { SignUp } from 'vitium-api'
 
 /**
  * User interface for signing up to a certain game server.
@@ -50,7 +51,11 @@ export const SignupForm = () => {
                                 setNotsamePassword(true)
                                 return
                             }
-                            const res = await signup(user, pass)
+                            var signupInfo = {
+                                user,
+                                pass,
+                            }
+                            const res = await signup(signupInfo)
                             if (res.ok) {
                                 // todo - change alert to toast or popover
                                 alert('Account created successfully')
@@ -79,7 +84,7 @@ export const SignupForm = () => {
                                 <div className="flex items-center">
                                     <Label htmlFor={passInputId2}>Confirm Password</Label>
                                 </div>
-                                <Input id={passInputId} name="pass2" type="password" required />
+                                <Input id={passInputId2} name="pass2" type="password" required />
                             </div>
                             <div className="flex h-0 items-center">
                                 {NotsamePassword && (
