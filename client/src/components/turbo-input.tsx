@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Send, Code2, ChevronsRight } from 'lucide-react'
 import { panic } from '@/lib/util'
 import { cn } from '@/lib/utils'
-import { sendCommand } from '@/lib/cmd'
+import { handleCommand } from '@/lib/cmd'
 import {
   Tooltip,
   TooltipContent,
@@ -30,7 +30,7 @@ export const TurboInput = () => {
         const form = new FormData(e.currentTarget)
         const content = form.get('content')?.toString() ?? panic()
         if (isCommand) {
-          sendCommand(content)
+          handleCommand(content)
         } else {
           sendMessage(content, enableHTML)
         }
