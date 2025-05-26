@@ -37,6 +37,12 @@ export const login = async (user: string, pass: string) => {
   return res
 }
 
+/**
+ * Attempt to sign up to the game server with specified username and password.
+ * @param signupInfo object containing user and pass
+ * Submits in html-form format.
+ * @returns response for this signup request
+ */
 export const signup = async (signupInfo: SignUp) => {
   const host = useHostStore.getState().host
   const url = `https://${host}/api/auth`
