@@ -72,7 +72,6 @@ export const SignupForm = () => {
                                 <Input
                                     id={userInputId}
                                     name="user"
-                                    placeholder="username"
                                     required
                                 />
                             </div>
@@ -81,6 +80,8 @@ export const SignupForm = () => {
                                     <Label htmlFor={passInputId}>Password</Label>
                                 </div>
                                 <Input id={passInputId} name="pass" type="password" required />
+                            </div>
+                            <div className="grid gap-3">
                                 <div className="flex items-center">
                                     <Label htmlFor={passInputId2}>Confirm Password</Label>
                                 </div>
