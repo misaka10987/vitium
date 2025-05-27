@@ -88,16 +88,23 @@ registerCommand(sendImage)
  * @param line the line of command
  */
 export const handleCommand = async (line: string) => {
-  console.info('Running client command:', line)
-
-  const tokens = parse(line).map((s) => (typeof s == 'string' ? s : panic()))
+  const tokens = parse(line)
   const name = tokens[0]
-  const args = tokens.slice(1)
 
-  const run = runCommand(name)
+  if (typeof name == 'string') {
+    const run = runCommand(name)
+    if (run) {
+      console.info('Running client command:', line)
+      const args = tokens
+        .slice(1)
+        .map((s) => (typeof s == 'string' ? s : panic()))
+      await run(args)
+      return
+    }
+  }
 
-  if (run && name) await run(args)
-  else await sendCommand(line)
+  console.info('Sending command:', line)
+  await sendCommand(line)
 }
 
 /**
