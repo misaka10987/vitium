@@ -1,98 +1,142 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Host, useHostStore } from '@/components/host'
-import { useId, useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useHostStore } from '@/components/host'
+import { useCallback, useRef } from 'react'
+import { validateEquals } from 'typia'
+import { useForm } from 'react-hook-form'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from './ui/form'
+
+interface Data {
+  user: string
+  pass: string
+  repeatPass: string
+}
 
 /**
  * User interface for signing up to a certain game server.
  */
 export const SignupForm = () => {
-    const userInputId = useId()
-    const passInputId = useId()
-    const passInputId2 = useId()
-    const [confirmPassword, setConfirmPassword] = useState('')
-    const [passwordMismatch, setpasswordMismatch] = useState(false)
-    const { host } = useHostStore()
-    const router = useRouter()
-    return (
-        <div className="flex flex-col gap-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        Connect to: <Host />
-                    </CardTitle>
-                    <CardDescription>
-                        Connect to the above game server
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form
-                        action={`${host}/api/signup`}
-                        method="POST"
-                        onSubmit={(e) => {
-                            const formData = new FormData(e.currentTarget)
-                            if (formData.get('pass') !== confirmPassword) {
-                                e.preventDefault()
-                                setpasswordMismatch(true)
-                                return
-                            }
-                            // router.replace('/login')
-                        }}
-                    >
-                        <div className="flex flex-col gap-6">
-                            <div className="grid gap-3">
-                                <Label htmlFor={userInputId}>Username</Label>
-                                <Input
-                                    id={userInputId}
-                                    name="user"
-                                    required
-                                />
-                            </div>
-                            <div className="grid gap-3">
-                                <div className="flex items-center">
-                                    <Label htmlFor={passInputId}>Password</Label>
-                                </div>
-                                <Input id={passInputId} name="pass" type="password" required />
-                            </div>
-                            <div className="grid gap-3">
-                                <div className="flex items-center">
-                                    <Label htmlFor={passInputId2}>Confirm Password</Label>
-                                </div>
-                                <Input
-                                    id={passInputId2}
-                                    type="password"
-                                    required
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex h-0 items-center">
-                                {passwordMismatch && (
-                                    <p className="text-sm text-red-600">
-                                        The passwords do not match
-                                    </p>
-                                )}
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <Button type="submit" className="w-full">
-                                    Submit
-                                </Button>
-                            </div>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
-        </div>
-    )
+  const { host } = useHostStore()
+
+  const resolver = useCallback((data: unknown) => {
+    const valid = validateEquals<Data>(data)
+    if (!valid.success)
+      return {
+        values: {},
+        errors: valid.errors.reduce(
+          (all, curr) => ({
+            ...all,
+            [curr.path]: {
+              type: 'typia',
+              message: `${curr.value}: expected ${curr.expected}`,
+            },
+          }),
+          {}
+        ),
+      }
+    if (valid.data.pass != valid.data.repeatPass)
+      return {
+        values: {},
+        errors: {
+          repeatPass: {
+            type: 'mismatch',
+            message: 'Password mismatch with repeated.',
+          },
+        },
+      }
+    return { values: valid.data, errors: {} }
+  }, [])
+
+  const form = useForm<Data>({
+    resolver,
+    defaultValues: {
+      user: '',
+      pass: '',
+      repeatPass: '',
+    },
+    shouldUnregister: true,
+    mode: 'onChange',
+  })
+
+  const htmlForm = useRef<HTMLFormElement>(null)
+
+  return (
+    <Form {...form}>
+      <form
+        ref={htmlForm}
+        className="flex flex-col gap-6 w-full"
+        action={`https://${host}/api/auth`}
+        method="POST"
+        onSubmit={form.handleSubmit((_) => {
+          form.unregister('repeatPass')
+          htmlForm.current?.submit()
+        })}
+      >
+        <FormField
+          control={form.control}
+          name="user"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input {...field} autoComplete="username" required />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="pass"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="repeatPass"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Repeat Password</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                />
+              </FormControl>
+              <FormMessage>
+                {form.formState.errors.repeatPass?.message}
+              </FormMessage>
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" className="w-full">
+          Sign Up
+        </Button>
+      </form>
+    </Form>
+  )
 }
