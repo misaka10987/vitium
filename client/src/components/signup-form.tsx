@@ -10,11 +10,9 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Host } from '@/components/host'
-import { useId, useState } from 'react'
-import { signup } from '@/lib/auth'
+import { Host, useHostStore } from '@/components/host'
+import { useId, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { panic } from '@/lib/util'
 
 /**
  * User interface for signing up to a certain game server.
@@ -23,7 +21,9 @@ export const SignupForm = () => {
     const userInputId = useId()
     const passInputId = useId()
     const passInputId2 = useId()
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [passwordMismatch, setpasswordMismatch] = useState(false)
+    const { host } = useHostStore()
     const router = useRouter()
     return (
         <div className="flex flex-col gap-6">
@@ -38,25 +38,17 @@ export const SignupForm = () => {
                 </CardHeader>
                 <CardContent>
                     <form
-                        onSubmit={async (e) => {
-                            e.preventDefault()
-                            const data = new FormData(e.currentTarget)
-                            const user = data.get('user')?.toString() ?? panic()
-                            const pass = data.get('pass')?.toString() ?? panic()
-                            const pass2 = data.get('pass2')?.toString() ?? panic()
-                            if (pass !== pass2) {
+                        action={host ? `https://${host}/api/signup` : undefined}
+                        method="POST"
+                        encType="application/x-www-form-urlencoded"
+                        onSubmit={(e) => {
+                            const formData = new FormData(e.currentTarget)
+                            if (formData.get('pass') !== confirmPassword) {
+                                e.preventDefault()
                                 setpasswordMismatch(true)
                                 return
                             }
-                            const res = await signup({ user, pass })
-                            if (res.ok) {
-                                // todo - change alert to toast or popover
-                                alert('Account created successfully')
-                                router.replace('/login')
-                            }
-                            else {
-                                console.error('Failed to create account. Error: ' + res.statusText)
-                            }
+                            router.replace('/login')
                         }}
                     >
                         <div className="flex flex-col gap-6">
@@ -78,7 +70,13 @@ export const SignupForm = () => {
                                 <div className="flex items-center">
                                     <Label htmlFor={passInputId2}>Confirm Password</Label>
                                 </div>
-                                <Input id={passInputId2} name="pass2" type="password" required />
+                                <Input
+                                    id={passInputId2}
+                                    type="password"
+                                    required
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
                             </div>
                             <div className="flex h-0 items-center">
                                 {passwordMismatch && (

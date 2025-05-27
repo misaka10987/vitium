@@ -42,6 +42,7 @@ export const login = async (user: string, pass: string) => {
  * @param signupInfo object containing user and pass
  * Submits in html-form format.
  * @returns response for this signup request
+ * @deprecated
  */
 export const signup = async (signupInfo: SignUp) => {
   const host = useHostStore.getState().host
