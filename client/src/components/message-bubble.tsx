@@ -61,7 +61,7 @@ export const MessageBubble = ({ sender, time, content, html }: Message) => {
               className={cn(
                 'py-1.5 px-2.5 rounded-lg',
                 send
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-accent text-accent-foreground'
                   : 'bg-secondary text-secondary-foreground'
               )}
             >

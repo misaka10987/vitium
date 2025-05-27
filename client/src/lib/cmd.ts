@@ -6,6 +6,7 @@ import { json } from 'typia'
 import { parse } from 'shell-quote'
 import parser from 'yargs-parser'
 import { dnd } from './cmd/dnd'
+import { sendImage } from './cmd/send-img'
 
 /**
  * A client command instance.
@@ -76,6 +77,7 @@ export const runCommand = (name: string) => {
 const registry = new Map<string, Command>()
 
 registerCommand(dnd)
+registerCommand(sendImage)
 
 /**
  * Handles a command.
