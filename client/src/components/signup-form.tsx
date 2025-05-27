@@ -38,9 +38,8 @@ export const SignupForm = () => {
                 </CardHeader>
                 <CardContent>
                     <form
-                        action={host ? `/api/signup` : undefined}
+                        action={`${host}/api/signup`}
                         method="POST"
-                        encType="application/x-www-form-urlencoded"
                         onSubmit={(e) => {
                             const formData = new FormData(e.currentTarget)
                             if (formData.get('pass') !== confirmPassword) {
@@ -48,7 +47,7 @@ export const SignupForm = () => {
                                 setpasswordMismatch(true)
                                 return
                             }
-                            router.replace('/login')
+                            // router.replace('/login')
                         }}
                     >
                         <div className="flex flex-col gap-6">
