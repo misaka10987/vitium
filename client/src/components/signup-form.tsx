@@ -38,7 +38,7 @@ export const SignupForm = () => {
                 </CardHeader>
                 <CardContent>
                     <form
-                        action={host ? `https://${host}/api/signup` : undefined}
+                        action={host ? `/api/signup` : undefined}
                         method="POST"
                         encType="application/x-www-form-urlencoded"
                         onSubmit={(e) => {
