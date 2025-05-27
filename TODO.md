@@ -8,7 +8,7 @@ Planned release date: 6/30.
 
 - [x] Login page
 
-- [ ] Signup page
+- [x] Signup page
 
 - [x] Gaming page
 
@@ -16,7 +16,7 @@ Planned release date: 6/30.
 
 - [x] Instant messaging
 
-- [ ] Sending images
+- [x] Sending images
 
 - [x] Basic RPG dice support
 
