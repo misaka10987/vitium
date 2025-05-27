@@ -83,11 +83,12 @@ export const LoginForm = () => {
             <FormItem className="w-full">
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input {...field} required />
+                <Input {...field} autoComplete="username" required />
               </FormControl>
             </FormItem>
           )}
-        ></FormField>
+        />
+
         <FormField
           control={form.control}
           name="pass"
@@ -103,11 +104,17 @@ export const LoginForm = () => {
                 </Link>
               </FormLabel>
               <FormControl>
-                <Input {...field} required />
+                <Input
+                  {...field}
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
               </FormControl>
             </FormItem>
           )}
-        ></FormField>
+        />
+
         {res != null && !res.ok && (
           <FormMessage>
             {match(res.status)
@@ -115,6 +122,7 @@ export const LoginForm = () => {
               .otherwise(() => `${res.status} ${res.statusText}`)}
           </FormMessage>
         )}
+
         <Button type="submit" className="w-full">
           Login
         </Button>
