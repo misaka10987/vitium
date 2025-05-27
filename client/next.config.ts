@@ -13,36 +13,35 @@ const nextConfig: NextConfig = {
 
     // walkaround for wasm loading
     // https://github.com/vercel/next.js/issues/25852#issuecomment-1057059000
-    config.plugins.push(
-      new (class {
-        apply(compiler: any) {
-          compiler.hooks.afterEmit.tapPromise(
-            'SymlinkWebpackPlugin',
-            async (compiler: any) => {
-              if (isServer) {
-                const from = join(compiler.options.output.path, '../static')
-                const to = join(compiler.options.output.path, 'static')
+    const plugin = {
+      apply: (compiler: any) => {
+        compiler.hooks.afterEmit.tapPromise(
+          'SymlinkWebpackPlugin',
+          async (compiler: any) => {
+            if (!isServer) return
 
-                try {
-                  await access(from)
-                  console.log(`${from} already exists`)
-                  return
-                } catch (error: any) {
-                  if (error.code === 'ENOENT') {
-                    // No link exists
-                  } else {
-                    throw error
-                  }
-                }
+            const from = join(compiler.options.output.path, '../static')
+            const to = join(compiler.options.output.path, 'static')
 
-                await symlink(to, from, 'junction')
-                console.log(`created symlink ${from} -> ${to}`)
-              }
+            try {
+              await access(from)
+              // console.debug(`${from} already exists`)
+              return
+            } catch (error: any) {
+              if (error.code !== 'ENOENT') throw error
             }
-          )
-        }
-      })()
-    )
+
+            await symlink(to, from, 'junction')
+            console.debug(
+              'Walkaround applied for WASM loading:',
+              `ln -s ${from} ${to}`
+            )
+          }
+        )
+      },
+    }
+
+    config.plugins.push(plugin)
     return config
   },
 }
