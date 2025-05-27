@@ -1,3 +1,5 @@
+'use client'
+
 import { create } from 'zustand'
 import { Button } from '@/components/ui/button'
 import {
