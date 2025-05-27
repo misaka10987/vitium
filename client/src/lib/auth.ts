@@ -17,6 +17,7 @@ export const basicAuthHeader = (user: string, pass: string) => {
 
 /**
  * Attempt to login to the game server with specified username and password.
+ *
  * @param user username
  * @param pass password
  * @returns response for this login request

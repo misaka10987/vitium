@@ -1,4 +1,4 @@
-use axum::{Form, Router, extract::State, http::StatusCode, routing::get};
+use axum::{Form, Router, extract::State, http::StatusCode, response::Redirect, routing::get};
 use axum_extra::extract::{
     CookieJar,
     cookie::{Cookie, SameSite},
@@ -87,7 +87,10 @@ async fn read(State(s): State<Server>, Password(user): Password) -> CookieJar {
     cookie
 }
 
-async fn create(State(s): State<Server>, Form(form): Form<net::SignUp>) -> Result<(), StatusCode> {
+async fn create(
+    State(s): State<Server>,
+    Form(form): Form<net::SignUp>,
+) -> Result<Redirect, StatusCode> {
     s.create_user(&form.user).await.map_err(|e| match e {
         basileus::err::CreateUserError::UserAlreadyExist(_) => StatusCode::CONFLICT,
         e => internal_server_error(e),
@@ -95,7 +98,7 @@ async fn create(State(s): State<Server>, Form(form): Form<net::SignUp>) -> Resul
     s.update_pass(&form.user, &form.pass)
         .await
         .map_err(internal_server_error)?;
-    Ok(())
+    Ok(Redirect::temporary("/login"))
 }
 
 async fn update(
