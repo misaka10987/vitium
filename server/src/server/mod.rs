@@ -35,8 +35,6 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::{error, info};
 use vitium_api::user::UserProfile;
 
-pub use prelude::*;
-
 const DB_INIT_QUERY: &'static str = r#"
 CREATE TABLE IF NOT EXISTS chat (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,10 +84,10 @@ impl Server {
             cfg,
             shutdown,
             started: AtomicBool::new(false),
+            chat: ChatModule::new(db.clone()),
             db,
             player: RwLock::const_new(HashMap::new()),
             basileus: Basileus::new(Default::default()).await?,
-            chat: ChatModule::new(),
             cmd: CommandModule::new(),
             log,
         }));
@@ -135,8 +133,10 @@ impl Server {
         info!("start server on {}", listener.local_addr()?);
 
         let app = Router::new();
+
         #[cfg(debug_assertions)]
         let app = app.nest("/test", test::router());
+
         let app = app
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
             .route("/hello", get("Hello, world!"))
@@ -162,33 +162,9 @@ impl Server {
     }
 }
 
-impl AsRef<ChatModule> for Server {
-    fn as_ref(&self) -> &ChatModule {
-        &self.chat
-    }
-}
-
-impl AsRef<SqlitePool> for Server {
-    fn as_ref(&self) -> &SqlitePool {
-        &self.db
-    }
-}
-
 impl AsRef<Basileus> for Server {
     fn as_ref(&self) -> &Basileus {
         &self.basileus
-    }
-}
-
-impl AsRef<CommandModule> for Server {
-    fn as_ref(&self) -> &CommandModule {
-        &self.cmd
-    }
-}
-
-impl AsRef<LogModule> for Server {
-    fn as_ref(&self) -> &LogModule {
-        &self.log
     }
 }
 

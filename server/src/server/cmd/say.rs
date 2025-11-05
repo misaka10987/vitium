@@ -1,7 +1,7 @@
 use basileus::Perm;
 use clap::Parser;
 
-use crate::{server::chat::ChatServer, Server};
+use crate::Server;
 
 use super::Command;
 
@@ -15,7 +15,7 @@ pub struct Say {
 
 impl Command for Say {
     async fn exec(self, s: Server) -> anyhow::Result<String> {
-        s.send_server_msg(self.message).await;
+        s.send_server_chat(self.message).await;
         Ok("".into())
     }
 

@@ -3,12 +3,14 @@ use std::{collections::HashMap, str::FromStr, sync::Mutex};
 use serde::{Deserialize, Serialize};
 use tracing::Level;
 use tracing_subscriber::{
+    Registry,
     filter::Targets,
     layer::SubscriberExt,
     reload::{self, Handle},
     util::SubscriberInitExt,
-    Registry,
 };
+
+use crate::Server;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -46,18 +48,15 @@ impl LogModule {
         };
         Ok(value)
     }
-}
 
-pub trait LogServer {
-    fn reload_logger(&self, setter: impl FnOnce(&mut Targets)) -> anyhow::Result<()>;
-}
-
-impl<T> LogServer for T
-where
-    T: AsRef<LogModule>,
-{
-    fn reload_logger(&self, setter: impl FnOnce(&mut Targets)) -> anyhow::Result<()> {
-        self.as_ref().reload.lock().unwrap().modify(setter)?;
+    fn update(&self, setter: impl FnOnce(&mut Targets)) -> anyhow::Result<()> {
+        self.reload.lock().unwrap().modify(setter)?;
         Ok(())
+    }
+}
+
+impl Server {
+    pub fn update_logger(&self, setter: impl FnOnce(&mut Targets)) -> anyhow::Result<()> {
+        self.log.update(setter)
     }
 }

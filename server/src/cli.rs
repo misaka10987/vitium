@@ -3,7 +3,7 @@ use std::thread;
 use rustyline::{DefaultEditor, error::ReadlineError};
 use tokio::runtime;
 
-use crate::{Server, server::CommandServer};
+use crate::Server;
 
 pub fn start(server: Server) -> anyhow::Result<()> {
     let mut rl = DefaultEditor::new()?;

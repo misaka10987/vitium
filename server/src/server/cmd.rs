@@ -169,13 +169,6 @@ impl CommandModule {
     }
 }
 
-pub trait CommandServer {
-    fn print_cmd_output(&self, shutdown: ShutUp) -> JoinHandle<()>;
-    fn server_run_cmd(&self, line: String) -> impl std::future::Future<Output = ()> + Send;
-    fn run_cmd(&self, user: &str, line: String) -> impl std::future::Future<Output = ()> + Send;
-    fn cmd_output(&self) -> broadcast::Receiver<Arc<(CommandLine, anyhow::Result<String>)>>;
-}
-
 fn resolve_cmd<'a>(server: &'a Server, line: &str) -> anyhow::Result<&'a CommandInst> {
     let name = line
         .split_whitespace()
@@ -201,8 +194,8 @@ async fn run_cmd_unchecked(server: &Server, line: String) -> anyhow::Result<Stri
     cmd.run(line, server.clone()).await
 }
 
-impl CommandServer for Server {
-    async fn run_cmd(&self, user: &str, line: String) {
+impl Server {
+    pub async fn run_cmd(&self, user: &str, line: String) {
         let res = run_cmd_checked(self, user, line.clone()).await;
         let cmd = CommandLine {
             user: Some(user.into()),
@@ -210,15 +203,15 @@ impl CommandServer for Server {
         };
         self.cmd.broadcast(cmd, res);
     }
-    async fn server_run_cmd(&self, line: String) {
+    pub async fn server_run_cmd(&self, line: String) {
         let res = run_cmd_unchecked(self, line.clone()).await;
         let cmd = CommandLine { user: None, line };
         self.cmd.broadcast(cmd, res);
     }
-    fn cmd_output(&self) -> broadcast::Receiver<Arc<(CommandLine, anyhow::Result<String>)>> {
+    pub fn cmd_output(&self) -> broadcast::Receiver<Arc<(CommandLine, anyhow::Result<String>)>> {
         self.cmd.output.subscribe()
     }
-    fn print_cmd_output(&self, shutdown: ShutUp) -> JoinHandle<()> {
+    pub fn print_cmd_output(&self, shutdown: ShutUp) -> JoinHandle<()> {
         let mut output = self.cmd.output.subscribe();
         tokio::spawn(async move {
             loop {

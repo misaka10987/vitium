@@ -3,7 +3,7 @@ use clap::Parser;
 use tracing::Level;
 use tracing_subscriber::filter::Targets;
 
-use crate::{server::log::LogServer, Server};
+use crate::Server;
 
 use super::Command;
 
@@ -24,7 +24,7 @@ impl Command for LogLevel {
             Some(m) => *filter = filter.clone().with_target(m, self.level),
             None => *filter = filter.clone().with_default(self.level),
         };
-        s.reload_logger(setter)?;
+        s.update_logger(setter)?;
         Ok(format!("set log level to {}", self.level))
     }
 
