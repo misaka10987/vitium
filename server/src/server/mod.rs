@@ -4,7 +4,6 @@ mod cmd;
 mod log;
 mod prelude;
 mod profile;
-mod proxy;
 #[cfg(debug_assertions)]
 mod test;
 
@@ -18,7 +17,6 @@ use basileus::Basileus;
 use chat::ChatModule;
 use cmd::CommandModule;
 use log::LogModule;
-use proxy::ProxyServer;
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 use shutup::ShutUp;
@@ -134,12 +132,7 @@ impl Server {
         let addr = SocketAddr::from((ip, port));
 
         let listener = TcpListener::bind(addr).await?;
-        info!("start API server on {}", listener.local_addr()?);
-
-        let port = listener.local_addr()?.port();
-        let proxy = ProxyServer::new(self.cfg.proxy.clone(), port);
-        let proxy = proxy.start()?;
-        self.shutdown.adopt(&proxy);
+        info!("start server on {}", listener.local_addr()?);
 
         let app = Router::new();
         #[cfg(debug_assertions)]
@@ -153,7 +146,7 @@ impl Server {
             .nest("/cmd", cmd::rest())
             .nest("/profile", profile::rest())
             .fallback(any(StatusCode::NOT_FOUND))
-            .layer(CorsLayer::very_permissive())
+            .layer(CorsLayer::new())
             .layer(TraceLayer::new_for_http());
 
         let fut = self.shutdown.wait();
@@ -211,9 +204,6 @@ pub struct Config {
     /// Whether to allow direct access to the API server via HTTP from remote.
     #[serde_inline_default(false)]
     pub direct_api: bool,
-    /// Configurations for HTTP proxy.
-    #[serde(default)]
-    pub proxy: proxy::Config,
     /// Configurations for logging.
     #[serde(default)]
     pub log: log::Config,
@@ -231,7 +221,6 @@ impl Default for Config {
             port: None,
             db: "./server.db".into(),
             direct_api: false,
-            proxy: Default::default(),
             log: Default::default(),
             motd: String::new(),
             contact: Default::default(),
