@@ -16,6 +16,7 @@ use axum::{
 use basileus::Basileus;
 use chat::ChatModule;
 use cmd::CommandModule;
+use http::HeaderValue;
 use log::LogModule;
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
@@ -24,15 +25,19 @@ use sqlx::{SqlitePool, query, sqlite::SqliteConnectOptions};
 use std::{
     collections::HashMap,
     error::Error,
-    net::{Ipv6Addr, SocketAddr},
+    net::Ipv6Addr,
     ops::Deref,
     path::PathBuf,
     sync::{Arc, atomic::AtomicBool},
-    time::SystemTime,
+    time::{Duration, SystemTime},
 };
 use tokio::{net::TcpListener, sync::RwLock};
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    trace::TraceLayer,
+};
 use tracing::{error, info};
+use url::Url;
 use vitium_api::user::UserProfile;
 
 const DB_INIT_QUERY: &'static str = r#"
@@ -108,6 +113,16 @@ impl Server {
         Ok(())
     }
 
+    fn cors(&self) -> CorsLayer {
+        let origin = self.cfg.client.origin();
+        CorsLayer::new()
+            .allow_origin(origin.ascii_serialization().parse::<HeaderValue>().unwrap())
+            .allow_credentials(true)
+            .allow_headers(Any)
+            .allow_methods(Any)
+            .max_age(Duration::from_secs(3600))
+    }
+
     /// Consumes `self` and start the server.
     pub async fn start(self) -> anyhow::Result<ShutUp> {
         if self.started() {
@@ -120,17 +135,6 @@ impl Server {
         self.dev_hooks().await?;
 
         self.print_cmd_output(self.shutdown.child());
-
-        let port = self.cfg.port.unwrap_or(0);
-        let ip = if self.cfg.direct_api {
-            Ipv6Addr::UNSPECIFIED
-        } else {
-            Ipv6Addr::LOCALHOST
-        };
-        let addr = SocketAddr::from((ip, port));
-
-        let listener = TcpListener::bind(addr).await?;
-        info!("start server on {}", listener.local_addr()?);
 
         let app = Router::new();
 
@@ -146,18 +150,19 @@ impl Server {
             .nest("/cmd", cmd::rest())
             .nest("/profile", profile::rest())
             .fallback(any(StatusCode::NOT_FOUND))
-            .layer(CorsLayer::new())
+            .layer(self.cors())
             .layer(TraceLayer::new_for_http());
 
-        let fut = self.shutdown.wait();
+        let port = self.cfg.port.unwrap_or(0);
+        let listener = TcpListener::bind((Ipv6Addr::UNSPECIFIED, port)).await?;
+        info!("listen {}", listener.local_addr()?);
+
         let shutdown = self.shutdown.clone();
 
-        tokio::spawn(async move {
-            axum::serve(listener, app.with_state(self))
-                .with_graceful_shutdown(fut)
-                .await
-                .unwrap()
-        });
+        axum::serve(listener, app.with_state(self))
+            .with_graceful_shutdown(shutdown.wait())
+            .await?;
+
         Ok(shutdown)
     }
 }
@@ -189,6 +194,7 @@ pub struct Config {
     /// URL to contact the game server administrator, e.g. `mailto:example@example.org`.
     #[serde(default)]
     pub contact: String,
+    pub client: Url,
 }
 
 impl Default for Config {
@@ -200,6 +206,7 @@ impl Default for Config {
             log: Default::default(),
             motd: String::new(),
             contact: Default::default(),
+            client: Url::parse("https://example.com/").unwrap(),
         }
     }
 }

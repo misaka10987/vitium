@@ -49,7 +49,7 @@ impl LogModule {
         Ok(value)
     }
 
-    fn update(&self, setter: impl FnOnce(&mut Targets)) -> anyhow::Result<()> {
+    pub fn update(&self, setter: impl FnOnce(&mut Targets)) -> anyhow::Result<()> {
         self.reload.lock().unwrap().modify(setter)?;
         Ok(())
     }
