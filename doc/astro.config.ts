@@ -3,8 +3,8 @@ import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 import type { ViteUserConfig } from 'astro'
 
-const vite: ViteUserConfig | undefined = (() => {
-  if (process.env.NODE_ENV != 'development') return undefined
+const vitePatch: ViteUserConfig = (() => {
+  if (process.env.NODE_ENV != 'development') return {}
   console.debug('Enforce Vite polling as HMR walkaround for bun')
   return {
     server: {
@@ -45,5 +45,14 @@ export default defineConfig({
       ],
     }),
   ],
-  vite,
+  vite: {
+    ...{
+      resolve: {
+        alias: {
+          '@': '/src',
+        },
+      },
+    },
+    ...vitePatch,
+  },
 })
