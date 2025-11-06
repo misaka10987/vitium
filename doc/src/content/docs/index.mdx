@@ -24,23 +24,20 @@ variant = "minimal"
 
 import { Card, CardGrid } from '@astrojs/starlight/components'
 
-## Next steps
+## 行动
 
 <CardGrid stagger>
-  <Card title="Update content" icon="pencil">
-    Edit `src/content/docs/index.mdx` to see this page change.
+  <Card title="加入聊天" icon="comment">
+    加入我们的开发者 [QQ群](https://qm.qq.com/q/RIW4AsfeOC) 以跟上最新消息
   </Card>
-  <Card title="Change page layout" icon="document">
-    Delete `template: splash` in `src/content/docs/index.mdx` to display a
-    sidebar on this page.
+  <Card title="学习 Starlight" icon="open-book">
+    本站采用 [Starlight](https://starlight.astro.build/zh-cn/) 编写，
+    阅读文档以了解使用方法
   </Card>
-  <Card title="Add new content" icon="add-document">
-    Add Markdown or MDX files to `src/content/docs` to create new pages.
-  </Card>
-  <Card title="Configure your site" icon="setting">
+  {/* <Card title="分享本站" icon="seti:license">
     Edit your `sidebar` and other config in `astro.config.mjs`.
-  </Card>
-  <Card title="Read the docs" icon="open-book">
-    Learn more in [the Starlight Docs](https://starlight.astro.build/).
+  </Card> */}
+  <Card title="PDF 版本" icon="seti:pdf">
+    查看如何将本站 [打包为 PDF 文件](https://github.com/Linkerin/starlight-to-pdf)
   </Card>
 </CardGrid>
