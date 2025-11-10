@@ -1,0 +1,44 @@
++++
+title = "首页"
+description = "Get started building your docs site with Starlight."
+template = "splash"
+
+[hero]
+title = "Vitium 开发文档"
+tagline = "在此处查阅 Vitium 开发所需的标准定义与参考文档"
+
+[hero.image]
+light = "@/assets/icon-light.webp"
+dark = "@/assets/icon-dark.webp"
+
+[[hero.actions]]
+text = "现在开始"
+link = "/start/intro/"
+icon = "right-arrow"
+
+[[hero.actions]]
+text = "前往 GitHub"
+link = "https://github.com/misaka10987/vitium"
+icon = "external"
+variant = "minimal"
++++
+
+import { Card, CardGrid } from '@astrojs/starlight/components'
+
+## 行动
+
+<CardGrid stagger>
+  <Card title="加入聊天" icon="comment">
+    加入我们的开发者 [QQ群](https://qm.qq.com/q/RIW4AsfeOC) 以跟上最新消息
+  </Card>
+  <Card title="学习 Starlight" icon="open-book">
+    本站采用 [Starlight](https://starlight.astro.build/zh-cn/) 编写，
+    阅读文档以了解使用方法
+  </Card>
+  {/* <Card title="分享本站" icon="seti:license">
+    Edit your `sidebar` and other config in `astro.config.mjs`.
+  </Card> */}
+  <Card title="PDF 版本" icon="seti:pdf">
+    查看如何将本站 [打包为 PDF 文件](https://github.com/Linkerin/starlight-to-pdf)
+  </Card>
+</CardGrid>
