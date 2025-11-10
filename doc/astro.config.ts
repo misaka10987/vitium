@@ -42,6 +42,10 @@ export default defineConfig({
           label: '开始',
           autogenerate: { directory: 'start' },
         },
+        {
+          label: '元文档',
+          autogenerate: { directory: 'meta' },
+        },
       ],
     }),
   ],
