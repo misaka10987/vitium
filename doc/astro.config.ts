@@ -43,6 +43,22 @@ export default defineConfig({
           autogenerate: { directory: 'start' },
         },
         {
+          label: '概念',
+          autogenerate: { directory: 'concept' },
+        },
+        {
+          label: '客户端',
+          autogenerate: { directory: 'client' },
+        },
+        {
+          label: '服务端',
+          autogenerate: { directory: 'server' },
+        },
+        {
+          label: '模组',
+          autogenerate: { directory: 'mod' },
+        },
+        {
           label: '元文档',
           autogenerate: { directory: 'meta' },
         },
