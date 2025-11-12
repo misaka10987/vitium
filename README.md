@@ -1,9 +1,10 @@
 # Vitium
 
-<div style="display: grid; place-items: center; margin: 1em;">
+<div align="center">
   <img src="asset/icon.svg" width="33%" alt="描述" />
   <p><i>A TRPG Framework</i></p>
 </div>
+<br/>
 
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/misaka10987/vitium)
 ![GitHub License](https://img.shields.io/github/license/misaka10987/vitium)
