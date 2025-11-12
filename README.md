@@ -1,12 +1,15 @@
 # Vitium
 
+<div style="display: grid; place-items: center; margin: 1em;">
+  <img src="asset/icon.svg" width="33%" alt="描述" />
+  <p><i>A TRPG Framework</i></p>
+</div>
+
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/misaka10987/vitium)
 ![GitHub License](https://img.shields.io/github/license/misaka10987/vitium)
 ![GitHub branch status](https://img.shields.io/github/checks-status/misaka10987/vitium/main)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/misaka10987/vitium)
 [![QQ](https://img.shields.io/badge/QQ-785725325-red)](https://qm.qq.com/q/RIW4AsfeOC)
-
-_The TRPG Framework._
 
 Vitium is a free and open-source software that targets to provide a simple and programmable platform for hosting any TRPG game online. Specifically, Vitium serves as a game engine for content makers to add their game rulesets, scripts and campaigns via JavaScript and JSON.
 
