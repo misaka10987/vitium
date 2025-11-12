@@ -10,21 +10,15 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  init:
+  build-doc:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-      - uses: jetli/wasm-pack-action@v0.4.0
-        with:
-          version: latest
 
-  build-doc:
-    runs-on: ubuntu-latest
-    needs: init
-    steps:
-      - uses: actions/checkout@v4
       - name: Install Dependencies
         working-directory: ./doc
         run: bun install
@@ -35,26 +29,34 @@ jobs:
 
   build-rust:
     runs-on: ubuntu-latest
-    needs: init
     steps:
       - uses: actions/checkout@v4
+
       - name: Compile Rust
         run: cargo build
 
   package-wasm:
     runs-on: ubuntu-latest
-    needs: init
     steps:
       - uses: actions/checkout@v4
+
+      - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: latest
+
       - name: Package WASM
         working-directory: ./api
         run: wasm-pack build
 
   build-client:
     runs-on: ubuntu-latest
-    needs: init
     steps:
       - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
       - name: Install Dependencies
         working-directory: ./client
         run: bun install
