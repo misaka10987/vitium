@@ -13,7 +13,6 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
@@ -25,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: init
     steps:
+      - uses: actions/checkout@v4
       - name: Install Dependencies
         working-directory: ./doc
         run: bun install
@@ -37,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: init
     steps:
+      - uses: actions/checkout@v4
       - name: Compile Rust
         run: cargo build
 
@@ -44,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: init
     steps:
+      - uses: actions/checkout@v4
       - name: Package WASM
         working-directory: ./api
         run: wasm-pack build
@@ -52,6 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: init
     steps:
+      - uses: actions/checkout@v4
       - name: Install Dependencies
         working-directory: ./client
         run: bun install
