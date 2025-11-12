@@ -41,8 +41,10 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
+      - name: Install Dependencies
+        working-directory: ./client
         run: bun install
 
-      - name: Run build
+      - name: Compile Client
+        working-directory: ./client
         run: bun run build
