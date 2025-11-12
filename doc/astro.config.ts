@@ -43,8 +43,8 @@ export default defineConfig({
           autogenerate: { directory: 'start' },
         },
         {
-          label: '概念',
-          autogenerate: { directory: 'concept' },
+          label: 'Web 应用',
+          autogenerate: { directory: 'app' },
         },
         {
           label: '客户端',

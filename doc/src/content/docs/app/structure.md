@@ -1,5 +1,7 @@
 +++
 title = '架构与角色'
+[sidebar]
+order = 1
 +++
 
 Vitium 是一个典型的 Web 2 全栈应用。它通过 HTTP 服务将 TRPG 玩家和游戏管理员，服务器管理员和 Vitium 模组开发者联系在一起。下图简单呈现了它的架构。
