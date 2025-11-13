@@ -1,0 +1,60 @@
+---
+import { Aside, Icon, Badge } from '@astrojs/starlight/components'
+import { upperBounded } from '@/util/version'
+import { valid, validRange, Range, maxSatisfying } from 'semver'
+
+export interface Props {
+  client?: string
+  server?: string
+}
+
+const { client, server } = Astro.props
+
+type Status = 'unimplemented' | 'supported' | 'deprecated'
+
+const status = (req: string | undefined): Status => {
+  if (req === undefined) return 'unimplemented'
+  if (upperBounded(req)) return 'deprecated'
+  return 'supported'
+}
+
+const [clientStatus, serverStatus] = [status(client), status(server)]
+
+const allStatus = (() => {
+  if (clientStatus == 'deprecated' || serverStatus == 'deprecated')
+    return 'deprecated'
+  if (clientStatus == 'unimplemented' || serverStatus == 'unimplemented')
+    return 'unimplemented'
+  return 'supported'
+})()
+
+const [asideType, asideTitle] = ((): ['caution' | 'note' | 'tip', string] => {
+  switch (allStatus) {
+    case 'deprecated':
+      return ['caution', 'Deprecated on some sides']
+    case 'unimplemented':
+      return ['note', 'Under development on some sides']
+    case 'supported':
+      return ['tip', 'Supported on all sides']
+  }
+})()
+
+const badgeVariant = (status: Status) => {
+  switch (status) {
+    case 'supported':
+      return 'success'
+    case 'deprecated':
+      return 'caution'
+    case 'unimplemented':
+      return 'note'
+  }
+}
+---
+
+<Aside type={asideType} title={asideTitle}>
+  <Badge text="Client" variant={badgeVariant(clientStatus)} />
+  <code>{client ?? 'TODO'}</code>
+  <span style="display: inline-block; width: 2em;"></span>
+  <Badge text="Server" variant={badgeVariant(serverStatus)} />
+  <code>{server ?? 'TODO'}</code>
+</Aside>
