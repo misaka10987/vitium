@@ -1,0 +1,91 @@
++++
+title = '用户'
+[sidebar]
+order = 3
++++
+
+import Supported from '@/components/Supported.astro'
+
+一个 **用户** 是现实中的某人在特定 [Vitium 服务端](/concept/structure/#服务端) 的身份。用户可以作为 TRPG 玩家或游戏管理员参与游戏。
+
+## 字段
+
+所有用户都具有以下必要身份证明凭据
+
+| 字段  | 标识符    | 描述           | 格式                |
+| --- | ------ | ------------ | ----------------- |
+| 用户名 | `user` | 对指定服务器的唯一标识符 | 不含空格的非空 ASCII 字符串 |
+| 密码  | `pass` | 该用户的登录密码     | 非空 ASCII 字符串      |
+
+同时，用户还可以带有以下可选信息
+
+| 字段   | 标识符        | 描述              | 格式        |
+| ---- | ---------- | --------------- | --------- |
+| 电子邮箱 | `email`    | 用户的电子邮箱，可用于身份验证 | 电子邮箱地址    |
+| 显示名称 | `nickname` | 在界面中显示的用户名称     | UTF-8 字符串 |
+| 头像   | `avatar`   | 在界面中显示的用户头像图片   | URL       |
+| 自我介绍 | `intro`    | 自我介绍文本          | HTML      |
+
+## 注册
+
+<Supported />
+
+显然地，首次使用前需要在服务端注册用户。不允许重复注册相同的用户名。
+
+通过向 `https://server.vitium.dev/signup` 请求 HTTP GET, 服务端返回一个嵌入了 `https://client.vitium.dev/signup` 的页面。客户端应当将这个页面实现为允许用户输入其需要注册的用户名与密码的 HTML 表单。表单必须带有 `target="_top"` 属性。
+
+在用户完成输入后，客户端向 `https://server.vitium.dev/signup` POST 提交表单。表单应当带有必须的用户名和密码，通过对应的标识符提交。
+
+如果客户端提交的表单是合法的，服务端在正常情况下应当作出以下可能回复：
+
+- HTTP 409, 如果试图注册的用户已经存在，并返回与 GET `https://server.vitium.dev/signup` 一致的页面；
+
+- HTTP 303 重定向至 `https://server.vitium.dev` , 并 [初始化会话](#%E8%8E%B7%E5%8F%96%E4%BC%9A%E8%AF%9D) 。
+
+## 登录
+
+<Supported />
+
+用户登录是通过访问 `https://server.vitium.dev/login` 进行的。客户端应当在用户尚未登录时引导用户访问该页面，或者先进行注册。
+
+在访问登录页面时，服务端应当在响应中嵌入 `https://client.vitium.dev/login` . 这个页面应当被客户端实现为允许用户输入在 `server.vitium.dev` 上用户名与密码的 HTML 表单。表单必须带有 `target="_top"` 属性。
+
+在用户完成输入后，客户端向 `https://server.vitium.dev/login` POST 提交表单。表单应当带有必须的用户名和密码，通过对应的标识符提交。
+
+如果客户端提交的表单是合法的，服务端在正常情况下应当作出以下可能回复：
+
+- HTTP 401, 如果试图登录的用户不存在，并返回与 GET `https://server.vitium.dev/login` 一致的页面；
+
+- HTTP 303 重定向至 `https://server.vitium.dev/` , 并 [初始化会话](#获取会话) 。
+
+## 会话
+
+<Supported />
+
+一个 **会话** 保存了用户在特定服务器上的登录状态，以调用需要身份验证的服务端 API.
+
+### 获取会话
+
+如果用户成功登录到指定服务端，服务端应当在其返回的相应中设置 cookie `token` . `token` 的值是由服务端实现定义的会话标识。同时，服务端应当设置 `HttpOnly` , `Secure` , `SameSite=None` 和 `Partitioned` 的 cookie 属性，并指定一个不超过 30 日的持久化保存寿命。
+
+```http
+Set-Cookie: token=0123456789abcdef; HttpOnly; Secure; SameSite=None; Partitioned; Path=/; Max-Age=86400
+```
+
+`token` 必须具有能够抵抗爆破攻击的密码学效力。
+
+### 使用会话
+
+当客户端请求需要身份验证的服务端 API 时，应当在请求中发送 cookie `token` . 例如，在调用 `fetch` API 时，应当添加 `credentials: "include"` 参数。
+
+:::danger[对抗 [跨站请求伪造攻击](https://developer.mozilla.org/zh-CN/docs/Glossary/CSRF)]
+
+服务端 **必须** 对所有收到的跨域请求添加 `Access-Control-Allow-Origin` 头以禁止 Vitium 客户端以外的任何程序向服务端构造请求。
+
+```http
+Access-Control-Allow-Origin: https://client.vitium.dev
+```
+
+:::
+
+同时，服务端应当在这些 API 上设置 `Access-Control-Allow-Credentials: true` 头，并根据具体 API 按需设置 `Access-Control-Allow-Methods` , `Access-Control-Allow-Headers` .
