@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use axum::{
     Json, Router,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
     response::{IntoResponse, Sse, sse::Event},
     routing::get,
 };
@@ -26,13 +26,8 @@ pub fn rest() -> Router<Server> {
         .route("/{time}", get(read))
 }
 
-async fn fetch(State(s): State<Server>, head: HeaderMap) -> impl IntoResponse {
-    match head.get("accept") {
-        Some(accept) if accept.to_str().unwrap_or("").contains("text/event-stream") => {
-            fetch_sse(s).await.into_response()
-        }
-        _ => fetch_longpoll(s).await.into_response(),
-    }
+async fn fetch(State(s): State<Server>) -> impl IntoResponse {
+    fetch_sse(s).await.into_response()
 }
 
 async fn fetch_sse(s: Server) -> Sse<impl Stream<Item = anyhow::Result<Event>>> {
@@ -46,13 +41,6 @@ async fn fetch_sse(s: Server) -> Sse<impl Stream<Item = anyhow::Result<Event>>> 
     };
     let stream = tokio_stream::iter(0..).then(wait);
     Sse::new(stream)
-}
-
-async fn fetch_longpoll(s: Server) -> Result<Json<Message>, StatusCode> {
-    s.wait_for_new_chat().await.map(|x| Json(x)).map_err(|e| {
-        error!("{e}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })
 }
 
 async fn read(
