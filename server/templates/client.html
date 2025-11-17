@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <div style="position: fixed; top: 0; bottom: 0; left: 0; right: 0">
+      <div
+        style="width: 100%; height: 100%; display: flex; flex-direction: column"
+      >
+        <div style="margin: 0.25em; font-size: small">{{ comment }}</div>
+        <div style="flex: 1">
+          <iframe
+            style="width: 100%; height: 100%; border: none"
+            src="{{ url }}"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
