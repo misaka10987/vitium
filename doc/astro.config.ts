@@ -59,6 +59,10 @@ export default defineConfig({
           autogenerate: { directory: 'mod' },
         },
         {
+          label: '集成',
+          autogenerate: { directory: 'integration' },
+        },
+        {
           label: '元文档',
           autogenerate: { directory: 'meta' },
         },
