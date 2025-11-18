@@ -5,11 +5,11 @@ use colored::Colorize;
 static CRASHED: AtomicBool = AtomicBool::new(false);
 
 pub fn crashed() -> bool {
-    CRASHED.load(std::sync::atomic::Ordering::Relaxed)
+    CRASHED.load(std::sync::atomic::Ordering::SeqCst)
 }
 
 pub fn crash(info: &PanicHookInfo<'_>) {
-    eprintln!("{} {info}", "FATAL".red().bold());
+    eprintln!("{} {info}", "fatal:".red().bold());
     #[cfg(debug_assertions)]
     {
         let trace = Backtrace::force_capture();
@@ -17,8 +17,7 @@ pub fn crash(info: &PanicHookInfo<'_>) {
         eprintln!("{trace}");
     }
     if !crashed() {
-        CRASHED.store(true, std::sync::atomic::Ordering::Relaxed);
-        eprintln!("{}", "SERVER CRASHED".red().bold());
+        CRASHED.store(true, std::sync::atomic::Ordering::SeqCst);
     }
     shutup::ROOT.shut();
 }
