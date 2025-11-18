@@ -9,14 +9,13 @@ use axum::{Router, routing::IntoMakeService};
 use axum_server::{Handle, tls_rustls::RustlsConfig};
 use local_ip_address::{local_ip, local_ipv6};
 use serde::{Deserialize, Serialize};
-use serde_inline_default::serde_inline_default;
 use shutup::ShutUp;
 use tracing::error;
 use url::Url;
 
 /// Configuration for the HTTP server.
-#[serde_inline_default]
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct NetworkConfig {
     /// Hostname of the HTTP server.
     /// If not specified, the local IP address would be used.
@@ -38,6 +37,7 @@ impl Default for NetworkConfig {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct HttpsConfig {
     pub cert: PathBuf,
     pub key: PathBuf,

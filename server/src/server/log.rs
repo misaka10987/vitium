@@ -12,25 +12,25 @@ use tracing_subscriber::{
 
 use crate::Server;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Config(HashMap<String, String>);
+pub struct LogConfig(HashMap<String, String>);
 
-impl Default for Config {
+impl Default for LogConfig {
     fn default() -> Self {
         Self(HashMap::from([("rustyline".into(), "INFO".into())]))
     }
 }
 
 pub struct LogModule {
-    pub cfg: Config,
+    pub config: LogConfig,
     reload: Mutex<Handle<Targets, Registry>>,
 }
 
 impl LogModule {
-    pub fn new(cfg: Config) -> anyhow::Result<Self> {
+    pub fn new(config: LogConfig) -> anyhow::Result<Self> {
         let mut entry = vec![];
-        for (k, v) in &cfg.0 {
+        for (k, v) in &config.0 {
             let level = Level::from_str(&v)?;
             entry.push((k, level));
         }
@@ -43,7 +43,7 @@ impl LogModule {
             .with(tracing_subscriber::fmt::layer())
             .init();
         let value = Self {
-            cfg,
+            config,
             reload: Mutex::new(reload),
         };
         Ok(value)

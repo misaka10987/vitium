@@ -35,13 +35,17 @@ use std::{
     time::{Duration, SystemTime},
 };
 use tokio::sync::RwLock;
+use toml::ser;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::{error, info};
 use url::Url;
 use urlencoding::Encoded;
 use vitium_api::user::UserProfile;
 
-use crate::server::network::{NetworkConfig, NetworkModule};
+use crate::server::{
+    log::LogConfig,
+    network::{NetworkConfig, NetworkModule},
+};
 
 const DB_INIT_QUERY: &'static str = r#"
 CREATE TABLE IF NOT EXISTS chat (
@@ -55,7 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_time ON chat(time);
 "#;
 
 pub struct ServerInst {
-    pub cfg: Config,
+    pub config: Config,
     pub shutdown: ShutUp,
     started: AtomicBool,
     db: SqlitePool,
@@ -88,17 +92,17 @@ impl Deref for Server {
 
 impl Server {
     /// Create a server with specified configuration.
-    pub async fn new(cfg: Config) -> anyhow::Result<Self> {
+    pub async fn new(config: Config) -> anyhow::Result<Self> {
         let conn_opt = SqliteConnectOptions::new()
-            .filename(&cfg.db)
+            .filename(&config.db)
             .create_if_missing(true);
         let db = SqlitePool::connect_with(conn_opt).await?;
         query(DB_INIT_QUERY).execute(&db).await?;
         let shutdown = ShutUp::new();
-        let log = LogModule::new(cfg.log.clone())?;
-        let network = NetworkModule::new(cfg.network.clone());
+        let log = LogModule::new(config.log.clone())?;
+        let network = NetworkModule::new(config.network.clone());
         let val = Self(Arc::new(ServerInst {
-            cfg,
+            config,
             shutdown,
             started: AtomicBool::new(false),
             chat: ChatModule::new(db.clone()),
@@ -117,7 +121,7 @@ impl Server {
         path: &str,
         query: Option<HashMap<String, String>>,
     ) -> anyhow::Result<String> {
-        let mut url = self.cfg.client.join(path).unwrap();
+        let mut url = self.config.client.join(path).unwrap();
         let query = query
             .into_iter()
             .flatten()
@@ -128,7 +132,7 @@ impl Server {
         url.set_query(Some(&query));
         let client = Client {
             url,
-            comment: format!("{}", self.cfg.client.join(path)?),
+            comment: format!("{}", self.config.client.join(path)?),
         };
         let html = client.render()?;
         Ok(html)
@@ -149,7 +153,7 @@ impl Server {
     }
 
     fn cors(&self) -> CorsLayer {
-        let origin = self.cfg.client.origin();
+        let origin = self.config.client.origin();
         CorsLayer::new()
             .allow_origin(origin.ascii_serialization().parse::<HeaderValue>().unwrap())
             .allow_credentials(true)
@@ -178,7 +182,7 @@ impl Server {
             .route("/", get(client_root))
             .route("/ping", get(|| async { Json(SystemTime::now()) }))
             .route("/hello", get("Hello, world!"))
-            .route("/contact", get(Redirect::temporary(&self.cfg.contact)))
+            .route("/contact", get(Redirect::temporary(&self.config.contact)))
             .nest("/auth", auth::rest())
             .nest("/chat", chat::rest())
             .nest("/cmd", cmd::rest())
@@ -208,18 +212,16 @@ impl AsRef<Basileus> for Server {
 /// Server configuration.
 #[serde_inline_default]
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     /// Path to the server database.
     #[serde_inline_default("./server.db".into())]
     pub db: PathBuf,
     #[serde(default)]
     pub network: NetworkConfig,
-    /// Whether to allow direct access to the API server via HTTP from remote.
-    #[serde_inline_default(false)]
-    pub direct_api: bool,
     /// Configurations for logging.
     #[serde(default)]
-    pub log: log::Config,
+    pub log: LogConfig,
     /// Message of the day.
     #[serde(default)]
     pub motd: String,
@@ -235,7 +237,6 @@ impl Default for Config {
         Self {
             db: "./server.db".into(),
             network: Default::default(),
-            direct_api: false,
             log: Default::default(),
             motd: String::new(),
             contact: Default::default(),
