@@ -2,25 +2,24 @@ mod auth;
 mod chat;
 mod cmd;
 mod log;
+mod network;
 mod prelude;
 mod profile;
 #[cfg(debug_assertions)]
 mod test;
 
-use anyhow::anyhow;
+use ::http::HeaderValue;
 use askama::Template;
 use axum::{
     Json, Router,
     extract::State,
     http::StatusCode,
-    response::{Html, IntoResponse, Redirect},
+    response::{Html, Redirect},
     routing::{any, get},
 };
 use basileus::Basileus;
 use chat::ChatModule;
 use cmd::CommandModule;
-use http::HeaderValue;
-use local_ip_address::{local_ip, local_ipv6};
 use log::LogModule;
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
@@ -30,18 +29,19 @@ use std::{
     collections::HashMap,
     error::Error,
     iter::once,
-    net::Ipv6Addr,
     ops::Deref,
     path::PathBuf,
-    sync::{Arc, OnceLock, atomic::AtomicBool},
+    sync::{Arc, atomic::AtomicBool},
     time::{Duration, SystemTime},
 };
-use tokio::{net::TcpListener, sync::RwLock};
+use tokio::sync::RwLock;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::{error, info};
 use url::Url;
 use urlencoding::Encoded;
 use vitium_api::user::UserProfile;
+
+use crate::server::network::{NetworkConfig, NetworkModule};
 
 const DB_INIT_QUERY: &'static str = r#"
 CREATE TABLE IF NOT EXISTS chat (
@@ -58,13 +58,13 @@ pub struct ServerInst {
     pub cfg: Config,
     pub shutdown: ShutUp,
     started: AtomicBool,
-    port: OnceLock<u16>,
     db: SqlitePool,
     player: RwLock<HashMap<String, UserProfile>>,
     basileus: Basileus,
     chat: ChatModule,
     cmd: CommandModule,
     log: LogModule,
+    network: NetworkModule,
 }
 
 #[derive(Template)]
@@ -96,37 +96,20 @@ impl Server {
         query(DB_INIT_QUERY).execute(&db).await?;
         let shutdown = ShutUp::new();
         let log = LogModule::new(cfg.log.clone())?;
+        let network = NetworkModule::new(cfg.network.clone());
         let val = Self(Arc::new(ServerInst {
             cfg,
             shutdown,
             started: AtomicBool::new(false),
-            port: OnceLock::new(),
             chat: ChatModule::new(db.clone()),
             db,
             player: RwLock::const_new(HashMap::new()),
             basileus: Basileus::new(Default::default()).await?,
             cmd: CommandModule::new(),
             log,
+            network,
         }));
         Ok(val)
-    }
-
-    /// Public URL of the HTTP server.
-    pub fn url(&self) -> anyhow::Result<Url> {
-        let host = if let Some(host) = &self.cfg.host {
-            host.clone()
-        } else {
-            let ip = local_ipv6().or(local_ip())?;
-            ip.to_string()
-        };
-        let port = if let Some(port) = &self.cfg.port {
-            port
-        } else {
-            self.port.get().ok_or(anyhow!("port not assigned yet"))?
-        };
-        let scheme = if self.cfg.https { "https" } else { "http" };
-        let url = Url::parse(&format!("{scheme}://{host}:{port}/")).unwrap();
-        Ok(url)
     }
 
     fn embed_client(
@@ -138,7 +121,7 @@ impl Server {
         let query = query
             .into_iter()
             .flatten()
-            .chain(once(("server".into(), self.url()?.as_str().into())))
+            .chain(once(("server".into(), self.network.url()?.as_str().into())))
             .map(|(k, v)| format!("{}={}", k, Encoded(v)))
             .collect::<Vec<_>>()
             .join("&");
@@ -204,24 +187,15 @@ impl Server {
             .layer(self.cors())
             .layer(TraceLayer::new_for_http());
 
-        let port = self.cfg.port.unwrap_or(0);
-        let listener = TcpListener::bind((Ipv6Addr::UNSPECIFIED, port)).await?;
-        let port = listener.local_addr()?.port();
-        self.port.set(port).unwrap();
+        let http = self
+            .network
+            .start(app.with_state(self.clone()).into_make_service())
+            .await?;
+        self.shutdown.adopt(&http);
 
-        info!("server available at {}", self.url()?);
+        info!("server started at {}", self.network.url()?);
 
-        let shutdown = self.shutdown.clone();
-        let s = self.shutdown.child();
-
-        tokio::spawn(async move {
-            axum::serve(listener, app.with_state(self))
-                .with_graceful_shutdown(s.wait())
-                .await
-                .unwrap()
-        });
-
-        Ok(shutdown)
+        Ok(self.shutdown.clone())
     }
 }
 
@@ -235,16 +209,11 @@ impl AsRef<Basileus> for Server {
 #[serde_inline_default]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Config {
-    /// Hostname of the HTTP server.
-    /// If not specified, the local IP address would be used.
-    #[serde_inline_default(None)]
-    pub host: Option<String>,
-    /// Port of the HTTP server.
-    /// If not specified, would use the random port assigned by system.
-    pub port: Option<u16>,
     /// Path to the server database.
     #[serde_inline_default("./server.db".into())]
     pub db: PathBuf,
+    #[serde(default)]
+    pub network: NetworkConfig,
     /// Whether to allow direct access to the API server via HTTP from remote.
     #[serde_inline_default(false)]
     pub direct_api: bool,
@@ -257,8 +226,6 @@ pub struct Config {
     /// URL to contact the game server administrator, e.g. `mailto:example@example.org`.
     #[serde(default)]
     pub contact: String,
-    #[serde_inline_default(false)]
-    pub https: bool,
     #[serde_inline_default(Url::parse("https://example.com/").unwrap())]
     pub client: Url,
 }
@@ -266,14 +233,12 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            port: None,
             db: "./server.db".into(),
+            network: Default::default(),
             direct_api: false,
             log: Default::default(),
             motd: String::new(),
             contact: Default::default(),
-            host: None,
-            https: true,
             client: Url::parse("https://example.com/").unwrap(),
         }
     }
