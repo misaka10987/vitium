@@ -1,7 +1,7 @@
 import { Router } from '@solidjs/router'
 import { FileRoutes } from '@solidjs/start/router'
 import { Suspense } from 'solid-js'
-import Nav from '~/components/Nav'
+import { NavBar } from '~/components/NavBar'
 import './app.css'
 
 import { isServer } from "solid-js/web"
@@ -23,7 +23,7 @@ export default function App() {
         <>
           <ColorModeScript storageType={storageManager.type} />
           <ColorModeProvider storageManager={storageManager}>
-            <Nav />
+            <NavBar />
             <Suspense>{props.children}</Suspense>
           </ColorModeProvider>
         </>
