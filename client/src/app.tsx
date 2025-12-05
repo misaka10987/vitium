@@ -6,13 +6,12 @@ import './app.css'
 import { ColorMode } from './components/ColorMode'
 
 export default function App() {
-  const storageManager = cookieStorageManagerSSR(isServer ? getServerCookies() : document.cookie)
   return (
     <Router
       root={(props) => (
         <>
           <ColorMode>
-            <Nav />
+            <NavBar />
             <Suspense>{props.children}</Suspense>
           </ColorMode>
         </>
