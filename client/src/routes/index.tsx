@@ -1,23 +1,37 @@
 import { A } from "@solidjs/router";
+import { Button } from "~/components/ui/button";
+import { useColorMode } from "@kobalte/core";
+import { createMemo } from "solid-js";
 
 export default function Home() {
+  const { colorMode } = useColorMode();
+
+  const iconSrc = createMemo(() => {
+    const mode = colorMode();
+    // public contains `icon-white.svg` and `icon-black.svg`
+    if (mode === "dark") return "/icon-white.svg";
+    if (mode === "light") return "/icon-black.svg";
+
+    // system or unknown: try to detect preference on client
+    if (typeof window !== "undefined" && window.matchMedia) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "/icon-white.svg" : "/icon-black.svg";
+    }
+    return "/icon-black.svg";
+  });
+
   return (
-    <main class="text-center mx-auto text-gray-700 p-4">
-      <h1 class="max-6-xs text-6xl text-sky-700 font-thin uppercase my-16">Hello world!</h1>
-      <p class="mt-8">
-        Visit{" "}
-        <a href="https://solidjs.com" target="_blank" class="text-sky-600 hover:underline">
-          solidjs.com
-        </a>{" "}
-        to learn how to build Solid apps.
-      </p>
-      <p class="my-4">
-        <span>Home</span>
-        {" - "}
-        <A href="/about" class="text-sky-600 hover:underline">
-          About Page
-        </A>{" "}
-      </p>
+    <main class="flex items-center justify-center min-h-screen bg-background text-foreground">
+      <div class="flex flex-col items-center gap-8">
+        {/* Vitium Icon (served from public/) - swaps based on theme */}
+        <img src={iconSrc()} alt="Vitium" class="w-32 h-32" />
+
+        {/* Login Button */}
+        <A href="/login">
+          <Button size="lg" variant="secondary" class="text-lg px-8 py-6">
+            Login
+          </Button>
+        </A>
+      </div>
     </main>
   );
 }
