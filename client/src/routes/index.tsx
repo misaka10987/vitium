@@ -20,14 +20,11 @@ export default function Home() {
   });
 
   return (
-    <main class="flex items-center justify-center min-h-screen bg-background text-foreground">
+    <main class="flex items-center justify-center flex-1 bg-background text-foreground">
       <div class="flex flex-col items-center gap-8">
-        {/* Vitium Icon (served from public/) - swaps based on theme */}
-        <img src={iconSrc()} alt="Vitium" class="w-32 h-32" />
-
-        {/* Login Button */}
+        <img src={iconSrc()} alt="Vitium" class="w-48 h-48" />
         <A href="/login">
-          <Button size="lg" variant="secondary" class="text-lg px-8 py-6">
+          <Button size="lg" variant="ghost" class="text-lg px-8 py-6">
             Login
           </Button>
         </A>

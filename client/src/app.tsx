@@ -11,8 +11,12 @@ export default function App() {
       root={(props) => (
         <>
           <ColorMode>
-            <NavBar />
-            <Suspense>{props.children}</Suspense>
+            <div class="flex flex-col min-h-screen">
+              <NavBar />
+              <div class="flex-1 flex flex-col">
+                <Suspense>{props.children}</Suspense>
+              </div>
+            </div>
           </ColorMode>
         </>
       )}
