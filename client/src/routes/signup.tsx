@@ -3,16 +3,24 @@ import { createSignal } from "solid-js";
 import { serverAddress } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
-export default function Login() {
+export default function Signup() {
   const [user, setUser] = createSignal("");
   const [pass, setPass] = createSignal("");
+  const [confirmPass, setConfirmPass] = createSignal("");
+  const [email, setEmail] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
+  const [error, setError] = createSignal("");
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
+    setError("");
+    if (pass() !== confirmPass()) {
+      setError("Passwords do not match");
+      return;
+    }
     setIsLoading(true);
     try {
       const url = serverAddress();
-      const res = await fetch(url + "/login", {
+      const res = await fetch(url + "/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -20,10 +28,11 @@ export default function Login() {
         body: JSON.stringify({
           user: user(),
           pass: pass(),
+          email: email(),
         }),
       });
       if (res.status != 303 && !res.ok) {
-        throw new Error("Login failed");
+        throw new Error("Signup failed");
       }
       // Optionally parse response
       // const data = await res.json();
@@ -38,16 +47,16 @@ export default function Login() {
     <main class="flex items-center justify-center flex-1 bg-background text-foreground">
       <div class="w-full max-w-72 flex flex-col gap-3">
         <div class="text-center py-4">
-          <h1 class="text-2xl font-semibold text-primary">Sign in</h1>
-          <p class="text-sm text-muted-foreground">to continue to Vitium</p>
+          <h1 class="text-2xl font-semibold text-primary">Sign up</h1>
+          <p class="text-sm text-muted-foreground">to create an account</p>
         </div>
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleLogin();
+            handleSignup();
           }}
-          class="space-y-4"
+          class="space-y-1.5"
         >
           <div>
             <label for="user" class="text-sm font-medium">
@@ -59,6 +68,20 @@ export default function Login() {
               class="mt-1 w-full px-3 py-2 rounded-md border"
               value={user()}
               onInput={(e) => setUser(e.currentTarget.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label for="email" class="text-sm font-medium">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              class="mt-1 w-full px-3 py-2 rounded-md border"
+              value={email()}
+              onInput={(e) => setEmail(e.currentTarget.value)}
               required
             />
           </div>
@@ -77,13 +100,35 @@ export default function Login() {
             />
           </div>
 
+          <div>
+            <label for="confirmPass" class="text-sm font-medium">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPass"
+              type="password"
+              class="mt-1 w-full px-3 py-2 rounded-md border"
+              value={confirmPass()}
+              onInput={(e) => setConfirmPass(e.currentTarget.value)}
+              required
+            />
+          </div>
+
+          <div class="h-0.5 pointer-events-none opacity-0" aria-hidden="true"></div>
+
+          {error() && (
+            <div class="text-red-500 text-sm text-center">{error()}</div>
+          )}
+
+          <div class="h-0.5 pointer-events-none opacity-0" aria-hidden="true"></div>
+
           <Button type="submit" class="w-full py-4" disabled={isLoading()}>
-            {isLoading() ? "Signing in..." : "Sign In"}
+            {isLoading() ? "Signing up..." : "Sign Up"}
           </Button>
         </form>
-        <A href="/signup">
+        <A href="/login">
           <Button variant="ghost" class="w-full">
-            Sign Up
+            Sign In
           </Button>
         </A>
 
