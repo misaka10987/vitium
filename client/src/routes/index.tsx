@@ -1,7 +1,18 @@
 import { A } from "@solidjs/router";
 import { Button } from "~/components/ui/button";
 import { useColorMode } from "@kobalte/core";
-import { createMemo } from "solid-js";
+import { createMemo, onMount } from "solid-js";
+import { setServerAddress } from "~/lib/auth";
+  // On mount, check for ?server= in the URL and store it
+  onMount(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const server = params.get("server");
+      if (server) {
+        setServerAddress(server);
+      }
+    }
+  });
 
 export default function Home() {
   const { colorMode } = useColorMode();

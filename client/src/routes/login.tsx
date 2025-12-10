@@ -1,17 +1,34 @@
 import { A } from "@solidjs/router";
 import { createSignal } from "solid-js";
+import { serverAddress } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default function Login() {
-  const [usrName, setUsrName] = createSignal("");
-  const [password, setPassword] = createSignal("");
+  const [user, setUser] = createSignal("");
+  const [pass, setPass] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement login logic here
-      console.log("Login attempt with:", { usrName: usrName(), password: password() });
+      const url = serverAddress();
+      const res = await fetch(url + "/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user: user(),
+          pass: pass(),
+        }),
+      });
+      if (res.status != 303 && !res.ok) {
+        throw new Error("Login failed");
+      }
+      // Optionally parse response
+      // const data = await res.json();
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -33,29 +50,29 @@ export default function Login() {
           class="space-y-4"
         >
           <div>
-            <label for="usrName" class="text-sm font-medium">
+            <label for="user" class="text-sm font-medium">
               User Name
             </label>
             <input
-              id="usrName"
+              id="user"
               type="text"
               class="mt-1 w-full px-3 py-2 rounded-md border"
-              value={usrName()}
-              onInput={(e) => setUsrName(e.currentTarget.value)}
+              value={user()}
+              onInput={(e) => setUser(e.currentTarget.value)}
               required
             />
           </div>
 
           <div>
-            <label for="password" class="text-sm font-medium">
-              Password
+            <label for="pass" class="text-sm font-medium">
+              pass
             </label>
             <input
-              id="password"
+              id="pass"
               type="password"
               class="mt-1 w-full px-3 py-2 rounded-md border"
-              value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
+              value={pass()}
+              onInput={(e) => setPass(e.currentTarget.value)}
               required
             />
           </div>
