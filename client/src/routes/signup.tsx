@@ -48,7 +48,7 @@ export default function Signup() {
       <div class="w-full max-w-72 flex flex-col gap-3">
         <div class="text-center py-4">
           <h1 class="text-2xl font-semibold text-primary">Sign up</h1>
-          <p class="text-sm text-muted-foreground">to create an account</p>
+          <p class="text-sm text-muted-foreground">create an account</p>
         </div>
 
         <form
