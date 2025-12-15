@@ -11,9 +11,9 @@ export default function App() {
       root={(props) => (
         <>
           <ColorMode>
-            <div class="flex flex-col min-h-screen">
+            <div class="flex flex-col h-screen overflow-hidden">
               <NavBar />
-              <div class="flex-1 flex flex-col">
+              <div class="flex-1 flex flex-col min-h-0">
                 <Suspense>{props.children}</Suspense>
               </div>
             </div>
