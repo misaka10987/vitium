@@ -1,4 +1,4 @@
-import { TextField } from '~/components/ui/text-field'
+import { TextField, TextFieldTextArea } from '~/components/ui/text-field'
 import { sendMessage } from '~/lib/chat'
 import { createSignal, createEffect, onCleanup } from 'solid-js'
 import { Button } from '~/components/ui/button'
@@ -73,7 +73,7 @@ export const ChatInput = () => {
           </Tooltip>
 
         </div>
-        <div class="flex flex-1/2">
+        <div class="flex-1/2">
           <Tooltip>
             <TooltipTrigger>
               <Button
@@ -92,12 +92,12 @@ export const ChatInput = () => {
         </div>
       </div>
 
-      <div class="flex grow w-0 h-full">
-        <TextField
+      <TextField class="flex grow w-0 h-full">
+        <TextFieldTextArea
           ref={msgInput}
           name="content"
           class={cn(
-            'resize-none overflow-auto py-2',
+            'resize-none overflow-auto h-full',
             isCommand() && 'font-bold font-mono'
           )}
           placeholder={isCommand() ? 'Type Command' : 'Type Message'}
@@ -105,7 +105,7 @@ export const ChatInput = () => {
           required
           onKeyDown={handleKeyDown}
         />
-      </div>
+      </TextField>
     </form>
   )
 }
