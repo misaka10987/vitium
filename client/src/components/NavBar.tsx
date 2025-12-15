@@ -6,7 +6,7 @@ import { Button } from '~/components/ui/button'
 
 export const NavBar = () => {
   return (
-    <NavigationMenu class="p-1 gap-2 items-start justify-start">
+    <NavigationMenu class="px-2 py-0.5 gap-2 items-start justify-start">
       <NavigationMenuItem>
         <Button variant="ghost" class="select-none">
           <a href="/">Vitium</a>

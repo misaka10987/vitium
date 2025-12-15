@@ -80,7 +80,12 @@ export const ChatInput = () => {
                 class="h-10 w-10 ease-in-out"
                 type="button"
                 variant={enableHTML() ? 'default' : 'secondary'}
-                onClick={() => setEnableHTML((v) => !v)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setEnableHTML((v) => !v);
+                  if (msgInput) msgInput.focus();
+                }}
               >
                 <Code />
               </Button>
