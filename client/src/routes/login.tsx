@@ -1,10 +1,9 @@
 import { A } from "@solidjs/router";
 import { createSignal } from "solid-js";
-import { serverAddress } from "~/lib/auth";
+import { serverAddress, userName, setUserName } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default function Login() {
-  const [user, setUser] = createSignal("");
   const [pass, setPass] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
 
@@ -18,7 +17,7 @@ export default function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user: user(),
+          user: userName(),
           pass: pass(),
         }),
       });
@@ -57,8 +56,8 @@ export default function Login() {
               id="user"
               type="text"
               class="mt-1 w-full px-3 py-2 rounded-md border"
-              value={user()}
-              onInput={(e) => setUser(e.currentTarget.value)}
+              value={userName()}
+              onInput={(e) => setUserName(e.currentTarget.value)}
               required
             />
           </div>
