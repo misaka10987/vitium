@@ -1,39 +1,29 @@
 import { createEffect, createSignal, onCleanup } from "solid-js";
-import DOMPurify from "dompurify";
+import DOMPurify, { Config } from "dompurify";
 
 interface PureDOMProps {
 	html: string;
-	sandbox?: string; // e.g., "allow-scripts"
 	class?: string; // Tailwind or custom classes for iframe
 }
 
 // This component renders sanitized HTML inside a sandboxed iframe for isolation
 export function PureDOM(props: PureDOMProps) {
-	let iframeRef: HTMLIFrameElement | undefined;
-	const [srcDoc, setSrcDoc] = createSignal("");
+	const [cleanhtml, setCleanhtml] = createSignal("");
 
 	createEffect(() => {
+		const config: Config = {
+			ALLOWED_TAGS: [
+			  "a", "abbr", "b", "blockquote", "br", "code", "div", "em", "h1", "h2", "h3", "h4", "h5", "h6",
+			  "hr", "i", "img", "li", "ol", "p", "pre", "s", "small", "span", "strong", "sub", "sup", "table",
+			  "tbody", "td", "th", "thead", "tr", "u", "ul"
+			],
+			ADD_ATTR: ["target"]
+		};
 		// Sanitize the HTML
-		const clean = DOMPurify.sanitize(props.html, { ADD_ATTR: ["target"] });
-		const doc = `<!DOCTYPE html><html><head><base target='_blank'></head><body>${clean}</body></html>`;
-		setSrcDoc(doc);
+		setCleanhtml(DOMPurify.sanitize(props.html, config));
 	});
 
-	// Cleanup on unmount
-	// onCleanup(() => {
-	// 	setSrcDoc("");
-	// });
-
-
-	// note that the sandbox must not 'allow-same-origin' to ensure login token safety
 	return (
-		<iframe
-			ref={iframeRef}
-			srcdoc={srcDoc()}
-			sandbox={props.sandbox ?? "allow-scripts"}
-			class={`w-full border-0 ${props.class ?? ""}`}
-			loading="lazy"
-			aria-label="Sanitized HTML content"
-		/>
+		<div class={props.class ?? ""} innerHTML={cleanhtml()}></div>
 	);
 }
