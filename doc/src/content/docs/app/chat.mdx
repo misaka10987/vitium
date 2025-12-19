@@ -60,3 +60,9 @@ import Supported from '@/components/Supported.astro'
 异步接收用于获取服务端收到的实时聊天消息。这通过 [服务器发送事件](https://developer.mozilla.org/zh-CN/docs/Web/API/Server-sent_events) 实现。客户端应当始终跟踪这一 API 以保证用户看到的聊天被即时更新。
 
 GET `https://server.vitium.dev/api/chat` 将返回服务器发送事件。每当有新的聊天消息，服务器将更新一个事件，其 [`data`](https://developer.mozilla.org/zh-CN/docs/Web/API/Server-sent_events/Using_server-sent_events#data) 字段为 JSON 编码的聊天数据。
+
+:::tip
+
+客户端也会被通知到其自己发送的聊天事件。处理它来确保聊天成功发送是一个好主意。
+
+:::
