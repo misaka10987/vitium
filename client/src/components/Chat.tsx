@@ -1,16 +1,20 @@
 import { For } from 'solid-js'
 import { ChatInput } from '~/components/ChatInput'
+import { PureDOM } from '~/components/PureDOM'
 
 type Message = {
   id: number
   author: string
   content: string
+  htmlEnabled?: boolean
 }
 
 export const Chat = () => {
   const messages: Message[] = [
     { id: 1, author: 'System', content: 'Welcome to the realm.' },
     { id: 2, author: 'Guide', content: 'Type a command or send a message below.' },
+    // Example HTML-enabled message:
+    { id: 3, author: 'Admin', content: '<b>Hello</b> <i>world</i>!', htmlEnabled: true },
   ]
 
   return (
@@ -21,7 +25,11 @@ export const Chat = () => {
             {(msg) => (
               <div class="rounded-md border border-border/60 bg-muted/50 p-2 text-sm">
                 <div class="text-xs font-semibold text-muted-foreground">{msg.author}</div>
-                <div>{msg.content}</div>
+                {msg.htmlEnabled ? (
+                  <PureDOM html={msg.content} />
+                ) : (
+                  <div>{msg.content}</div>
+                )}
               </div>
             )}
           </For>

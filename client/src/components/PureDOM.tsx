@@ -8,7 +8,7 @@ interface PureDOMProps {
 }
 
 // This component renders sanitized HTML inside a sandboxed iframe for isolation
-export default function PureDOM(props: PureDOMProps) {
+export function PureDOM(props: PureDOMProps) {
 	let iframeRef: HTMLIFrameElement | undefined;
 	const [srcDoc, setSrcDoc] = createSignal("");
 
@@ -19,17 +19,19 @@ export default function PureDOM(props: PureDOMProps) {
 		setSrcDoc(doc);
 	});
 
-    // Cleanup on unmount
+	// Cleanup on unmount
 	// onCleanup(() => {
 	// 	setSrcDoc("");
 	// });
 
+
+	// note that the sandbox must not 'allow-same-origin' to ensure login token safety
 	return (
 		<iframe
 			ref={iframeRef}
 			srcdoc={srcDoc()}
 			sandbox={props.sandbox ?? "allow-scripts"}
-			class={`w-full border-0 min-h-[2em] ${props.class ?? ""}`}
+			class={`w-full border-0 ${props.class ?? ""}`}
 			loading="lazy"
 			aria-label="Sanitized HTML content"
 		/>

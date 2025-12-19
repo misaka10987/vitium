@@ -17,21 +17,22 @@ import { JSX } from 'solid-js'
 export const ChatInput = () => {
   let msgForm: HTMLFormElement | undefined
   let msgInput: HTMLTextAreaElement | undefined
-  const [isCommand, setIsCommand] = createSignal(false)
+  const [isCommand, setIsCommand] = createSignal(false) // UI state for indicating the current input is a command
   const [enableHTML, setEnableHTML] = createSignal(false)
 
   const handleSubmit: JSX.EventHandlerUnion<HTMLFormElement, SubmitEvent> = (e) => {
     e.preventDefault()
     const form = new FormData(msgForm!)
     const content = form.get('content')?.toString() ?? panic('No content')
-    if (isCommand()) {
+    if (content.trim().startsWith('/')) {
       handleCommand(content)
+      setIsCommand(true)
     } else {
       sendMessage(content, enableHTML())
+      setIsCommand(false)
     }
     if (!msgInput) panic('No msgInput')
     msgInput.value = ''
-    setIsCommand(false)
   }
 
   const handleKeyDown: JSX.EventHandlerUnion<HTMLTextAreaElement, KeyboardEvent> = (e) => {
@@ -39,15 +40,12 @@ export const ChatInput = () => {
       e.preventDefault()
       msgForm?.requestSubmit()
     }
-    if ((e.currentTarget as HTMLTextAreaElement).value == '') {
-      if (e.key == 'Backspace' && isCommand()) {
-        e.preventDefault()
-        setIsCommand(false)
-      }
-      if (e.key == ':' && !isCommand()) {
-        e.preventDefault()
-        setIsCommand(true)
-      }
+    // Dynamically update isCommand based on input value - used for the ui
+    const value = (e.currentTarget as HTMLTextAreaElement).value + (e.key.length === 1 ? e.key : '');
+    if (value.trim().startsWith('/')) {
+      setIsCommand(true)
+    } else {
+      setIsCommand(false)
     }
   }
 
