@@ -1,5 +1,5 @@
 use std::{
-    net::{Ipv6Addr, TcpListener},
+    net::{Ipv6Addr, SocketAddr, TcpListener},
     path::PathBuf,
     sync::{OnceLock, atomic::AtomicBool},
     time::Duration,
@@ -50,25 +50,35 @@ pub struct NetworkModule {
     port: OnceLock<u16>,
 }
 
-fn start_http(tcp: TcpListener, app: IntoMakeService<Router>, handle: Handle) {
+fn start_http(
+    tcp: TcpListener,
+    app: IntoMakeService<Router>,
+    handle: Handle<SocketAddr>,
+) -> anyhow::Result<()> {
+    let server = axum_server::from_tcp(tcp)?.handle(handle);
     tokio::spawn(async move {
-        let exit = axum_server::from_tcp(tcp).handle(handle).serve(app).await;
+        let exit = server.serve(app).await;
         if let Err(e) = exit {
             error!("HTTP server exited with error: {e}");
         }
     });
+    Ok(())
 }
 
-fn start_https(tcp: TcpListener, tls: RustlsConfig, app: IntoMakeService<Router>, handle: Handle) {
+fn start_https(
+    tcp: TcpListener,
+    tls: RustlsConfig,
+    app: IntoMakeService<Router>,
+    handle: Handle<SocketAddr>,
+) -> anyhow::Result<()> {
+    let server = axum_server::from_tcp_rustls(tcp, tls)?.handle(handle);
     tokio::spawn(async move {
-        let exit = axum_server::from_tcp_rustls(tcp, tls)
-            .handle(handle)
-            .serve(app)
-            .await;
+        let exit = server.serve(app).await;
         if let Err(e) = exit {
             error!("HTTPS server exited with error: {e}");
         }
     });
+    Ok(())
 }
 
 impl NetworkModule {
@@ -101,9 +111,9 @@ impl NetworkModule {
 
         if let Some(https) = &self.config.https {
             let tls = RustlsConfig::from_pem_file(&https.cert, &https.key).await?;
-            start_https(tcp, tls, app, handle.clone());
+            start_https(tcp, tls, app, handle.clone())?;
         } else {
-            start_http(tcp, app, handle.clone());
+            start_http(tcp, app, handle.clone())?;
         }
 
         self.shutdown
