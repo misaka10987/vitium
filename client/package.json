@@ -19,7 +19,7 @@
     "vinxi": "^0.5.10"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.0.7",
+    "@tailwindcss/vite": "^4.1.18",
     "tailwindcss": "^4.1.18"
   },
   "engines": {
