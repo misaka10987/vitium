@@ -1,6 +1,6 @@
 import { A } from "@solidjs/router";
 import { createSignal } from "solid-js";
-import { serverAddress } from "~/lib/auth";
+import { getServerURL } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default function Signup() {
@@ -19,7 +19,7 @@ export default function Signup() {
     }
     setIsLoading(true);
     try {
-      const url = serverAddress();
+      const url = getServerURL();
       const res = await fetch(url + "/signup", {
         method: "POST",
         headers: {
