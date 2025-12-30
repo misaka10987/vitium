@@ -10,7 +10,7 @@ import Supported from '@/components/Supported.astro'
 
 为了一起工作，[Vitium 客户端](/app/structure/#客户端) 和 [服务端](/app/structure/#服务端) 必须先发现和识别对方。这可以被简单地实现。
 
-当服务端选择在返回的页面中嵌入客户端时，它在 HTML 中添加一个指向客户端的 `<iframe>` 标签。进一步地，服务端应当设置 URL 查询参数 `server` 为自己的主机名。
+当服务端选择在返回的页面中嵌入客户端时，它在 HTML 中添加一个指向客户端的 `<iframe>` 标签。进一步地，服务端应当设置 URL 查询参数 `server` 为自己的用来访问服务器根目录的 URL.
 
 ```html
 <iframe
