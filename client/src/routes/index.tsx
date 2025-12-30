@@ -31,14 +31,17 @@ export default function Home() {
   });
 
   return (
-    <main class="flex items-center justify-center flex-1 bg-background text-foreground">
-      <div class="flex flex-col items-center gap-8">
-        <img src={iconSrc()} alt="Vitium" class="w-48 h-48" />
-        <A href="/login">
-          <Button size="lg" variant="ghost" class="text-lg px-8 py-6">
+    <main class="flex flex-row items-center flex-1 pb-24 px-20 bg-background text-foreground min-h-screen select-none">
+      <div class="flex flex-col items-center gap-8 flex-1 select-none">
+        <div class="text-7xl font-semibold mb-4 select-none">Vitium</div>
+        <A href="/login" class="select-none">
+          <Button size="lg" variant="outline" class="text-lg select-none">
             Login
           </Button>
         </A>
+      </div>
+      <div class="flex flex-col items-center flex-1 select-none">
+        <img src={iconSrc()} alt="Vitium" class="w-80 h-80 select-none" />
       </div>
     </main>
   );
