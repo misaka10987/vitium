@@ -1,4 +1,4 @@
-import { getServerURL, userName } from '~/lib/auth'
+import { serverAddress, userName } from '~/lib/auth'
 
 // Message type for chat
 export type Message = {
@@ -10,7 +10,7 @@ export type Message = {
 
 // Fetch chat messages after a given timestamp (ms)
 export async function fetchRecentMessages(after: number): Promise<Message[]> {
-  const url = `${getServerURL()}/api/chat?after=${after}`
+  const url = `${serverAddress().toString()}/api/chat?after=${after}`
   const res = await fetch(url)
   if (!res.ok) throw new Error('Failed to fetch chat messages')
   return await res.json()
@@ -20,7 +20,7 @@ export async function fetchRecentMessages(after: number): Promise<Message[]> {
 // onMessage: callback for each new message
 // Returns: unsubscribe function
 export function subscribeChatSSE(onMessage: (msg: Message) => void): () => void {
-  const es = new window.EventSource(`${getServerURL()}/api/chat`)
+  const es = new window.EventSource(`${serverAddress().toString()}/api/chat`)
   es.onmessage = (event) => {
     try {
       const msg: Message = JSON.parse(event.data)
@@ -38,7 +38,7 @@ export function subscribeChatSSE(onMessage: (msg: Message) => void): () => void 
 
 export async function sendMessage(content: string, isHtml: boolean) {
   try {
-    const res = await fetch(`${getServerURL()}/api/chat`,
+    const res = await fetch(new URL("/api/chat", serverAddress()),
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

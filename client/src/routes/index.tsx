@@ -9,7 +9,7 @@ import { setServerAddress } from "~/lib/auth";
       const params = new URLSearchParams(window.location.search);
       const server = params.get("server");
       if (server) {
-        setServerAddress(server);
+        setServerAddress(new URL(server));
       }
     }
   });

@@ -1,6 +1,6 @@
 import { A } from "@solidjs/router";
 import { createSignal } from "solid-js";
-import { getServerURL, userName, setUserName } from "~/lib/auth";
+import { serverAddress, userName, setUserName } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default function Login() {
@@ -9,14 +9,11 @@ export default function Login() {
 
   const handleLogin = async () => {
     setIsLoading(true);
-    console.log(`server: ${getServerURL()}`);
+    console.log(`server: ${serverAddress()}`);
     try {
-      const url = getServerURL();
-      const res = await fetch(url + "/login", {
+      const url = serverAddress();
+      const res = await fetch(new URL("/login", url), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           user: userName(),
           pass: pass(),
