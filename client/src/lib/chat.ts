@@ -9,8 +9,8 @@ export type Message = {
 }
 
 // Fetch chat messages after a given timestamp (ms)
-export async function fetchRecentMessages(after: number): Promise<Message[]> {
-  const url = `${serverAddress().toString()}/api/chat?after=${after}`
+export const fetchRecentMessages = async (after: number): Promise<Message[]> => {
+  const url = new URL(`/api/chat?after=${after}`, serverAddress())
   const res = await fetch(url)
   if (!res.ok) throw new Error('Failed to fetch chat messages')
   return await res.json()
