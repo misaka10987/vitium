@@ -34,8 +34,8 @@ export default function Home() {
   return (
     <main class="flex flex-row items-center flex-1 pb-24 px-20 bg-background text-foreground min-h-screen select-none">
       <div class="flex flex-col items-center flex-1 select-none">
-        <div class="text-7xl font-semibold mb-6 text-center select-none">Vitium</div>
-        <div class="text-lg mb-8 select-none">A TRPG Framework</div>
+        <div class="text-7xl font-semibold mb-6 text-center select-none">Vitium: A TRPG Framework</div>
+        <div class="text-lg mb-8 select-none">Login to start your adventure</div>
         <div class="flex flex-row">
           <A href="/login" class="select-none mx-2">
             <Button size="lg" variant="default" class="text-lg select-none rounded-full">
@@ -52,7 +52,7 @@ export default function Home() {
         </div>
       </div>
       <div class="flex flex-col items-center flex-1 select-none">
-        <img src={iconSrc()} alt="Vitium" class="w-full h-full select-none" />
+        <img src={iconSrc()} alt="Vitium" class="w-lg h-lg select-none" />
       </div>
     </main>
   );
