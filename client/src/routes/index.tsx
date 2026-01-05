@@ -1,25 +1,32 @@
-import { A } from "@solidjs/router";
-import Counter from "~/components/Counter";
+import { Button } from "~/components/ui/button";
+import LogIn from "lucide-solid/icons/log-in";
+import UserPlus from "lucide-solid/icons/user-plus";
+import Icon from "~/asset/icon.svg"
 
 export default function Home() {
   return (
-    <main class="text-center mx-auto text-gray-700 p-4">
-      <h1 class="max-6-xs text-6xl text-sky-700 font-thin uppercase my-16">Hello world!</h1>
-      <Counter />
-      <p class="mt-8">
-        Visit{" "}
-        <a href="https://solidjs.com" target="_blank" class="text-sky-600 hover:underline">
-          solidjs.com
-        </a>{" "}
-        to learn how to build Solid apps.
-      </p>
-      <p class="my-4">
-        <span>Home</span>
-        {" - "}
-        <A href="/about" class="text-sky-600 hover:underline">
-          About Page
-        </A>{" "}
-      </p>
+    <main class="flex flex-row items-center flex-1 pb-24 px-20 bg-background text-foreground min-h-screen select-none">
+      <div class="flex flex-col items-center flex-1 select-none">
+        <div class="text-7xl font-semibold mb-6 text-center select-none">Vitium: A TRPG Framework</div>
+        <div class="text-lg mb-8 select-none">Login to start your adventure</div>
+        <div class="flex flex-row">
+          <a href="/login" class="select-none mx-2">
+            <Button size="lg" variant="default" class="text-lg select-none rounded-full">
+              <LogIn class="w-6 h-6" />
+              Login
+            </Button>
+          </a>
+          <a href="/signup" class="select-none mx-2">
+            <Button size="lg" variant="outline" class="text-lg select-none rounded-full">
+              <UserPlus class="w-6 h-6" />
+              Sign Up
+            </Button>
+          </a>
+        </div>
+      </div>
+      <div class="flex flex-col items-center flex-1 select-none">
+        <img src={Icon} class="w-lg h-lg select-none" alt="Vitium Logo" />
+      </div>
     </main>
   );
 }
