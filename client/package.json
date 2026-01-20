@@ -16,7 +16,7 @@
     "solid-js": "^1.9.5",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "vinxi": "^0.5.10"
+    "vinxi": "^0.5.11"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
