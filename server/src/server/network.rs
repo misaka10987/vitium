@@ -103,6 +103,7 @@ impl NetworkModule {
             .store(true, std::sync::atomic::Ordering::SeqCst);
 
         let tcp = TcpListener::bind((Ipv6Addr::UNSPECIFIED, self.config.port.unwrap_or(0)))?;
+        tcp.set_nonblocking(true)?;
 
         let port = tcp.local_addr()?.port();
         self.port.set(port).unwrap();

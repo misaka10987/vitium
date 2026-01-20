@@ -35,7 +35,6 @@ use std::{
     time::{Duration, SystemTime},
 };
 use tokio::sync::RwLock;
-use toml::ser;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::{error, info};
 use url::Url;
