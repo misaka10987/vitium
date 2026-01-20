@@ -8,7 +8,7 @@ export default function Home() {
     <main class="flex flex-col-reverse items-center justify-center h-full mx-24 md:gap-16 md:flex-row bg-background text-foreground">
       <div class="flex flex-col items-center md:max-w-1/2 gap-8">
         <div class="flex flex-col items-center gap-4">
-          <div class="text-5xl md:text-6xl font-medium text-center">
+          <div class="text-4xl font-semibold text-center">
             Vitium: A TRPG Framework
           </div>
           <div class="text-lg">Login to start your adventure</div>
@@ -28,13 +28,11 @@ export default function Home() {
           </a>
         </div>
       </div>
-      <div class="flex items-center justify-center [@media(max-height:40rem)_and_(max-width:767.98px)]:hidden">
-        <img
-          src={Icon}
-          class="w-72 h-72 md:w-96 md:h-96 min-w-64"
-          alt="Vitium Logo"
-        />
-      </div>
+      <img
+        src={Icon}
+        class="w-72 h-72 md:w-96 md:h-96 min-w-64"
+        alt="Vitium Logo"
+      />
     </main>
   )
 }
