@@ -1,25 +1,44 @@
-import { A } from "@solidjs/router";
-import Counter from "~/components/Counter";
+import { Button } from '~/components/ui/button'
+import LogIn from 'lucide-solid/icons/log-in'
+import UserPlus from 'lucide-solid/icons/user-plus'
+import Icon from '~/asset/icon.svg'
 
 export default function Home() {
   return (
-    <main class="text-center mx-auto text-gray-700 p-4">
-      <h1 class="max-6-xs text-6xl text-sky-700 font-thin uppercase my-16">Hello world!</h1>
-      <Counter />
-      <p class="mt-8">
-        Visit{" "}
-        <a href="https://solidjs.com" target="_blank" class="text-sky-600 hover:underline">
-          solidjs.com
-        </a>{" "}
-        to learn how to build Solid apps.
-      </p>
-      <p class="my-4">
-        <span>Home</span>
-        {" - "}
-        <A href="/about" class="text-sky-600 hover:underline">
-          About Page
-        </A>{" "}
-      </p>
+    <main class="w-full h-full flex items-center justify-center overflow-scroll">
+      <div class="flex flex-wrap-reverse items-center justify-center gap-12 m-12">
+        <div class="flex flex-col gap-8">
+          <div class="flex flex-col gap-4">
+            <h1 class="text-6xl font-semibold">TRPG Framework</h1>
+            <p class="text-lg text-secondary-foreground p-1">
+              Login to start your adventure
+            </p>
+          </div>
+          <div class="flex flex-row gap-4 p-1">
+            <Button
+              as="a"
+              href="/login"
+              size="lg"
+              variant="default"
+              class="text-lg rounded-full"
+            >
+              <LogIn class="w-6 h-6" />
+              Start
+            </Button>
+            <Button
+              as="a"
+              href="/signup"
+              size="lg"
+              variant="outline"
+              class="text-lg rounded-full"
+            >
+              <UserPlus class="w-6 h-6" />
+              Sign Up
+            </Button>
+          </div>
+        </div>
+        <img src={Icon} class="w-64" alt="Vitium Logo" />
+      </div>
     </main>
-  );
+  )
 }
