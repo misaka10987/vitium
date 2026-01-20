@@ -126,9 +126,10 @@ impl NetworkModule {
     pub fn url(&self) -> anyhow::Result<Url> {
         let host = if let Some(host) = &self.config.host {
             host.clone()
+        } else if let Ok(ip) = local_ipv6() {
+            format!("[{ip}]")
         } else {
-            let ip = local_ipv6().or(local_ip())?;
-            ip.to_string()
+            local_ip()?.to_string()
         };
         let port = self.port.get().unwrap();
         let scheme = if self.config.https.is_some() {
