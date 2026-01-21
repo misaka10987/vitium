@@ -8,12 +8,12 @@ updates:
   - package-ecosystem: 'bun' # See documentation for possible values
     directory: '/doc' # Location of package manifests
     schedule:
-      interval: 'weekly'
+      interval: 'daily'
   - package-ecosystem: 'bun'
     directory: '/client'
     schedule:
-      interval: 'weekly'
+      interval: 'daily'
   - package-ecosystem: 'cargo'
     directory: '/'
     schedule:
-      interval: 'weekly'
+      interval: 'daily'
