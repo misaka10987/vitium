@@ -14,10 +14,6 @@ updates:
     schedule:
       interval: 'weekly'
   - package-ecosystem: 'cargo'
-    directory: '/api'
-    schedule:
-      interval: 'weekly'
-  - package-ecosystem: 'cargo'
-    directory: '/server'
+    directory: '/'
     schedule:
       interval: 'weekly'
