@@ -17,14 +17,7 @@ license = "GPL-3.0-only"
 vitium-api = "0.1.1"
 basileus = "0.1.5"
 axum = { version = "0.8.3", features = ["macros", "tokio", "http2", "ws"] }
-tokio = { version = "1.44.2", features = [
-    "rt-multi-thread",
-    "tracing",
-    "signal",
-    "fs",
-    "io-std",
-    "io-util",
-] }
+tokio = { version = "1.49.0", features = ["full", "tracing", "io-uring"] }
 serde = { version = "1.0.219", features = ["derive"] }
 tracing-subscriber = "0.3.20"
 tracing = "0.1.41"
