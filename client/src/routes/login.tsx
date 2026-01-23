@@ -1,4 +1,3 @@
-import { A } from "@solidjs/router";
 import { createSignal } from "solid-js";
 import { serverAddress, userName, setUserName } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
@@ -78,16 +77,15 @@ export default function Login() {
             {isLoading() ? "Signing in..." : "Sign In"}
           </Button>
         </form>
-        <A href="/signup">
+        <a href="/signup">
           <Button variant="ghost" class="w-full">
             Sign Up
           </Button>
-        </A>
-
+        </a>
         <div class="text-center">
-          <A href="/" class="text-sm text-primary hover:underline">
+          <a href="/" class="text-sm text-primary hover:underline">
             Back to Home
-          </A>
+          </a>
         </div>
       </div>
     </main>
