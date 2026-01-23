@@ -1,10 +1,8 @@
 +++
 title = '用户'
 [sidebar]
-order = 3
+order = 2
 +++
-
-import Supported from '@/components/Supported.astro'
 
 一个 **用户** 是现实中的某人在特定 [Vitium 服务端](/concept/structure/#服务端) 的身份。用户可以作为 TRPG 玩家或游戏管理员参与游戏。
 
