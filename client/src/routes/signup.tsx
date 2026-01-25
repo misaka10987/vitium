@@ -59,7 +59,7 @@ export default function Signup() {
         >
           <div>
             <label for="user" class="text-sm font-medium">
-              User Name
+              Username
             </label>
             <input
               id="user"
@@ -125,16 +125,9 @@ export default function Signup() {
             {isLoading() ? "Signing up..." : "Sign Up"}
           </Button>
         </form>
-        <a href="/login">
-          <Button variant="ghost" class="w-full">
-            Sign In
-          </Button>
+        <a href="/login" class="w-full">
+          Sign In
         </a>
-        <div class="text-center">
-          <a href="/" class="text-sm text-primary hover:underline">
-            Back to Home
-          </a>
-        </div>
       </div>
     </main>
   );

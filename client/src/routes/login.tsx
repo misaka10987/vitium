@@ -47,7 +47,7 @@ export default function Login() {
         >
           <div>
             <label for="user" class="text-sm font-medium">
-              User Name
+              Username
             </label>
             <input
               id="user"
@@ -77,16 +77,9 @@ export default function Login() {
             {isLoading() ? "Signing in..." : "Sign In"}
           </Button>
         </form>
-        <a href="/signup">
-          <Button variant="ghost" class="w-full">
-            Sign Up
-          </Button>
+        <a href="/signup" class="w-full">
+          Sign Up
         </a>
-        <div class="text-center">
-          <a href="/" class="text-sm text-primary hover:underline">
-            Back to Home
-          </a>
-        </div>
       </div>
     </main>
   );
