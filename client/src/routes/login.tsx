@@ -77,7 +77,7 @@ export default function Login() {
             {isLoading() ? "Signing in..." : "Sign In"}
           </Button>
         </form>
-        <a href="/signup" class="w-full">
+        <a href="/signup" class="w-full flex justify-center">
           Sign Up
         </a>
       </div>
