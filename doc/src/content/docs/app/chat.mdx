@@ -4,13 +4,17 @@ title = '全局聊天'
 order = 4
 +++
 
-import Supported from '@/components/Supported.astro'
+**全局聊天** 是 Vitium 的一个子系统。它是一个典型的 Web 2 即时通讯软件。用户可以使用全局聊天在游戏外发送与接收消息，并接收服务器通告。
 
-**全局聊天** 是一个典型的 Web 2 即时通讯子系统。它被设计用于给用户提供与游戏内容本身无关的聊天平台，i.e. 参与聊天的身份是用户，而非用户扮演的角色。
+全局聊天被设计为公开的。然而，只有已登录的用户才被允许发送消息。仍然，任何人都可以读取聊天内容。
 
-## 字段
+支持的聊天消息格式为带有 HTML 支持的文本。
 
-一条全局聊天消息通过以下消息编码：
+---
+
+## 实现
+
+我们如下编码一条全局聊天消息：
 
 | 字段      | 标识符       | 描述                         | 格式                |
 | ------- | --------- | -------------------------- | ----------------- |
@@ -18,24 +22,6 @@ import Supported from '@/components/Supported.astro'
 | 发件时间    | `time`    | 发件的 UNIX 时间戳               | 64 位无符号整数         |
 | 内容      | `content` | 聊天消息内容                     | UTF-8 字符串         |
 | HTML 开关 | `html`    | *内容* 是否应当被解释为 HTML, 否则为纯文本 | 布尔值               |
-
-## 发送
-
-<Supported />
-
-客户端应当在界面中向登录后的用户提供发送聊天功能。
-
-全局聊天 API 被设计为 RESTful 的。为了发送一条新的消息，客户端只需要向 `https://server.vitium.dev/api/chat` POST 以 JSON 编码的聊天数据。
-
-如果请求是合法的，在正常情况下，服务端应当保存客户端发送的消息并返回 HTTP 200.
-
-这个操作需要 [验证身份](/app/user/#会话) 。令牌所授权的用户应当与聊天消息的发件人字段一致。
-
-## 读取
-
-<Supported />
-
-客户端应当在界面中保存一定时间或数量之内的聊天记录，并即时更新并显示最新聊天。
 
 :::danger[对抗 HTML 注入]
 
@@ -45,24 +31,38 @@ import Supported from '@/components/Supported.astro'
 
 :::
 
-全局聊天消息的接收同样通过 RESTful API 实现。服务端应当提供两个 API: 同步的和异步的。
+全局聊天被设计为 RESTful API `/api/chat` .
 
-接收聊天不需要验证身份，i.e. 未登录用户亦可读取全局聊天。
+### 发送
 
-### 同步
+客户端不应当尝试让未登录的用户发送消息。
 
-同步接收用来取得服务端上所有指定时刻之后的聊天消息。客户端可以利用这一机制在用户刚登录时获取一次聊天记录。
+服务端提供 `/api/chat` API 用于发送新的聊天消息。为了调用此 API, 客户端应当先获取登录会话，再 HTTP POST 至此路由。请求体为以 JSON 编码的聊天数据。请求应带有会话 cookie.
 
-通过 GET `https://server.vitium.dev/api/chat` , 并设置 URL 查询参数 `after` 为所需要的毫秒 UNIX 时间戳，服务端应当返回以 JSON 列表编码的 `after` 后的所有聊天消息。
+如果请求是合法的，且客户端提供的身份验证信息与消息的发件人一致，服务端正常运作时，返回 HTTP 200.
 
-### 异步
+### 接收
 
-异步接收用于获取服务端收到的实时聊天消息。这通过 [服务器发送事件](https://developer.mozilla.org/zh-CN/docs/Web/API/Server-sent_events) 实现。客户端应当始终跟踪这一 API 以保证用户看到的聊天被即时更新。
+从 `/api/chat` 读取聊天消息有两种方式，即同步（接收所有消息）和异步（等待下一条消息）。
 
-GET `https://server.vitium.dev/api/chat` 将返回服务器发送事件。每当有新的聊天消息，服务器将更新一个事件，其 [`data`](https://developer.mozilla.org/zh-CN/docs/Web/API/Server-sent_events/Using_server-sent_events#data) 字段为 JSON 编码的聊天数据。
+#### 同步
+
+同步读取将返回服务端保存的所有指定时刻之后的聊天消息。客户端可以利用这一机制在用户刚登录时获取一次聊天记录。
+
+为了同步调用 API, 客户端应当 HTTP GET `/api/chat` , 并传递 URL 查询参数 `after` . `after` 的值为指定的 UNIX 时间戳，单位为毫秒。
+
+服务端正常运作时，返回所有发件时间在 `after` 之后的聊天消息，以 JSON 列表编码。
+
+#### 异步
+
+异步读取将在有新消息到达服务端时实时返回最新消息。客户端可以利用这一机制保证用户看到的聊天内容是即时的。
+
+异步通过通过 [服务器发送事件](https://developer.mozilla.org/zh-CN/docs/Web/API/Server-sent_events) 实现。
+
+为了异步调用 API, 客户端应当 HTTP GET `/api/chat` . 这返回一个服务器发送事件。每当有新的聊天消息，服务端更新一个事件，其 [`data`](https://developer.mozilla.org/zh-CN/docs/Web/API/Server-sent_events/Using_server-sent_events#data) 字段为 JSON 编码的聊天数据。
 
 :::tip
 
-客户端也会被通知到其自己发送的聊天事件。处理它来确保聊天成功发送是一个好主意。
+客户端也会被通知到其自己发送的聊天事件。可以通过这一机制确保聊天被成功发送。
 
 :::
