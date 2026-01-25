@@ -5,8 +5,10 @@ import { Button } from "~/components/ui/button";
 export default function Login() {
   const [pass, setPass] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
+  const [error, setError] = createSignal("");
 
   const handleLogin = async () => {
+    setError("");
     setIsLoading(true);
     console.log(`server: ${serverAddress()}`);
     try {
@@ -25,6 +27,7 @@ export default function Login() {
       // const data = await res.json();
     } catch (err) {
       console.error(err);
+      setError("Please check your credentials");
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +46,7 @@ export default function Login() {
             e.preventDefault();
             handleLogin();
           }}
-          class="space-y-4"
+          class="space-y-6"
         >
           <div>
             <label for="user" class="text-sm font-medium">
@@ -52,7 +55,7 @@ export default function Login() {
             <input
               id="user"
               type="text"
-              class="mt-1 w-full px-3 py-2 rounded-md border"
+              class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={userName()}
               onInput={(e) => setUserName(e.currentTarget.value)}
               required
@@ -66,18 +69,22 @@ export default function Login() {
             <input
               id="pass"
               type="password"
-              class="mt-1 w-full px-3 py-2 rounded-md border"
+              class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={pass()}
               onInput={(e) => setPass(e.currentTarget.value)}
               required
             />
           </div>
 
-          <Button type="submit" class="w-full py-4" disabled={isLoading()}>
+          {error() && (
+            <div class="text-red-500 text-sm text-center">{error()}</div>
+          )}
+
+          <Button type="submit" class="w-full py-4 rounded-xl" disabled={isLoading()}>
             {isLoading() ? "Signing in..." : "Sign In"}
           </Button>
         </form>
-        <a href="/signup" class="w-full flex justify-center">
+        <a href="/signup" class="w-full text-sm text-center">
           Sign Up
         </a>
       </div>

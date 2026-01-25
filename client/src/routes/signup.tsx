@@ -11,7 +11,7 @@ export default function Signup() {
   const [error, setError] = createSignal("");
 
   const handleSignup = async () => {
-    setError("");
+    setError("test");
     if (pass() !== confirmPass()) {
       setError("Passwords do not match");
       return;
@@ -55,7 +55,7 @@ export default function Signup() {
             e.preventDefault();
             handleSignup();
           }}
-          class="space-y-1.5"
+          class="space-y-4"
         >
           <div>
             <label for="user" class="text-sm font-medium">
@@ -64,7 +64,7 @@ export default function Signup() {
             <input
               id="user"
               type="text"
-              class="mt-1 w-full px-3 py-2 rounded-md border"
+              class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={user()}
               onInput={(e) => setUser(e.currentTarget.value)}
               required
@@ -78,7 +78,7 @@ export default function Signup() {
             <input
               id="email"
               type="email"
-              class="mt-1 w-full px-3 py-2 rounded-md border"
+              class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={email()}
               onInput={(e) => setEmail(e.currentTarget.value)}
               required
@@ -92,7 +92,7 @@ export default function Signup() {
             <input
               id="pass"
               type="password"
-              class="mt-1 w-full px-3 py-2 rounded-md border"
+              class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={pass()}
               onInput={(e) => setPass(e.currentTarget.value)}
               required
@@ -106,26 +106,22 @@ export default function Signup() {
             <input
               id="confirmPass"
               type="password"
-              class="mt-1 w-full px-3 py-2 rounded-md border"
+              class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={confirmPass()}
               onInput={(e) => setConfirmPass(e.currentTarget.value)}
               required
             />
           </div>
 
-          <div class="h-0.5 pointer-events-none opacity-0" aria-hidden="true"></div>
-
           {error() && (
             <div class="text-red-500 text-sm text-center">{error()}</div>
           )}
 
-          <div class="h-0.5 pointer-events-none opacity-0" aria-hidden="true"></div>
-
-          <Button type="submit" class="w-full py-4" disabled={isLoading()}>
+          <Button type="submit" class="w-full py-4 rounded-xl" disabled={isLoading()}>
             {isLoading() ? "Signing up..." : "Sign Up"}
           </Button>
         </form>
-        <a href="/login" class="w-full flex justify-center">
+        <a href="/login" class="w-full text-sm text-center">
           Sign In
         </a>
       </div>
