@@ -1773,9 +1773,9 @@ dependencies = [
 
 [[package]]
 name = "http-auth-basic"
-version = "0.3.5"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e0c088bddfd73005b09807131224ad12c302655436b1270c8346a3ae8aaa37a"
+checksum = "8e92637d714ad90b81c91bce86e8c1f98fb32ca79bddf8d69e9d83fee3966946"
 dependencies = [
  "base64 0.22.1",
 ]
