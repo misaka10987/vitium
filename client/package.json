@@ -13,7 +13,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-solid": "^0.562.0",
-    "solid-js": "^1.9.5",
+    "solid-js": "^1.9.11",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "vinxi": "^0.5.11"
