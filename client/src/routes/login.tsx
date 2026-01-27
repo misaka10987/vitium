@@ -13,6 +13,9 @@ export default function Login() {
     console.log(`server: ${serverAddress()}`);
     try {
       const url = serverAddress();
+      if(url === null) {
+        throw new Error("Server address is not set");
+      }
       const res = await fetch(new URL("/login", url), {
         method: "POST",
         body: JSON.stringify({
@@ -80,7 +83,7 @@ export default function Login() {
             <div class="text-red-500 text-sm text-center">{error()}</div>
           )}
 
-          <Button type="submit" class="w-full py-4 rounded-xl" disabled={isLoading()}>
+          <Button type="submit" class="w-full text-sm py-4 rounded-xl" disabled={isLoading()}>
             {isLoading() ? "Signing in..." : "Sign In"}
           </Button>
         </form>

@@ -19,6 +19,9 @@ export default function Signup() {
     setIsLoading(true);
     try {
       const url = serverAddress();
+      if (url === null) {
+        throw new Error("Server address is not set");
+      }
       const res = await fetch(new URL("/signup", url), {
         method: "POST",
         headers: {
@@ -81,7 +84,6 @@ export default function Signup() {
               class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={email()}
               onInput={(e) => setEmail(e.currentTarget.value)}
-              required
             />
           </div>
 
@@ -117,7 +119,7 @@ export default function Signup() {
             <div class="text-red-500 text-sm text-center">{error()}</div>
           )}
 
-          <Button type="submit" class="w-full py-4 rounded-xl" disabled={isLoading()}>
+          <Button type="submit" class="w-full text-sm py-4 rounded-xl" disabled={isLoading()}>
             {isLoading() ? "Signing up..." : "Sign Up"}
           </Button>
         </form>
