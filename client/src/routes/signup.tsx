@@ -11,7 +11,7 @@ export default function Signup() {
   const [error, setError] = createSignal("");
 
   const handleSignup = async () => {
-    setError("test");
+    setError("");
     if (pass() !== confirmPass()) {
       setError("Passwords do not match");
       return;
