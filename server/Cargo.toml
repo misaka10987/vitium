@@ -41,7 +41,7 @@ static_init = "1.0.3"
 shutup = "0.2.0"
 shell-words = "1.1.0"
 rustyline = "17.0.2"
-serde-inline-default = "1.0.0"
+serde-inline-default = "1.0.1"
 url = { version = "2.5.8", features = ["serde"] }
 askama = "0.15.4"
 local-ip-address = "0.6.5"
