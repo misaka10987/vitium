@@ -62,7 +62,7 @@ export default function Signup() {
         >
           <div>
             <label for="user" class="text-sm font-medium">
-              Username
+              Username <span class="text-red-500">*</span>
             </label>
             <input
               id="user"
@@ -89,7 +89,7 @@ export default function Signup() {
 
           <div>
             <label for="pass" class="text-sm font-medium">
-              Password
+              Password <span class="text-red-500">*</span>
             </label>
             <input
               id="pass"
@@ -103,7 +103,7 @@ export default function Signup() {
 
           <div>
             <label for="confirmPass" class="text-sm font-medium">
-              Confirm Password
+              Confirm Password <span class="text-red-500">*</span>
             </label>
             <input
               id="confirmPass"
