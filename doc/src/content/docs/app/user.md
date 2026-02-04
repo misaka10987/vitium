@@ -19,19 +19,19 @@ Vitium 开发者团队并不想投入额外成本，维护一个集中式的身�
 
 我们如下编码用户的必要身份证明凭据：
 
-| 字段  | 标识符    | 描述           | 格式                |
-| --- | ------ | ------------ | ----------------- |
+| 字段   | 标识符 | 描述                     | 格式                        |
+| ------ | ------ | ------------------------ | --------------------------- |
 | 用户名 | `user` | 对指定服务器的唯一标识符 | 不含空格的非空 ASCII 字符串 |
-| 密码  | `pass` | 该用户的登录密码     | 非空 ASCII 字符串      |
+| 密码   | `pass` | 该用户的登录密码         | 非空 ASCII 字符串           |
 
 同时，用户还可以带有以下可选信息：
 
-| 字段   | 标识符        | 描述              | 格式        |
-| ---- | ---------- | --------------- | --------- |
-| 电子邮箱 | `email`    | 用户的电子邮箱，可用于身份验证 | 电子邮箱地址    |
-| 显示名称 | `nickname` | 在界面中显示的用户名称     | UTF-8 字符串 |
-| 头像   | `avatar`   | 在界面中显示的用户头像图片   | URL       |
-| 自我介绍 | `intro`    | 自我介绍文本          | HTML      |
+| 字段     | 标识符     | 描述                           | 格式         |
+| -------- | ---------- | ------------------------------ | ------------ |
+| 电子邮箱 | `email`    | 用户的电子邮箱，可用于身份验证 | 电子邮箱地址 |
+| 显示名称 | `nickname` | 在界面中显示的用户名称         | UTF-8 字符串 |
+| 头像     | `avatar`   | 在界面中显示的用户头像图片     | URL          |
+| 自我介绍 | `intro`    | 自我介绍文本                   | HTML         |
 
 ### 注册
 
@@ -43,42 +43,34 @@ Vitium 开发者团队并不想投入额外成本，维护一个集中式的身�
 
 - HTTP 303 重定向至 `https://server.vitium.dev/` , 并 [初始化会话](#获取会话) 。
 
-### 登录
+### 登录与会话
 
-服务端提供 `/login` API 用于用户登录。调用方式为通过 HTTP POST 提交表单。表单应带有正确编码的必要字段 `user` 和 `pass`, 即用户名和相对应的密码。
+我们采用字符串令牌来标识某个用户的会话。此令牌由服务端生成，具有密码学效力，保存于客户端的 `localStorage` 中。在调用需要用户会话的 API 时，客户端通过 HTTP `Authorization` 头提供令牌。
+
+```http
+Authorization: Bearer <token>
+```
+
+相应地，服务端应当允许在跨域上下文中使用令牌。
+
+```http
+Access-Control-Allow-Headers: Authorization
+```
+
+令牌的寿命不作详细规定，但服务端应当向运维人员提供吊销令牌的功能。
+
+我们通过执行 [PKCE](https://datatracker.ietf.org/doc/html/rfc7636) 策略来登录和获取会话。服务端提供 `/login` API 用于用户登录。
+
+为开始用户登录流程，客户端向此路由 HTTP POST 提交表单。表单应带有正确编码的必要字段 `user` 和 `pass`, 即用户名和相对应的密码，用于用户认证。同时，请求还应带有客户端已预先准备的 [`code_challenge`](https://datatracker.ietf.org/doc/html/rfc7636#section-4.2) , 作为查询参数。
+
+我们只支持 SHA256 作为 PKCE 的验证算法。
 
 如果输入合法，服务端在正常运作时，作出以下回复：
 
-- HTTP 401, 如果试图登录的用户不存在，或提供了错误的密码。返回与 GET `https://server.vitium.dev/login` 一致的页面；或
+- HTTP 401, 如果试图登录的用户不存在，或提供了错误的密码。此时，服务端应当返回与 GET `https://server.vitium.dev/login` 一致的页面；或
 
-- HTTP 303 重定向至 `https://server.vitium.dev/` , 并 [初始化会话](#获取会话) 。
+- HTTP 303 重定向至 `https://client.vitium.dev/` , 如果登录是成功的。服务端应当按照 [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.2) 在查询参数中设置验证码 `code`.
 
-### 会话
+客户端通过检查页面的地址栏获取验证码。一旦获取，客户端应当尽快从 `/access-token` API 获取会话令牌。这通过向其 HTTP POST 提交表单实现。表单应带有 `code` 与 `code_verifier` , 参见 [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3) .
 
-会话功能通过 HTTP cookie 实现。
-
-#### 获取会话
-
-如果用户成功登录，服务端在成功的登录请求的响应中设置 cookie `token` . `token` 的值是由服务端实现定义的会话标识。同时，服务端应当设置 `HttpOnly` , `Secure` , `SameSite=None` 和 `Partitioned` 的 cookie 属性，并指定一个不超过 30 日的持久化保存寿命。
-
-```http
-Set-Cookie: token=0123456789abcdef; HttpOnly; Secure; SameSite=None; Partitioned; Path=/; Max-Age=86400
-```
-
-`token` 必须具有能够抵抗爆破攻击的密码学效力。
-
-#### 使用会话
-
-当客户端请求需要身份验证的服务端 API 时，应当在请求中发送 cookie `token` , 原则上浏览器将自动处理。在调用 `fetch` API 时，应当添加 `credentials: "include"` 参数。
-
-:::danger[对抗 [跨站请求伪造攻击](https://developer.mozilla.org/zh-CN/docs/Glossary/CSRF)]
-
-服务端 **必须** 对所有收到的跨域请求添加 `Access-Control-Allow-Origin` 头以禁止 Vitium 客户端以外的任何程序向服务端构造请求。
-
-```http
-Access-Control-Allow-Origin: https://client.vitium.dev
-```
-
-:::
-
-同时，服务端应当在这些 API 上设置 `Access-Control-Allow-Credentials: true` 头，并根据具体 API 按需设置 `Access-Control-Allow-Methods` , `Access-Control-Allow-Headers` .
+如果输入合法，服务端 [按相应标准](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.4) 作出回复，在验证成功时发放令牌。客户端应当读取回复获得会话令牌，并将其存储于浏览器 `localStorage` 中。
