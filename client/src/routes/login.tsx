@@ -16,12 +16,15 @@ export default function Login() {
       if(url === null) {
         throw new Error("Server address is not set");
       }
+      const input = new URLSearchParams();
+      input.append("user", userName());
+      input.append("pass", pass());
       const res = await fetch(new URL("/login", url), {
         method: "POST",
-        body: JSON.stringify({
-          user: userName(),
-          pass: pass(),
-        }),
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: input,
       });
       if (res.status != 303 && !res.ok) {
         throw new Error("Login failed");

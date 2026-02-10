@@ -22,16 +22,18 @@ export default function Signup() {
       if (url === null) {
         throw new Error("Server address is not set");
       }
+      const formData = new URLSearchParams();
+      formData.append("user", user());
+      formData.append("pass", pass());
+      if (email()) {
+        formData.append("email", email());
+      }
       const res = await fetch(new URL("/signup", url), {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify({
-          user: user(),
-          pass: pass(),
-          email: email(),
-        }),
+        body: formData.toString(),
       });
       if (res.status != 303 && !res.ok) {
         throw new Error("Signup failed");
