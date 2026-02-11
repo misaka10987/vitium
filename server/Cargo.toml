@@ -28,7 +28,7 @@ serde_json = "1.0.140"
 thiserror = "2.0.12"
 axum-extra = { version = "0.12.1", features = ["cookie"] }
 anyhow = "1.0.97"
-ctrlc = "3.4.6"
+ctrlc = "3.5.2"
 dicexp = "1.1.1"
 sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio"] }
 tokio-stream = "0.1.17"
