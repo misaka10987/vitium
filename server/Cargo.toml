@@ -23,7 +23,7 @@ tracing-subscriber = "0.3.20"
 tracing = "0.1.41"
 clap = { version = "4.5.56", features = ["derive", "string"] }
 clearscreen = "4.0.1"
-toml = "0.9.8"
+toml = "0.9.12"
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 axum-extra = { version = "0.12.1", features = ["cookie"] }
