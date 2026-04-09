@@ -1,43 +1,12 @@
-import { createSignal } from "solid-js";
+import { onMount } from "solid-js";
+import { code_challenge, code_verifier_gen } from "~/lib/auth";
 import { serverAddress, userName, setUserName } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default function Login() {
-  const [pass, setPass] = createSignal("");
-  const [isLoading, setIsLoading] = createSignal(false);
-  const [error, setError] = createSignal("");
-
-  const handleLogin = async () => {
-    setError("");
-    setIsLoading(true);
-    console.log(`server: ${serverAddress()}`);
-    try {
-      const url = serverAddress();
-      if(url === null) {
-        throw new Error("Server address is not set");
-      }
-      const input = new URLSearchParams();
-      input.append("user", userName());
-      input.append("pass", pass());
-      const res = await fetch(new URL("/login", url), {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: input,
-      });
-      if (res.status != 303 && !res.ok) {
-        throw new Error("Login failed");
-      }
-      // Optionally parse response
-      // const data = await res.json();
-    } catch (err) {
-      console.error(err);
-      setError("Please check your credentials");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  onMount(() => {
+    sessionStorage.setItem("code_verifier", code_verifier_gen());
+  });
 
   return (
     <main class="flex items-center justify-center flex-1 bg-background text-foreground">
@@ -48,10 +17,8 @@ export default function Login() {
         </div>
 
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleLogin();
-          }}
+          method="post"
+          action={serverAddress()?.toString() + "/login?" + code_challenge(sessionStorage.getItem("code_verifier") ?? "")}
           class="space-y-6"
         >
           <div>
@@ -76,18 +43,12 @@ export default function Login() {
               id="pass"
               type="password"
               class="mt-1 w-full px-3 py-2 rounded-xl border"
-              value={pass()}
-              onInput={(e) => setPass(e.currentTarget.value)}
               required
             />
           </div>
 
-          {error() && (
-            <div class="text-red-500 text-sm text-center">{error()}</div>
-          )}
-
-          <Button type="submit" class="w-full text-sm py-4 rounded-xl" disabled={isLoading()}>
-            {isLoading() ? "Signing in..." : "Sign In"}
+          <Button type="submit" class="w-full text-sm py-4 rounded-xl">
+            "Sign In"
           </Button>
         </form>
         <a href="/signup" class="w-full text-sm text-center">
