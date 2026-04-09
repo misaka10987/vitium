@@ -17,10 +17,9 @@ export default function Login() {
   const loginAddress = () => {
     const url = serverAddress();
     const challenge = codeChallenge();
-    if (url === null || challenge === "") {
+    if (url === undefined || challenge === "") {
       return "";
     }
-
     const loginUrl = new URL("/login", url);
     loginUrl.searchParams.set("code_challenge", challenge);
     return loginUrl.toString();

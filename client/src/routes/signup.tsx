@@ -3,49 +3,8 @@ import { serverAddress } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default function Signup() {
-  const [user, setUser] = createSignal("");
   const [pass, setPass] = createSignal("");
   const [confirmPass, setConfirmPass] = createSignal("");
-  const [email, setEmail] = createSignal("");
-  const [isLoading, setIsLoading] = createSignal(false);
-  const [error, setError] = createSignal("");
-
-  const handleSignup = async () => {
-    setError("");
-    if (pass() !== confirmPass()) {
-      setError("Passwords do not match");
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const url = serverAddress();
-      if (url === null) {
-        throw new Error("Server address is not set");
-      }
-      const formData = new URLSearchParams();
-      formData.append("user", user());
-      formData.append("pass", pass());
-      if (email()) {
-        formData.append("email", email());
-      }
-      const res = await fetch(new URL("/signup", url), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData.toString(),
-      });
-      if (res.status != 303 && !res.ok) {
-        throw new Error("Signup failed");
-      }
-      // Optionally parse response
-      // const data = await res.json();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <main class="flex items-center justify-center flex-1 bg-background text-foreground">
@@ -56,10 +15,7 @@ export default function Signup() {
         </div>
 
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSignup();
-          }}
+          action={new URL("/signup", serverAddress()).toString()}
           class="space-y-4"
         >
           <div>
@@ -70,8 +26,6 @@ export default function Signup() {
               id="user"
               type="text"
               class="mt-1 w-full px-3 py-2 rounded-xl border"
-              value={user()}
-              onInput={(e) => setUser(e.currentTarget.value)}
               required
             />
           </div>
@@ -84,8 +38,6 @@ export default function Signup() {
               id="email"
               type="email"
               class="mt-1 w-full px-3 py-2 rounded-xl border"
-              value={email()}
-              onInput={(e) => setEmail(e.currentTarget.value)}
             />
           </div>
 
@@ -99,6 +51,7 @@ export default function Signup() {
               class="mt-1 w-full px-3 py-2 rounded-xl border"
               value={pass()}
               onInput={(e) => setPass(e.currentTarget.value)}
+              minLength={6}
               required
             />
           </div>
@@ -117,12 +70,8 @@ export default function Signup() {
             />
           </div>
 
-          {error() && (
-            <div class="text-red-500 text-sm text-center">{error()}</div>
-          )}
-
-          <Button type="submit" class="w-full text-sm py-4 rounded-xl" disabled={isLoading()}>
-            {isLoading() ? "Signing up..." : "Sign Up"}
+          <Button type="submit" class="w-full text-sm py-4 rounded-xl" disabled={pass() === "" || pass() !== confirmPass()}>
+            Sign Up
           </Button>
         </form>
         <a href="/login" class="w-full text-sm text-center">
