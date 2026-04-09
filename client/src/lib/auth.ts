@@ -5,13 +5,17 @@ export const [serverAddress, setServerAddress] = createSignal<URL | null>(null);
 
 export const [userName, setUserName] = createSignal('');
 
-export function code_verifier_gen() : string {
-    const array = new Uint8Array(64); // RFC7636 requests a length between 43 and 128 characters, used 64 here
-    crypto.getRandomValues(array);
-    return String.fromCharCode(...array)
+function base64url(bytes: Uint8Array): string {
+    return btoa(String.fromCharCode(...bytes))
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
-        .replace(/=/g, '');
+        .replace(/=+$/g, '');
+}
+
+export function code_verifier_gen(): string {
+    const array = new Uint8Array(64); // RFC7636 requests a length between 43 and 128 characters, used 64 here
+    crypto.getRandomValues(array);
+    return base64url(array);
 }
 
 export function code_challenge(code_verifier: string): Promise<string> {
@@ -20,10 +24,7 @@ export function code_challenge(code_verifier: string): Promise<string> {
     // Perform the SHA-256 hash
     return crypto.subtle.digest('SHA-256', data).then((hash) => {
         // Convert the hash to a base64url string
-        return btoa(String.fromCharCode(...new Uint8Array(hash)))
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=/g, '');
+        return base64url(new Uint8Array(hash));
     });
 }
 
