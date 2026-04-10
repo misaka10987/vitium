@@ -15,6 +15,7 @@ export default function Signup() {
         </div>
 
         <form
+          method="post"
           action={new URL("/signup", serverAddress()).toString()}
           class="space-y-4"
         >

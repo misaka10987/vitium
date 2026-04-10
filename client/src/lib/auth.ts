@@ -18,7 +18,7 @@ export function code_verifier_gen(): string {
     return base64url(array);
 }
 
-export function code_challenge(code_verifier: string): Promise<string> {
+export async function code_challenge(code_verifier: string): Promise<string> {
     const encoder = new TextEncoder(); // utf8 is compatible with ascii, so the encode should be fine
     const data = encoder.encode(code_verifier);
     // Perform the SHA-256 hash
