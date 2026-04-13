@@ -1,10 +1,3 @@
-import { createSignal } from 'solid-js';
-
-// Signal for the server address
-export const [serverAddress, setServerAddress] = createSignal<URL | undefined>(undefined);
-
-export const [userName, setUserName] = createSignal('');
-
 const base64url = (bytes: Uint8Array) => {
     return btoa(String.fromCharCode(...bytes))
         .replace(/\+/g, '-')

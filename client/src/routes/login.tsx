@@ -1,10 +1,10 @@
-import { createSignal, onMount } from "solid-js";
+import { createEffect, createSignal, onMount } from "solid-js";
 import { code_challenge, code_verifier_gen } from "~/lib/auth";
-import { serverAddress, userName, setUserName } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default () => {
   const [codeChallenge, setCodeChallenge] = createSignal("");
+  const [userName, setUserName] = createSignal("");
 
   onMount(async () => {
     const verifier = code_verifier_gen();
@@ -14,10 +14,18 @@ export default () => {
     setCodeChallenge(challenge);
   });
 
+  createEffect(() => {
+    setUserName(localStorage.getItem("user_name") ?? "");
+  });
+
   const loginAddress = () => {
-    const url = serverAddress();
+    if (typeof window === "undefined") {
+      return "";
+    }
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get("server_address");
     const challenge = codeChallenge();
-    if (url === undefined || challenge === "") {
+    if (url === null || challenge === "") {
       return "";
     }
     const loginUrl = new URL("/login", url);
@@ -36,6 +44,7 @@ export default () => {
         <form
           method="post"
           action={loginAddress()}
+          onsubmit={() => {localStorage.setItem("user_name", userName())}}
           class="space-y-6"
         >
           <div>
@@ -47,8 +56,8 @@ export default () => {
               name="user"
               type="text"
               class="mt-1 w-full px-3 py-2 rounded-xl border"
-              value={userName()}
               onInput={(e) => setUserName(e.currentTarget.value)}
+              value={userName()}
               required
             />
           </div>

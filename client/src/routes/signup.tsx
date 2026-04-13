@@ -1,10 +1,22 @@
 import { createSignal } from "solid-js";
-import { serverAddress } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
 export default () => {
   const [pass, setPass] = createSignal("");
   const [confirmPass, setConfirmPass] = createSignal("");
+
+  const signupAddress = () => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get("server_address");
+    if (url === null) {
+      return "";
+    }
+    const signupUrl = new URL("/signup", url);
+    return signupUrl.toString();
+  }
 
   return (
     <main class="flex items-center justify-center flex-1 bg-background text-foreground">
@@ -16,7 +28,7 @@ export default () => {
 
         <form
           method="post"
-          action={new URL("/signup", serverAddress()).toString()}
+          action={signupAddress()}
           class="space-y-4"
         >
           <div>
