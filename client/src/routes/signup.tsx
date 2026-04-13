@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 import { serverAddress } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
-export default function Signup() {
+export default () => {
   const [pass, setPass] = createSignal("");
   const [confirmPass, setConfirmPass] = createSignal("");
 

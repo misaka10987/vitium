@@ -3,7 +3,7 @@ import { code_challenge, code_verifier_gen } from "~/lib/auth";
 import { serverAddress, userName, setUserName } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
-export default function Login() {
+export default () => {
   const [codeChallenge, setCodeChallenge] = createSignal("");
 
   onMount(async () => {
