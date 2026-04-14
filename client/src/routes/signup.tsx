@@ -1,3 +1,4 @@
+import { useSearchParams } from "@solidjs/router";
 import { createSignal } from "solid-js";
 import { Button } from "~/components/ui/button";
 
@@ -5,18 +6,15 @@ export default () => {
   const [pass, setPass] = createSignal("");
   const [confirmPass, setConfirmPass] = createSignal("");
 
-  const signupAddress = () => {
-    if (typeof window === "undefined") {
-      return "";
+  const serverAddress = () => {
+    const [params] = useSearchParams();
+    const url = params.server;
+    if (typeof url !== "string") {
+      throw new Error("server parameter is required");
     }
-    const params = new URLSearchParams(window.location.search);
-    const url = params.get("server_address");
-    if (url === null) {
-      return "";
-    }
-    const signupUrl = new URL("/signup", url);
-    return signupUrl.toString();
-  }
+    return url;
+  };
+
 
   return (
     <main class="flex items-center justify-center flex-1 bg-background text-foreground">
@@ -28,7 +26,7 @@ export default () => {
 
         <form
           method="post"
-          action={signupAddress()}
+          action={serverAddress() + "/signup"}
           class="space-y-4"
         >
           <div>
@@ -87,7 +85,7 @@ export default () => {
             Sign Up
           </Button>
         </form>
-        <a href="/login" class="w-full text-sm text-center">
+        <a href={`/login?server=${serverAddress()}`} class="w-full text-sm text-center">
           Sign In
         </a>
       </div>

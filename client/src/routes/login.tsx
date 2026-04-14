@@ -1,4 +1,5 @@
 import { createEffect, createSignal, onMount } from "solid-js";
+import { useSearchParams } from "@solidjs/router";
 import { code_challenge, code_verifier_gen } from "~/lib/auth";
 import { Button } from "~/components/ui/button";
 
@@ -18,18 +19,29 @@ export default () => {
     setUserName(localStorage.getItem("user_name") ?? "");
   });
 
+  const serverAddress = () => {
+    const [params] = useSearchParams();
+    const url = params.server;
+    if (typeof url !== "string") {
+      throw new Error("server parameter is required");
+    }
+    return url;
+  };
+
+  const [codeChallengeGuard, setCodeChallengeGuard] = createSignal(true);
+
   const loginAddress = () => {
-    if (typeof window === "undefined") {
+    if(typeof window === "undefined") {
       return "";
     }
-    const params = new URLSearchParams(window.location.search);
-    const url = params.get("server_address");
     const challenge = codeChallenge();
-    if (url === null || challenge === "") {
+    if (challenge === "") {
+      setCodeChallengeGuard(true);
       return "";
     }
-    const loginUrl = new URL("/login", url);
+    const loginUrl = new URL("/login", serverAddress());
     loginUrl.searchParams.set("code_challenge", challenge);
+    setCodeChallengeGuard(false);
     return loginUrl.toString();
   };
 
@@ -75,11 +87,11 @@ export default () => {
             />
           </div>
 
-          <Button type="submit" class="w-full text-sm py-4 rounded-xl">
+          <Button type="submit" class="w-full text-sm py-4 rounded-xl" disabled={codeChallengeGuard()}>
             Sign In
           </Button>
         </form>
-        <a href="/signup" class="w-full text-sm text-center">
+        <a href={`/signup?server=${serverAddress()}`} class="w-full text-sm text-center">
           Sign Up
         </a>
       </div>
