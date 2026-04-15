@@ -1,9 +1,13 @@
+import { useSearchParams } from '@solidjs/router'
 import { Button } from '~/components/ui/button'
 import LogIn from 'lucide-solid/icons/log-in'
 import UserPlus from 'lucide-solid/icons/user-plus'
 import Icon from '~/asset/icon.svg'
 
 export default function Home() {
+  const [params] = useSearchParams();
+  const serverAddress = (typeof params.server === "string" ? params.server : "");
+
   return (
     <main class="w-full h-full flex items-center justify-center overflow-scroll">
       <div class="flex flex-wrap-reverse items-center justify-center gap-12 m-12">
@@ -17,7 +21,7 @@ export default function Home() {
           <div class="flex flex-row gap-4 p-1">
             <Button
               as="a"
-              href="/login"
+              href={`/login?server=${serverAddress}`}
               size="lg"
               variant="default"
               class="text-lg rounded-full"
@@ -27,7 +31,7 @@ export default function Home() {
             </Button>
             <Button
               as="a"
-              href="/signup"
+              href={`/signup?server=${serverAddress}`}
               size="lg"
               variant="outline"
               class="text-lg rounded-full"
