@@ -13,7 +13,7 @@
     "@astrojs/starlight": "^0.37.5",
     "astro": "^5.15.5",
     "semver": "^7.7.4",
-    "sharp": "^0.34.5"
+    "sharp": "^0.35.3"
   },
   "patchedDependencies": {
     "astro@5.15.5": "patches/astro@5.15.5.patch"
